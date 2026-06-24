@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>WHITESPACE — find the ad nobody is running yet</title>
+<style>
+  :root{
+    --bg:#0a0b0f; --panel:#12141c; --panel2:#171a24; --line:#242838;
+    --ink:#e8ebf2; --mut:#8b90a3; --dim:#5b6072;
+    --acc:#5eead4; --acc2:#a78bfa; --warn:#fbbf24; --hot:#fb7185; --ok:#34d399;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1200px 700px at 70% -10%,#1a1d2e 0%,var(--bg) 55%);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 22px 80px}
+  header{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:6px}
+  .brand{font-family:var(--mono);font-weight:700;font-size:30px;letter-spacing:.18em}
+  .brand b{color:var(--acc)}
+  .by{font-size:12px;color:var(--dim);font-family:var(--mono)}
+  .by a{color:var(--acc2);text-decoration:none}
+  .tag{color:var(--mut);font-size:15px;margin:8px 0 26px;max-width:680px;line-height:1.5}
+  .tag b{color:var(--ink);font-weight:600}
+  .card{background:linear-gradient(180deg,var(--panel),#0e1017);border:1px solid var(--line);border-radius:16px;padding:20px}
+  .modes{display:flex;gap:8px;margin-bottom:14px}
+  .mode{background:#0c0e15;color:var(--mut);border:1px solid var(--line);border-radius:10px;padding:9px 14px;font-size:13.5px;font-weight:600;cursor:pointer}
+  .mode span{color:var(--dim);font-weight:400;font-size:11.5px;font-family:var(--mono)}
+  .mode.on{border-color:var(--acc);color:var(--ink);background:#0c1a17}
+  .inrow{display:flex;gap:10px;flex-wrap:wrap}
+  input{flex:1;min-width:240px;background:#0c0e15;border:1px solid var(--line);border-radius:10px;color:var(--ink);font-size:16px;padding:14px 16px;outline:none;font-family:var(--sans)}
+  input:focus{border-color:var(--acc)}
+  button{background:var(--acc);color:#04231f;font-weight:700;border:0;border-radius:10px;padding:0 22px;font-size:15px;cursor:pointer;font-family:var(--sans)}
+  button:disabled{opacity:.5;cursor:default}
+  .chips{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
+  .chip{font-size:12.5px;color:var(--mut);border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer;background:#0c0e15}
+  .chip:hover{border-color:var(--acc2);color:var(--ink)}
+  .status{margin:18px 0 0;display:none}
+  .bar{height:5px;background:#0c0e15;border-radius:4px;overflow:hidden;border:1px solid var(--line)}
+  .fill{height:100%;width:0;background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .4s ease}
+  .feed{font-family:var(--mono);font-size:12.5px;margin-top:12px;max-height:168px;overflow:auto;color:var(--mut);border-left:2px solid var(--line);padding-left:12px}
+  .feed div{padding:2px 0}
+  .feed .st{color:var(--acc)}
+  .feed .er{color:var(--hot)}
+  .results{margin-top:26px;display:none}
+  .sec{margin-top:22px}
+  .h{font-family:var(--mono);font-size:12px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;margin:0 0 12px}
+  .rec{background:linear-gradient(180deg,#15212b,#101820);border:1px solid #1f4a44;border-radius:16px;padding:22px}
+  .rec .lab{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--acc);text-transform:uppercase}
+  .rec h2{margin:8px 0 10px;font-size:24px;line-height:1.25}
+  .rec p{color:var(--mut);margin:0 0 14px;line-height:1.55}
+  .conf{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;color:var(--ink);background:#04231f;border:1px solid #1f4a44;border-radius:999px;padding:5px 12px}
+  .adj{margin-top:12px;font-size:12.5px;color:var(--dim);font-family:var(--mono)}
+  .adj b{color:var(--acc2)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:720px){.grid{grid-template-columns:1fr}}
+  .tile{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .tile h3{margin:0 0 8px;font-size:14px}
+  .tile .ct{font-family:var(--mono);font-size:12px;color:var(--mut);line-height:1.55}
+  .cta{display:inline-block;margin-top:8px;font-size:11px;font-family:var(--mono);color:var(--acc);border:1px solid #1f4a44;border-radius:6px;padding:3px 8px}
+  .lane{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+  .sat{font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:.08em}
+  .sat.heavy{background:#3b1418;color:var(--hot);border:1px solid #5a1d22}
+  .sat.moderate{background:#3a2e10;color:var(--warn);border:1px solid #5a4715}
+  .sat.light{background:#10231a;color:var(--ok);border:1px solid #1d4a36}
+  .lane .ang{flex:1}
+  .lane .em{font-family:var(--mono);font-size:11.5px;color:var(--dim)}
+  .ev{font-size:13px;color:var(--mut);padding:9px 0;border-bottom:1px solid var(--line);line-height:1.5}
+  .ev a{color:var(--acc2);text-decoration:none;font-family:var(--mono);font-size:11px}
+  .ev b{color:var(--ink)}
+  .alt{font-size:13.5px;color:var(--mut);padding:8px 0;border-bottom:1px solid var(--line)}
+  .alt b{color:var(--ink)}
+  .alt .c{font-family:var(--mono);font-size:11px;color:var(--acc)}
+  .meta{margin-top:20px;font-family:var(--mono);font-size:11.5px;color:var(--dim);line-height:1.6}
+  .deg{margin-top:14px;background:#2a210c;border:1px solid #5a4715;color:var(--warn);border-radius:10px;padding:12px 14px;font-size:12.5px;font-family:var(--mono);display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="brand">WHITE<b>SPACE</b></div>
+    </div>
+    <div class="by">an AIdeazz agent · <a href="https://aideazz.xyz" target="_blank" rel="noopener">aideazz.xyz</a></div>
+  </header>
+  <div class="tag">It doesn't generate one more ad. It autonomously mines the <b>live</b> ad market, reverse-engineers <b>why</b> the top creatives convert, and surfaces the high-margin angle <b>nobody is running yet</b> — with a sourced evidence trail.</div>
+
+  <div class="card">
+    <div class="modes" id="modes">
+      <button class="mode on" data-mode="media_buyer">Ad angles <span>· media buyer</span></button>
+      <button class="mode" data-mode="content">Content angles <span>· AIdeazz engine</span></button>
+    </div>
+    <div class="inrow">
+      <input id="q" placeholder="Enter a vertical or offer — e.g. medicare advantage, solar, auto insurance" autocomplete="off" />
+      <button id="go">Find the whitespace</button>
+    </div>
+    <div class="chips" id="chips"></div>
+
+    <div class="status" id="status">
+      <div class="bar"><div class="fill" id="fill"></div></div>
+      <div class="feed" id="feed"></div>
+    </div>
+  </div>
+
+  <div class="results" id="results">
+    <div class="deg" id="deg"></div>
+
+    <div class="sec">
+      <div class="rec">
+        <div class="lab">▸ Recommended whitespace angle</div>
+        <h2 id="recAngle"></h2>
+        <p id="recRationale"></p>
+        <span class="conf" id="recConf"></span>
+        <div class="adj" id="recAdj"></div>
+      </div>
+    </div>
+
+    <!-- media_buyer sections -->
+    <div class="sec mb">
+      <div class="h">Launch-ready ad copy</div>
+      <div class="grid" id="adcopy"></div>
+    </div>
+    <div class="sec mb">
+      <div class="h">Landing-page concept</div>
+      <div class="tile" id="lp"></div>
+    </div>
+
+    <!-- content sections -->
+    <div class="sec ct">
+      <div class="h">Blog brief — drops into your Dev.to / aideazz.xyz pipeline</div>
+      <div class="tile" id="blog"></div>
+    </div>
+    <div class="sec ct">
+      <div class="h">Social atoms — drop into Buffer</div>
+      <div class="grid" id="social"></div>
+    </div>
+    <div class="sec ct">
+      <div class="h">HubSpot campaign angle</div>
+      <div class="tile" id="hub"></div>
+    </div>
+
+    <div class="sec">
+      <div class="h">Crowded lanes — what to avoid</div>
+      <div id="lanes"></div>
+    </div>
+
+    <div class="sec" id="altSec">
+      <div class="h">Other whitespace bets</div>
+      <div id="alts"></div>
+    </div>
+
+    <div class="sec">
+      <div class="h">Evidence trail — live ads behind the call</div>
+      <div id="evidence"></div>
+    </div>
+
+    <div class="meta" id="meta"></div>
+  </div>
+</div>
+
+<script>
+const EXAMPLES = {
+  media_buyer: ['medicare advantage','solar installation','auto insurance','debt relief','weight loss'],
+  content: ['ai marketing agency','fractional CTO services','autonomous AI agents','AI customer support']
+};
+const $ = (id)=>document.getElementById(id);
+const esc = (s)=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+let mode = 'media_buyer';
+function paintChips(){
+  const chips=$('chips'); chips.innerHTML='';
+  EXAMPLES[mode].forEach(e=>{const c=document.createElement('span');c.className='chip';c.textContent=e;c.onclick=()=>{$('q').value=e;run();};chips.appendChild(c);});
+  $('q').placeholder = mode==='content'
+    ? 'Enter a topic you want to own — e.g. ai marketing agency, fractional CTO services'
+    : 'Enter a vertical or offer — e.g. medicare advantage, solar, auto insurance';
+}
+document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{
+  mode=b.dataset.mode;
+  document.querySelectorAll('.mode').forEach(x=>x.classList.toggle('on',x===b));
+  paintChips();
+});
+paintChips();
+
+let running=false;
+function run(){
+  if(running) return;
+  const v=$('q').value.trim();
+  if(!v) return;
+  running=true; $('go').disabled=true;
+  $('status').style.display='block';
+  $('results').style.display='none';
+  $('feed').innerHTML=''; $('fill').style.width='0%';
+  feed('start','connecting…');
+
+  const es=new EventSource('api/run?vertical='+encodeURIComponent(v)+'&mode='+encodeURIComponent(mode));
+  es.onmessage=(m)=>{
+    let e; try{e=JSON.parse(m.data);}catch{return;}
+    if(typeof e.pct==='number') $('fill').style.width=e.pct+'%';
+    feed(e.stage,e.message);
+    if(e.stage==='done'&&e.data){ render(e.data); es.close(); finish(); }
+    if(e.stage==='error'){ feed('error',e.message); es.close(); finish(); }
+  };
+  es.addEventListener('close',()=>{es.close();finish();});
+  es.onerror=()=>{ if(running){feed('error','stream closed');} es.close(); finish(); };
+}
+function finish(){ running=false; $('go').disabled=false; }
+function feed(stage,msg){
+  const d=document.createElement('div');
+  const cls = stage==='error'?'er':'st';
+  d.innerHTML='<span class="'+cls+'">'+esc(stage)+'</span> · '+esc(msg);
+  $('feed').appendChild(d); $('feed').scrollTop=$('feed').scrollHeight;
+}
+
+function render(p){
+  $('results').style.display='block';
+  const r=p.recommendation||{};
+  $('recAngle').textContent=r.angle||'—';
+  $('recRationale').textContent=r.rationale||'';
+  $('recConf').innerHTML='confidence <b style="color:var(--acc)">'+(r.confidence||0)+'</b>/100 · owns <b>'+esc(r.emotion||'—')+'</b> · '+esc(r.hookType||'');
+  $('recAdj').innerHTML=(r.adjacentTo&&r.adjacentTo.length)?('borrows proven psychology from → <b>'+r.adjacentTo.map(esc).join('</b>, <b>')+'</b>'):'';
+
+  const isContent = p.kind==='content';
+  document.querySelectorAll('.results .mb').forEach(el=>el.style.display=isContent?'none':'block');
+  document.querySelectorAll('.results .ct').forEach(el=>el.style.display=isContent?'block':'none');
+
+  if(!isContent){
+    $('adcopy').innerHTML=(p.adCopy||[]).map(c=>(
+      '<div class="tile"><h3>'+esc(c.headline)+'</h3><div class="ct">'+esc(c.primaryText)+'</div><span class="cta">'+esc(c.cta)+'</span></div>'
+    )).join('')||'<div class="ct" style="color:var(--dim)">—</div>';
+    const lp=p.landingPage||{};
+    $('lp').innerHTML='<h3>'+esc(lp.hook||'—')+'</h3><div class="ct">'+esc(lp.subhead||'')+'<br><br><span style="color:var(--dim)">HERO:</span> '+esc(lp.heroConcept||'')+'</div>';
+  } else {
+    const b=p.blog||{};
+    $('blog').innerHTML='<h3>'+esc(b.title||'—')+'</h3><div class="ct"><span style="color:var(--dim)">KEYWORD:</span> '+esc(b.targetKeyword||'')+'<br><br>'+
+      (b.outline||[]).map(o=>'• '+esc(o)).join('<br>')+'<br><br><span style="color:var(--dim)">AEO:</span> '+esc(b.aeoHint||'')+'</div>';
+    const s=p.social||{};
+    $('social').innerHTML=
+      '<div class="tile"><h3>LinkedIn</h3><div class="ct">'+esc(s.linkedin||'').replace(/\n/g,'<br>')+'</div></div>'+
+      '<div class="tile"><h3>Instagram</h3><div class="ct">'+esc(s.instagram||'')+'</div></div>'+
+      '<div class="tile"><h3>X thread hook</h3><div class="ct">'+esc(s.xThreadHook||'')+'</div></div>';
+    $('hub').innerHTML='<div class="ct">'+esc(p.hubspotCampaignAngle||'—')+'</div>';
+  }
+
+  $('lanes').innerHTML=(p.crowdedLanes||[]).map(l=>(
+    '<div class="lane"><span class="sat '+esc(l.saturation)+'">'+esc(l.saturation)+'</span>'+
+    '<span class="ang">'+esc(l.angle)+' <span style="color:var(--dim)">('+ (l.creativeCount||0) +')</span></span>'+
+    '<span class="em">'+esc(l.dominantEmotion||'')+'</span></div>'
+  )).join('')||'<div class="ct" style="color:var(--dim)">—</div>';
+
+  const alts=p.alternativeBets||[];
+  $('altSec').style.display=alts.length?'block':'none';
+  $('alts').innerHTML=alts.map(a=>(
+    '<div class="alt"><b>'+esc(a.angle)+'</b> <span class="c">'+(a.confidence||0)+'</span><br>'+esc(a.rationale)+'</div>'
+  )).join('');
+
+  $('evidence').innerHTML=(p.evidence||[]).map(e=>(
+    '<div class="ev"><b>'+esc(e.advertiser||'unknown')+'</b> — '+esc(e.insight)+'<br>'+
+    (e.sourceUrl?('<a href="'+esc(e.sourceUrl)+'" target="_blank" rel="noopener">'+esc(e.sourceUrl).slice(0,72)+'</a>'):'')+'</div>'
+  )).join('')||'<div class="ct" style="color:var(--dim)">No live evidence in this run.</div>';
+
+  const m=p.meta||{};
+  $('meta').textContent='scanned '+(m.creativesScanned||0)+' creatives · '+((m.sources&&m.sources.join('+'))||'knowledge-mode')+' · '+esc(m.llmProvider||'')+' · '+(m.durationMs||0)+'ms'+(m.degraded?' · DEGRADED':'');
+  const deg=$('deg');
+  if(m.degraded&&m.notes&&m.notes.length){ deg.style.display='block'; deg.textContent='⚠ '+m.notes.join('  '); }
+  else deg.style.display='none';
+}
+
+$('go').onclick=run;
+$('q').addEventListener('keydown',e=>{if(e.key==='Enter')run();});
+</script>
+</body>
+</html>

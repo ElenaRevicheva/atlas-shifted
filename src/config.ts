@@ -1,0 +1,41 @@
+/**
+ * config.ts — env-driven configuration, loaded once at startup.
+ *
+ * Same discipline as the AIdeazz fleet: keys are read from .env via dotenv,
+ * never hardcoded. Everything is overridable through environment variables so
+ * the same bundle runs locally and on Oracle without code changes.
+ */
+import 'dotenv/config';
+
+const num = (v: string | undefined, d: number): number => {
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0 ? n : d;
+};
+
+export const config = {
+  // LLM providers (resilient chain: Claude → Groq → OpenAI)
+  anthropicKey: process.env.ANTHROPIC_API_KEY?.trim() || '',
+  groqKey: process.env.GROQ_API_KEY?.trim() || '',
+  openaiKey: process.env.OPENAI_API_KEY?.trim() || '',
+
+  claudeModel: process.env.WHITESPACE_CLAUDE_MODEL?.trim() || 'claude-sonnet-4-6',
+  claudeVisionModel: process.env.WHITESPACE_CLAUDE_VISION_MODEL?.trim() || 'claude-sonnet-4-6',
+  groqModel: process.env.WHITESPACE_GROQ_MODEL?.trim() || 'llama-3.3-70b-versatile',
+  openaiModel: process.env.WHITESPACE_OPENAI_MODEL?.trim() || 'gpt-4o-mini',
+
+  // Bright Data — live public ad-market recon
+  brightDataToken: process.env.BRIGHTDATA_API_TOKEN?.trim() || '',
+  brightDataZone: process.env.BRIGHTDATA_ZONE?.trim() || '',
+
+  // Server
+  port: num(process.env.PORT, 8095),
+
+  // Run controls
+  maxCreatives: num(process.env.WHITESPACE_MAX_CREATIVES, 12),
+  maxToolCalls: num(process.env.WHITESPACE_MAX_TOOL_CALLS, 10),
+  runTimeoutMs: num(process.env.WHITESPACE_RUN_TIMEOUT_MS, 180_000),
+};
+
+export const hasBrightData = (): boolean => !!(config.brightDataToken && config.brightDataZone);
+export const hasAnthropic = (): boolean => !!config.anthropicKey;
+export const hasAnyLlm = (): boolean => !!(config.anthropicKey || config.groqKey || config.openaiKey);

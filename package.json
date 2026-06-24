@@ -1,0 +1,28 @@
+{
+  "name": "whitespace",
+  "version": "0.1.0",
+  "private": true,
+  "description": "WHITESPACE — agentic creative-angle intelligence: mines the live ad market, reverse-engineers why winning ads convert, and surfaces the high-margin angle nobody is running yet.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "dev": "tsc -p tsconfig.json && node dist/server.js",
+    "cli": "tsc -p tsconfig.json && node dist/cli.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "groq-sdk": "^0.9.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.2"
+  }
+}
