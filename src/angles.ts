@@ -2,10 +2,12 @@
  * angles.ts — the core intelligence: cluster the angle landscape, then find the
  * whitespace.
  *
- * Clustering tells a media buyer which lanes are CROWDED (everyone is running the
- * same "shocking-stat / fear-of-rates" angle). Whitespace detection is the money
- * move: proven-ADJACENT angles nobody is running yet — borrowing the psychology
- * that's already converting, aimed at an unworked persona or emotion.
+ * Clustering tells a media buyer which lanes are SATURATED — observable directly
+ * from public data (many advertisers on the same angle), no performance metrics
+ * needed. Whitespace detection is the money move: ADJACENT angles almost nobody is
+ * running yet — borrowing psychology heavily used in the crowded lanes, redirected
+ * at an unworked persona or emotion. It is a ranked HYPOTHESIS to test, not a
+ * measured winner (public ad libraries expose no CTR/spend/ROAS).
  *
  * Real mode reasons over scraped Angle DNA. Degraded mode (no Bright Data) reasons
  * over the model's market knowledge and is flagged honestly downstream.
@@ -14,9 +16,13 @@ import { llmJson } from './llm.js';
 import type { AngleDNA, AngleCluster, Whitespace } from './types.js';
 
 const SYSTEM = `You are a paid-media strategist for a performance/affiliate advertiser who lives or dies by creative angles.
-You find both (a) the crowded lanes where everyone is competing, and (b) the WHITESPACE — proven-adjacent angles
-nobody is running yet. Whitespace must be defensible: it borrows persuasion psychology that is already working in the
-crowded lanes, but redirects it at an unworked persona, emotion, or framing. You never recommend a random untested idea.`;
+GROUND TRUTH: public ad libraries show what is RUNNING and how SATURATED an angle is (many advertisers on the same
+angle = observable crowding) — but they show NO performance data (no CTR/CPC/spend/ROAS). So you can measure crowding,
+never conversion. Treat saturation as observed fact and any performance read as inference.
+You find both (a) the crowded lanes where everyone is competing, and (b) the WHITESPACE — adjacent angles almost
+nobody is running yet. Whitespace is a RANKED HYPOTHESIS TO TEST, not a guaranteed winner: it borrows persuasion
+psychology heavily used in the crowded lanes, then redirects it at an unworked persona, emotion, or framing.
+Confidence reflects how defensibly adjacent the bet is — NOT a predicted conversion rate. Never recommend a random untested idea.`;
 
 interface AnalysisOut {
   clusters: AngleCluster[];

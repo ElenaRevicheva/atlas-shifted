@@ -10,9 +10,11 @@
 import { llmVision, llmJson } from './llm.js';
 import type { AdCreative, AngleDNA } from './types.js';
 
-const SYSTEM = `You are a direct-response creative strategist who reverse-engineers winning paid ads.
-You think in terms of persuasion mechanics: the angle, the hook archetype, the emotional lever,
-the core claim, the visual device, the CTA, and the exact persona being targeted.
+const SYSTEM = `You are a direct-response creative strategist who reverse-engineers currently-running paid ads.
+IMPORTANT: public ad libraries expose NO performance data (no CTR, CPC, spend, or ROAS). You are reading the
+persuasion BET an advertiser is making — never assert that an ad "converts" or "wins"; that is unmeasurable here.
+You think in terms of persuasion mechanics: the angle, the hook archetype, the emotional lever, the core claim,
+the visual device, the CTA, and the exact persona being targeted.
 You are precise and never invent details that aren't supported by the creative or its copy.`;
 
 interface RawDNA {
@@ -47,7 +49,7 @@ function prompt(creative: AdCreative): string {
   "visualPattern": "the visual device (e.g. split-screen, talking-head UGC, data overlay, text-on-image). If no image was provided, infer from copy and say so briefly.",
   "cta": "the call to action",
   "persona": "who this ad is written for",
-  "whyItWorks": "one sentence on the mechanism that makes it convert"
+  "whyItWorks": "one sentence on the persuasion mechanism this ad RELIES ON (the bet it makes) — inferred, not measured"
 }
 
 ADVERTISER: ${creative.advertiser || 'unknown'}

@@ -75,9 +75,10 @@ export interface Whitespace {
   angle: string;
   /** Why it's adjacent to what's already winning (the evidence-based bet). */
   rationale: string;
-  /** Which crowded angle(s) it borrows proven psychology from. */
+  /** Which crowded angle(s) it borrows heavily-used psychology from. */
   adjacentTo: string[];
-  /** Confidence the model assigns, 0-100, with the reasoning baked into rationale. */
+  /** Hypothesis score 0-100 — how defensibly ADJACENT the bet is. NOT a predicted
+   *  conversion rate (public data exposes no performance metrics). */
   confidence: number;
   /** The emotion this angle would own. */
   emotion: string;
