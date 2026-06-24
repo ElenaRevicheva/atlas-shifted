@@ -164,16 +164,25 @@ export async function reconContentSources(
   const serp = await bdSerpSearch(`${topic} marketing OR services OR agency`, { num: 10 }).catch(() => []);
   onProgress?.(`Found ${serp.length} ranking competitors. Reading their positioning…`);
 
+  // Parallelize with bounded concurrency — sequential heavy fetches were the
+  // main time sink. Use the fast Web Unlocker fetch (no browser escalation):
+  // competitor marketing pages are server-rendered enough to extract positioning.
   const top = serp.slice(0, config.maxCreatives);
   const out: AdCreative[] = [];
-  for (let i = 0; i < top.length; i++) {
-    const r = top[i];
-    if (!r) continue;
-    const html = await bdSmartFetch(r.link).catch(() => null);
-    if (!html) continue;
-    const advertiser = r.title?.split(/[-|–:]/)[0]?.trim() || new URL(r.link).hostname.replace(/^www\./, '');
-    const c = await extractContentAngle(html, topic, advertiser, r.link, i).catch(() => null);
-    if (c) out.push(c);
+  const concurrency = 4;
+  for (let i = 0; i < top.length; i += concurrency) {
+    const batch = top.slice(i, i + concurrency);
+    const settled = await Promise.all(
+      batch.map(async (r, j) => {
+        if (!r) return null;
+        const html = await bdFetch(r.link, 18_000).catch(() => null);
+        if (!html || html.length < 400) return null;
+        const advertiser = r.title?.split(/[-|–:]/)[0]?.trim() || new URL(r.link).hostname.replace(/^www\./, '');
+        return extractContentAngle(html, topic, advertiser, r.link, i + j).catch(() => null);
+      }),
+    );
+    for (const c of settled) if (c) out.push(c);
+    onProgress?.(`Read ${Math.min(i + concurrency, top.length)}/${top.length} competitors…`);
     if (out.length >= config.maxCreatives) break;
   }
 
