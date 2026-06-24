@@ -11,6 +11,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { config, hasBrightData, hasAnthropic, hasAnyLlm } from './config.js';
 import { runWhitespace } from './agent.js';
+import { breakerState } from './llm.js';
 import type { RunEvent, RunMode } from './types.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -27,6 +28,7 @@ app.get('/healthz', (_req, res) => {
     anthropic: hasAnthropic(),
     llm: hasAnyLlm(),
     maxCreatives: config.maxCreatives,
+    breaker: breakerState(),
   });
 });
 

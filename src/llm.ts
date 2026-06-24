@@ -22,9 +22,42 @@ export interface LlmAnswer {
 const sysWrap = (system: string | undefined, prompt: string): string =>
   system ? `${system}\n\n${prompt}` : prompt;
 
+/**
+ * Per-process circuit breaker. When a provider signals it's hard-down — Claude
+ * credit exhaustion (400) or Groq rate-cap (429) — we stop hammering it on every
+ * subsequent call and jump straight to the next leg. Claude exhaustion latches
+ * for the process (credits don't refill mid-run); Groq cools down for a window
+ * (its cap resets), then auto-rejoins. This is what keeps a run fast and alive
+ * when the primary providers are dead — the exact failure the content run hit.
+ */
+let claudeDead = false;
+let groqCooldownUntil = 0;
+const GROQ_COOLDOWN_MS = 90_000;
+
+const isCreditExhaustion = (msg: string): boolean =>
+  /credit balance is too low|insufficient_quota|billing/i.test(msg);
+
+/** Inspect a provider error and trip the breaker if it's a hard-down signal. */
+function noteProviderError(provider: 'claude' | 'groq', err: unknown): void {
+  const e = err as { status?: number; message?: string };
+  const msg = e?.message || String(err);
+  if (provider === 'claude' && (isCreditExhaustion(msg) || e?.status === 400)) {
+    if (!claudeDead) console.warn('[llm] Claude tripped circuit breaker (credit/billing) — skipping it for this process.');
+    claudeDead = true;
+  }
+  if (provider === 'groq' && (e?.status === 429 || /rate limit|429/i.test(msg))) {
+    groqCooldownUntil = Date.now() + GROQ_COOLDOWN_MS;
+  }
+}
+
+/** Diagnostics for /healthz and meta. */
+export function breakerState(): { claudeDead: boolean; groqCoolingMs: number } {
+  return { claudeDead, groqCoolingMs: Math.max(0, groqCooldownUntil - Date.now()) };
+}
+
 /** Claude text/JSON completion. Returns '' on failure so callers can fall through. */
 async function claudeText(prompt: string, system: string | undefined, maxTokens: number): Promise<string> {
-  if (!config.anthropicKey) return '';
+  if (!config.anthropicKey || claudeDead) return '';
   try {
     const anthropic = new Anthropic({ apiKey: config.anthropicKey });
     const msg = await anthropic.messages.create({
@@ -36,13 +69,14 @@ async function claudeText(prompt: string, system: string | undefined, maxTokens:
     const block = msg.content[0];
     return block && block.type === 'text' ? block.text.trim() : '';
   } catch (e) {
+    noteProviderError('claude', e);
     console.warn('[llm] Claude text failed:', (e as Error).message?.slice(0, 140));
     return '';
   }
 }
 
 async function groqText(prompt: string, system: string | undefined, maxTokens: number): Promise<string> {
-  if (!config.groqKey) return '';
+  if (!config.groqKey || Date.now() < groqCooldownUntil) return '';
   try {
     const groq = new Groq({ apiKey: config.groqKey });
     const completion = await groq.chat.completions.create({
@@ -56,6 +90,7 @@ async function groqText(prompt: string, system: string | undefined, maxTokens: n
     });
     return (completion.choices[0]?.message?.content || '').trim();
   } catch (e) {
+    noteProviderError('groq', e);
     console.warn('[llm] Groq text failed:', (e as Error).message?.slice(0, 140));
     return '';
   }
@@ -171,8 +206,8 @@ export async function llmVision(
     return llmText(sysWrap(opts.system, prompt), { maxTokens });
   }
 
-  // 1) Claude vision
-  if (config.anthropicKey) {
+  // 1) Claude vision (skipped once the credit breaker has tripped)
+  if (config.anthropicKey && !claudeDead) {
     try {
       const anthropic = new Anthropic({ apiKey: config.anthropicKey });
       const content: Anthropic.ContentBlockParam[] = [
@@ -193,6 +228,7 @@ export async function llmVision(
         return { text: block.text.trim(), provider: 'claude' };
       }
     } catch (e) {
+      noteProviderError('claude', e);
       console.warn('[llm] Claude vision failed:', (e as Error).message?.slice(0, 140));
     }
   }
@@ -237,8 +273,10 @@ export async function llmVision(
 }
 
 export function activeLlmLabel(): string {
+  if (config.anthropicKey && !claudeDead) return `Claude (${config.claudeModel})`;
+  if (config.groqKey && Date.now() >= groqCooldownUntil) return `Groq (${config.groqModel})`;
+  if (config.openaiKey) return `OpenAI (${config.openaiModel})`;
   if (config.anthropicKey) return `Claude (${config.claudeModel})`;
   if (config.groqKey) return `Groq (${config.groqModel})`;
-  if (config.openaiKey) return `OpenAI (${config.openaiModel})`;
   return 'no-LLM-configured';
 }
