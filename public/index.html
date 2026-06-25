@@ -73,6 +73,12 @@
   .alt .c{font-family:var(--mono);font-size:11px;color:var(--acc)}
   .meta{margin-top:20px;font-family:var(--mono);font-size:11.5px;color:var(--dim);line-height:1.6}
   .deg{margin-top:14px;background:#2a210c;border:1px solid #5a4715;color:var(--warn);border-radius:10px;padding:12px 14px;font-size:12.5px;font-family:var(--mono);display:none}
+  .how{margin-top:22px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  @media(max-width:760px){.how{grid-template-columns:1fr}}
+  .howstep{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:15px 16px;font-size:13px;color:var(--mut);line-height:1.5}
+  .hn{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:#04231f;border:1px solid #1f4a44;color:var(--acc);font-family:var(--mono);font-size:12px;margin-right:8px}
+  .footnote{margin-top:18px;text-align:center;font-family:var(--mono);font-size:11.5px;color:var(--dim);line-height:1.7}
+  .footnote a{color:var(--acc2);text-decoration:none}
 </style>
 </head>
 <body>
@@ -81,7 +87,7 @@
     <div>
       <div class="brand">WHITE<b>SPACE</b></div>
     </div>
-    <div class="by">an AIdeazz agent · <a href="https://aideazz.xyz" target="_blank" rel="noopener">aideazz.xyz</a></div>
+    <div class="by">an AIdeazz agent · <a href="https://aideazz.xyz/sop-ai-ops.html" target="_blank" rel="noopener">AI Ops SOP ↗</a> · <a href="atlas.html">← Atlas radar</a></div>
   </header>
   <div class="tag">Every spy tool tells you to <b>copy the ad that's already winning</b> — so everyone piles into the same lane. WHITESPACE does the opposite: it maps which angles are <b>saturated</b> and surfaces the adjacent angle <b>almost nobody is running yet</b> — a ranked hypothesis to test, with a sourced evidence trail.</div>
   <div class="tag" style="font-size:12.5px;color:var(--dim);margin-top:-14px">Honest by design: public ad libraries expose <b style="color:var(--mut)">no</b> CTR/spend/ROAS. WHITESPACE measures what's <b style="color:var(--mut)">observable</b> — angle saturation — and ranks the gap as a hypothesis, never a guaranteed winner.</div>
@@ -102,6 +108,13 @@
       <div class="feed" id="feed"></div>
     </div>
   </div>
+
+  <div class="how">
+    <div class="howstep"><span class="hn">1</span>Pick a vertical or offer — Atlas points its radar at that market.</div>
+    <div class="howstep"><span class="hn">2</span>It mines the live ad libraries via Bright Data and deconstructs every running ad into its angle.</div>
+    <div class="howstep"><span class="hn">3</span>You get the open angle almost nobody is running — ranked, with a clickable evidence trail.</div>
+  </div>
+  <div class="footnote">Public ad-transparency data only · part of the <a href="atlas.html">Atlas Shifted</a> marketing engine · <a href="https://aideazz.xyz/portfolio" target="_blank" rel="noopener">aideazz.xyz/portfolio ↗</a></div>
 
   <div class="results" id="results">
     <div class="deg" id="deg"></div>
