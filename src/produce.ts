@@ -26,12 +26,9 @@ const CONCEPTS = join(DATA_DIR, 'concepts.json');
 
 const FLUX_CHAIN = [config.fluxModel, 'black-forest-labs/flux-dev'];
 
-/** Render one image from a prompt; returns a fetchable URL + the model used. */
-async function renderImage(prompt: string): Promise<{ url: string; model: string } | null> {
-  if (!config.replicateToken) {
-    console.error('FATAL: REPLICATE_API_TOKEN not set — cannot render.');
-    return null;
-  }
+/** Render via Replicate/Flux → return image bytes, or null on failure. */
+async function renderViaFlux(prompt: string): Promise<{ buffer: Buffer; model: string } | null> {
+  if (!config.replicateToken) return null;
   const replicate = new Replicate({ auth: config.replicateToken });
   for (const model of FLUX_CHAIN) {
     try {
@@ -44,13 +41,53 @@ async function renderImage(prompt: string): Promise<{ url: string; model: string
       if (typeof first === 'string') url = first;
       else if (first && typeof first.url === 'function') url = first.url().toString();
       else if (first && first.url) url = String(first.url);
-      if (url) return { url, model };
-      console.warn(`[produce] ${model} returned no usable url`);
+      if (!url) continue;
+      const res = await fetch(url, { signal: AbortSignal.timeout(60_000) });
+      if (res.ok) return { buffer: Buffer.from(await res.arrayBuffer()), model };
     } catch (e) {
-      console.warn(`[produce] ${model} failed:`, (e as Error).message?.slice(0, 160));
+      console.warn(`[produce] ${model} failed:`, (e as Error).message?.slice(0, 140));
     }
   }
   return null;
+}
+
+/** Render via OpenAI images — the "shrug" failover when Replicate is dry. */
+async function renderViaOpenAI(prompt: string): Promise<{ buffer: Buffer; model: string } | null> {
+  if (!config.openaiKey) return null;
+  const attempts: Array<{ model: string; size: string }> = [
+    { model: 'gpt-image-1', size: '1024x1536' },
+    { model: 'dall-e-3', size: '1024x1792' },
+  ];
+  for (const a of attempts) {
+    try {
+      console.log(`[produce] rendering via OpenAI ${a.model}…`);
+      const res = await fetch('https://api.openai.com/v1/images/generations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.openaiKey}` },
+        body: JSON.stringify({ model: a.model, prompt: prompt.slice(0, 3800), size: a.size, n: 1 }),
+        signal: AbortSignal.timeout(120_000),
+      });
+      if (!res.ok) {
+        console.warn(`[produce] OpenAI ${a.model} ${res.status}: ${(await res.text()).slice(0, 140)}`);
+        continue;
+      }
+      const d = (await res.json()) as { data?: Array<{ b64_json?: string; url?: string }> };
+      const item = d.data?.[0];
+      if (item?.b64_json) return { buffer: Buffer.from(item.b64_json, 'base64'), model: a.model };
+      if (item?.url) {
+        const img = await fetch(item.url, { signal: AbortSignal.timeout(60_000) });
+        if (img.ok) return { buffer: Buffer.from(await img.arrayBuffer()), model: a.model };
+      }
+    } catch (e) {
+      console.warn(`[produce] OpenAI ${a.model} failed:`, (e as Error).message?.slice(0, 140));
+    }
+  }
+  return null;
+}
+
+/** Render chain: Flux (best) → OpenAI (the shrug). Returns image bytes + model. */
+async function renderImage(prompt: string): Promise<{ buffer: Buffer; model: string } | null> {
+  return (await renderViaFlux(prompt)) ?? (await renderViaOpenAI(prompt));
 }
 
 async function main() {
@@ -71,17 +108,10 @@ async function main() {
   console.log(`  prompt: ${prompt.slice(0, 110)}…`);
   const rendered = await renderImage(prompt);
   if (!rendered) {
-    console.error('render failed on all models');
+    console.error('render failed on all providers (Flux + OpenAI)');
     process.exit(1);
   }
-
-  // Fetch the bytes and write the real file.
-  const res = await fetch(rendered.url, { signal: AbortSignal.timeout(60_000) });
-  if (!res.ok) {
-    console.error(`fetch render failed: ${res.status}`);
-    process.exit(1);
-  }
-  const bytes = Buffer.from(await res.arrayBuffer());
+  const bytes = rendered.buffer;
   mkdirSync(ASSETS_DIR, { recursive: true });
   const file = `${vertical}.jpg`;
   writeFileSync(join(ASSETS_DIR, file), bytes);
