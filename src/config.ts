@@ -29,6 +29,10 @@ export const config = {
   brightDataToken: process.env.BRIGHTDATA_API_TOKEN?.trim() || '',
   brightDataZone: process.env.BRIGHTDATA_ZONE?.trim() || '',
 
+  // Atuona Producer — image render via Replicate/Flux (the fleet's proven path)
+  replicateToken: process.env.REPLICATE_API_TOKEN?.trim() || '',
+  fluxModel: process.env.WHITESPACE_FLUX_MODEL?.trim() || 'black-forest-labs/flux-1.1-pro',
+
   // Server
   port: num(process.env.PORT, 8095),
 

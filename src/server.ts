@@ -23,6 +23,8 @@ const DATA_DIR = join(__dirname, '..', 'data');
 const app = express();
 app.disable('x-powered-by');
 app.use(express.static(PUBLIC_DIR));
+// Generated creative assets (Atuona Producer output) — served for the dashboard.
+app.use('/assets', express.static(join(DATA_DIR, 'assets')));
 
 app.get('/healthz', (_req, res) => {
   res.json({

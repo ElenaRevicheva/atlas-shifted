@@ -16,13 +16,15 @@
     "classify": "node dist/classify.js",
     "brief": "node dist/brief.js",
     "concept": "node dist/concept.js",
+    "produce": "node dist/produce.js",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
     "dotenv": "^16.4.5",
     "express": "^4.21.2",
-    "groq-sdk": "^0.9.1"
+    "groq-sdk": "^0.9.1",
+    "replicate": "^1.0.1"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
