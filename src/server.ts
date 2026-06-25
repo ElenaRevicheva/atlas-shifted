@@ -9,6 +9,8 @@
 import express from 'express';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { DatabaseSync } from 'node:sqlite';
+import { existsSync, readFileSync } from 'node:fs';
 import { config, hasBrightData, hasAnthropic, hasAnyLlm } from './config.js';
 import { runWhitespace } from './agent.js';
 import { breakerState } from './llm.js';
@@ -16,6 +18,7 @@ import type { RunEvent, RunMode } from './types.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = join(__dirname, '..', 'public');
+const DATA_DIR = join(__dirname, '..', 'data');
 
 const app = express();
 app.disable('x-powered-by');
@@ -30,6 +33,37 @@ app.get('/healthz', (_req, res) => {
     maxCreatives: config.maxCreatives,
     breaker: breakerState(),
   });
+});
+
+/** Atlas dashboard data: the radar board + daily brief + generated concepts. */
+app.get('/api/atlas', (_req, res) => {
+  const out: Record<string, unknown> = { ok: true, board: [], brief: null, concepts: {}, snapshot_date: null, total_rows: 0, distinct_days: 0 };
+  try {
+    const sqlitePath = join(DATA_DIR, 'radar.sqlite');
+    if (existsSync(sqlitePath)) {
+      const db = new DatabaseSync(sqlitePath);
+      const latest = (db.prepare('SELECT MAX(snapshot_date) d FROM angle_daily_agg').get() as { d: string } | undefined)?.d ?? null;
+      out.snapshot_date = latest;
+      out.total_rows = (db.prepare('SELECT COUNT(*) c FROM angle_snapshots').get() as { c: number }).c;
+      out.distinct_days = (db.prepare('SELECT COUNT(DISTINCT snapshot_date) c FROM angle_snapshots').get() as { c: number }).c;
+      const rows = db.prepare('SELECT * FROM angle_daily_agg WHERE snapshot_date=? ORDER BY vertical, window_score DESC').all(latest) as Array<Record<string, unknown>>;
+      const byV: Record<string, Array<Record<string, unknown>>> = {};
+      for (const r of rows) (byV[r.vertical as string] ??= []).push(r);
+      out.board = Object.entries(byV).map(([vertical, angles]) => ({ vertical, angles }));
+      db.close();
+    }
+  } catch (e) {
+    out.board_error = (e as Error).message;
+  }
+  try {
+    const p = join(DATA_DIR, 'brief.json');
+    if (existsSync(p)) out.brief = JSON.parse(readFileSync(p, 'utf8'));
+  } catch { /* ignore */ }
+  try {
+    const p = join(DATA_DIR, 'concepts.json');
+    if (existsSync(p)) out.concepts = JSON.parse(readFileSync(p, 'utf8'));
+  } catch { /* ignore */ }
+  res.json(out);
 });
 
 app.get('/api/run', async (req, res) => {
