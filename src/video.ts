@@ -15,6 +15,7 @@
  * Run:  node dist/video.js                 (defaults to expat_language)
  *       node dist/video.js auto_insurance
  */
+import 'dotenv/config'; // CRITICAL: this module reads process.env directly — without this, every API key is undefined and providers skip silently.
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
