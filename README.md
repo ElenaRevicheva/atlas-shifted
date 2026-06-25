@@ -1,4 +1,4 @@
-# Atlas AIPA — autonomous marketing strategist
+# Atlas Shifted AIPA — autonomous marketing strategist
 
 > **Live demo:** https://webhook.aideazz.xyz/whitespace/atlas.html
 > **On-demand whitespace finder:** https://webhook.aideazz.xyz/whitespace/
