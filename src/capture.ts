@@ -31,13 +31,22 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = join(__dirname, '..', 'data');
 const JSONL = join(DATA_DIR, 'captures.jsonl');
 
-/** Seed verticals — the judge's affiliate world + AIdeazz dogfood (expat_language). */
-const SEED_VERTICALS: Array<{ id: string; query: string }> = [
-  { id: 'auto_insurance', query: 'auto insurance' },
-  { id: 'solar', query: 'solar panels' },
-  { id: 'debt_finance', query: 'debt relief' },
-  { id: 'health_supplements', query: 'health supplement' },
-  { id: 'expat_language', query: 'learn spanish' },
+/**
+ * Seed verticals — the judge's affiliate world + AIdeazz dogfood (expat_language).
+ * `queries` is frozen per vertical (like the taxonomy): it defines the population
+ * we measure, so changing it mid-series would corrupt velocity. expat_language
+ * uses EspaLuz's real ICP keywords (relocators with language anxiety), not generic
+ * "learn spanish", so the dogfood signal is about the market EspaLuz actually serves.
+ */
+const SEED_VERTICALS: Array<{ id: string; queries: string[] }> = [
+  { id: 'auto_insurance', queries: ['auto insurance'] },
+  { id: 'solar', queries: ['solar panels'] },
+  { id: 'debt_finance', queries: ['debt relief'] },
+  { id: 'health_supplements', queries: ['health supplement'] },
+  {
+    id: 'expat_language',
+    queries: ['learn spanish', 'move abroad spanish', 'spanish for expats', 'relocation language'],
+  },
 ];
 
 const META_LIBRARY = (q: string) =>
@@ -128,51 +137,56 @@ function existingKeysForDate(snapshotDate: string): Set<string> {
 }
 
 async function captureVertical(
-  v: { id: string; query: string },
+  v: { id: string; queries: string[] },
   snapshotDate: string,
   seenKeys: Set<string>,
 ): Promise<{ found: number; written: number; dupes: number }> {
-  const url = META_LIBRARY(v.query);
-  const html = (await bdScrapingBrowserFetch(url)) || (await bdFetch(url));
-  if (!html) {
-    console.warn(`  [${v.id}] no HTML from Bright Data`);
-    return { found: 0, written: 0, dupes: 0 };
-  }
-  const ads = (await extractAds(html, v.id)).filter((a) => a && typeof a.copy === 'string' && a.copy.trim().length > 8);
-
+  let found = 0;
   let written = 0;
   let dupes = 0;
   const capturedAt = new Date().toISOString();
-  for (const a of ads) {
-    const advertiserName = (a.advertiser || 'unknown').toString().slice(0, 120);
-    const copy = a.copy.toString().slice(0, 1000);
-    const advertiser_ref = norm(advertiserName) || 'unknown';
-    const ad_ref = adRef(advertiserName, copy);
-    const key = `${advertiser_ref}::${ad_ref}::${snapshotDate}`;
-    if (seenKeys.has(key)) {
-      dupes++;
+
+  for (const query of v.queries) {
+    const url = META_LIBRARY(query);
+    const html = (await bdScrapingBrowserFetch(url)) || (await bdFetch(url));
+    if (!html) {
+      console.warn(`  [${v.id}] no HTML for query "${query}"`);
       continue;
     }
-    seenKeys.add(key);
-    const rec: CaptureRecord = {
-      snapshot_date: snapshotDate,
-      captured_at: capturedAt,
-      vertical: v.id,
-      platform: 'meta',
-      query: v.query,
-      advertiser_ref,
-      advertiser_name: advertiserName,
-      ad_ref,
-      ad_text: copy,
-      landing_url: a.landingUrl?.toString().slice(0, 500) || null,
-      activity_signal: a.activitySignal?.toString().slice(0, 200) || null,
-      started_running: a.startedRunning?.toString().slice(0, 80) || null,
-      source_url: url,
-    };
-    appendFileSync(JSONL, JSON.stringify(rec) + '\n');
-    written++;
+    const ads = (await extractAds(html, v.id)).filter((a) => a && typeof a.copy === 'string' && a.copy.trim().length > 8);
+    found += ads.length;
+
+    for (const a of ads) {
+      const advertiserName = (a.advertiser || 'unknown').toString().slice(0, 120);
+      const copy = a.copy.toString().slice(0, 1000);
+      const advertiser_ref = norm(advertiserName) || 'unknown';
+      const ad_ref = adRef(advertiserName, copy);
+      const key = `${advertiser_ref}::${ad_ref}::${snapshotDate}`;
+      if (seenKeys.has(key)) {
+        dupes++;
+        continue;
+      }
+      seenKeys.add(key);
+      const rec: CaptureRecord = {
+        snapshot_date: snapshotDate,
+        captured_at: capturedAt,
+        vertical: v.id,
+        platform: 'meta',
+        query,
+        advertiser_ref,
+        advertiser_name: advertiserName,
+        ad_ref,
+        ad_text: copy,
+        landing_url: a.landingUrl?.toString().slice(0, 500) || null,
+        activity_signal: a.activitySignal?.toString().slice(0, 200) || null,
+        started_running: a.startedRunning?.toString().slice(0, 80) || null,
+        source_url: url,
+      };
+      appendFileSync(JSONL, JSON.stringify(rec) + '\n');
+      written++;
+    }
   }
-  return { found: ads.length, written, dupes };
+  return { found, written, dupes };
 }
 
 async function main() {

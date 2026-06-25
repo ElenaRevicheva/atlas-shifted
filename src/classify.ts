@@ -130,6 +130,8 @@ interface Snapshot {
   first_seen_date: string | null;
   raw_text_hash: string;
   confidence: number;
+  advertiser_name: string;
+  ad_text: string;
 }
 
 async function main() {
@@ -169,6 +171,8 @@ async function main() {
       first_seen_date: r.started_running,
       raw_text_hash: createHash('sha1').update(r.ad_text).digest('hex').slice(0, 16),
       confidence: Math.round(bestSim * 1000) / 1000,
+      advertiser_name: r.advertiser_name,
+      ad_text: r.ad_text,
     };
   });
 
@@ -180,7 +184,8 @@ async function main() {
       snapshot_date TEXT, vertical TEXT, platform TEXT,
       angle_id TEXT, angle_version TEXT,
       advertiser_ref TEXT, ad_ref_url TEXT,
-      first_seen_date TEXT, raw_text_hash TEXT, confidence REAL
+      first_seen_date TEXT, raw_text_hash TEXT, confidence REAL,
+      advertiser_name TEXT, ad_text TEXT
     );
     CREATE TABLE angle_daily_agg (
       snapshot_date TEXT, vertical TEXT, platform TEXT,
@@ -200,10 +205,10 @@ async function main() {
   `);
 
   const insSnap = db.prepare(
-    `INSERT INTO angle_snapshots VALUES (?,?,?,?,?,?,?,?,?,?)`,
+    `INSERT INTO angle_snapshots VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
   );
   for (const s of snapshots) {
-    insSnap.run(s.snapshot_date, s.vertical, s.platform, s.angle_id, ANGLE_VERSION, s.advertiser_ref, s.ad_ref_url, s.first_seen_date, s.raw_text_hash, s.confidence);
+    insSnap.run(s.snapshot_date, s.vertical, s.platform, s.angle_id, ANGLE_VERSION, s.advertiser_ref, s.ad_ref_url, s.first_seen_date, s.raw_text_hash, s.confidence, s.advertiser_name, s.ad_text);
   }
 
   // ── Aggregate per (date, vertical) ──────────────────────────────────────

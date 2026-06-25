@@ -15,6 +15,7 @@
     "capture": "node dist/capture.js",
     "classify": "node dist/classify.js",
     "brief": "node dist/brief.js",
+    "concept": "node dist/concept.js",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
