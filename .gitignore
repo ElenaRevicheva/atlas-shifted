@@ -6,3 +6,4 @@ dist/
 .cache/
 runs/
 .DS_Store
+data/

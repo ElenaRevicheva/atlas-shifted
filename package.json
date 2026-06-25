@@ -12,6 +12,7 @@
     "start": "node dist/server.js",
     "dev": "tsc -p tsconfig.json && node dist/server.js",
     "cli": "tsc -p tsconfig.json && node dist/cli.js",
+    "capture": "node dist/capture.js",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
