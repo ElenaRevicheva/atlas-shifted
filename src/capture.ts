@@ -54,6 +54,12 @@ const META_LIBRARY = (q: string) =>
     q,
   )}&search_type=keyword_unordered`;
 
+// Google Ads Transparency Center — public, DSA/transparency-mandated. Best-effort
+// (JS-heavy, advertiser-centric), so we attempt one query per vertical and never
+// let a thin Google result block the Meta spine.
+const GOOGLE_TRANSPARENCY = (q: string) =>
+  `https://adstransparency.google.com/?region=US&q=${encodeURIComponent(q)}`;
+
 /** Panama (UTC-5, no DST) calendar date — the snapshot day-boundary. */
 function panamaDate(d = new Date()): string {
   return new Intl.DateTimeFormat('en-CA', {
@@ -84,7 +90,7 @@ interface CaptureRecord {
   snapshot_date: string;
   captured_at: string;
   vertical: string;
-  platform: 'meta';
+  platform: 'meta' | 'google';
   query: string;
   advertiser_ref: string;
   advertiser_name: string;
@@ -96,11 +102,11 @@ interface CaptureRecord {
   source_url: string;
 }
 
-/** Extract as many ads as possible from the scraped Ad Library page (over-capture). */
-async function extractAds(rawHtml: string, vertical: string): Promise<RawAd[]> {
+/** Extract as many ads as possible from a scraped ad-library page (over-capture). */
+async function extractAds(rawHtml: string, vertical: string, sourceName: string): Promise<RawAd[]> {
   const text = htmlToText(rawHtml, 30_000);
   const { value } = await llmJson<RawAd[]>(
-    `Extract EVERY distinct advertisement you can find in this scraped Meta Ad Library page for the vertical "${vertical}".
+    `Extract EVERY distinct advertisement you can find in this scraped ${sourceName} page for the vertical "${vertical}".
 Return up to 40 ads. For each, a JSON object:
 - advertiser: brand/page name running it (null if not visible)
 - copy: the ad's primary text / headline / caption (the persuasive words)
@@ -146,15 +152,22 @@ async function captureVertical(
   let dupes = 0;
   const capturedAt = new Date().toISOString();
 
-  for (const query of v.queries) {
-    const url = META_LIBRARY(query);
-    const html = (await bdScrapingBrowserFetch(url)) || (await bdFetch(url));
+  // Sources: Meta spine (all queries) + Google Ads Transparency (best-effort, first
+  // query only so a slow/thin Google scrape never blocks the Meta capture).
+  const sources: Array<{ platform: 'meta' | 'google'; name: string; query: string; url: string }> = [
+    ...v.queries.map((q) => ({ platform: 'meta' as const, name: 'Meta Ad Library', query: q, url: META_LIBRARY(q) })),
+    ...(v.queries[0] ? [{ platform: 'google' as const, name: 'Google Ads Transparency Center', query: v.queries[0], url: GOOGLE_TRANSPARENCY(v.queries[0]) }] : []),
+  ];
+
+  for (const src of sources) {
+    const html = (await bdScrapingBrowserFetch(src.url)) || (await bdFetch(src.url));
     if (!html) {
-      console.warn(`  [${v.id}] no HTML for query "${query}"`);
+      console.warn(`  [${v.id}] no HTML for ${src.platform} "${src.query}"`);
       continue;
     }
-    const ads = (await extractAds(html, v.id)).filter((a) => a && typeof a.copy === 'string' && a.copy.trim().length > 8);
+    const ads = (await extractAds(html, v.id, src.name)).filter((a) => a && typeof a.copy === 'string' && a.copy.trim().length > 8);
     found += ads.length;
+    if (src.platform === 'google') console.log(`  [${v.id}] google: ${ads.length} ads extracted`);
 
     for (const a of ads) {
       const advertiserName = (a.advertiser || 'unknown').toString().slice(0, 120);
@@ -171,8 +184,8 @@ async function captureVertical(
         snapshot_date: snapshotDate,
         captured_at: capturedAt,
         vertical: v.id,
-        platform: 'meta',
-        query,
+        platform: src.platform,
+        query: src.query,
         advertiser_ref,
         advertiser_name: advertiserName,
         ad_ref,
@@ -180,7 +193,7 @@ async function captureVertical(
         landing_url: a.landingUrl?.toString().slice(0, 500) || null,
         activity_signal: a.activitySignal?.toString().slice(0, 200) || null,
         started_running: a.startedRunning?.toString().slice(0, 80) || null,
-        source_url: url,
+        source_url: src.url,
       };
       appendFileSync(JSONL, JSON.stringify(rec) + '\n');
       written++;

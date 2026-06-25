@@ -242,6 +242,7 @@ async function main() {
 
   for (const [gk, rowsG] of groups) {
     const [snapshot_date, vertical] = gk.split('|') as [string, string];
+    const platforms = [...new Set(rowsG.map((s) => s.platform))].sort().join('+'); // e.g. "google+meta"
 
     const angleAdv = new Map<string, Set<string>>();           // angle -> advertisers
     const firstLaunch = new Map<string, string>();             // angle|adv -> earliest launch date
@@ -331,7 +332,7 @@ async function main() {
       const windowScore = Math.round((0.4 * vel + 0.4 * inverseSat + 0.2 * adjacency) * 1000) / 1000;
 
       insAgg.run(
-        snapshot_date, vertical, 'meta', angle, ANGLE_VERSION,
+        snapshot_date, vertical, platforms, angle, ANGLE_VERSION,
         distinct, observed7d.get(angle) ?? null, observedVel.get(angle) ?? null,
         recentLaunch.get(angle) ?? 0, Math.round((launchShare.get(angle) ?? 0) * 1000) / 1000,
         Math.round(saturation * 1000) / 1000, Math.round(adjacency * 1000) / 1000,
