@@ -16,7 +16,7 @@ import { config } from './config.js';
 
 export interface LlmAnswer {
   text: string;
-  provider: 'claude' | 'groq' | 'openai' | 'none';
+  provider: 'claude' | 'groq' | 'openai' | 'grok' | 'none';
 }
 
 const sysWrap = (system: string | undefined, prompt: string): string =>
@@ -125,7 +125,41 @@ async function openaiText(prompt: string, system: string | undefined, maxTokens:
   }
 }
 
-/** Resilient text completion: Claude → Groq → OpenAI. */
+/** Grok (xAI) text completion — OpenAI-compatible REST. The 4th, final tier:
+ *  catches a run even if BOTH Groq and OpenAI are down. Exported so a probe can
+ *  prove it green (roadmap rule: Grok claimed only once it's green in the logs). */
+export async function grokText(prompt: string, system: string | undefined, maxTokens: number): Promise<string> {
+  if (!config.xaiKey) return '';
+  try {
+    const res = await fetch('https://api.x.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.xaiKey}` },
+      body: JSON.stringify({
+        model: config.grokModel,
+        messages: [
+          ...(system ? [{ role: 'system', content: system }] : []),
+          { role: 'user', content: prompt },
+        ],
+        max_tokens: Math.min(maxTokens, 8000),
+        temperature: 0.3,
+      }),
+      signal: AbortSignal.timeout(90_000),
+    });
+    if (!res.ok) {
+      console.warn(`[llm] Grok ${res.status}: ${(await res.text()).slice(0, 120)}`);
+      return '';
+    }
+    const d = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
+    return (d.choices?.[0]?.message?.content || '').trim();
+  } catch (e) {
+    console.warn('[llm] Grok failed:', (e as Error).message?.slice(0, 140));
+    return '';
+  }
+}
+
+/** Resilient text completion: Claude → Groq → OpenAI → Grok (4-tier, any single
+ *  outage survivable). OpenAI stays the primary backstop; Grok is the final net so
+ *  a Groq+OpenAI double failure still completes. */
 export async function llmText(
   prompt: string,
   opts: { system?: string; maxTokens?: number } = {},
@@ -137,6 +171,8 @@ export async function llmText(
   if (g) return { text: g, provider: 'groq' };
   const o = await openaiText(prompt, opts.system, maxTokens);
   if (o) return { text: o, provider: 'openai' };
+  const x = await grokText(prompt, opts.system, maxTokens);
+  if (x) return { text: x, provider: 'grok' };
   return { text: '', provider: 'none' };
 }
 

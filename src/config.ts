@@ -22,6 +22,8 @@ export const config = {
   claudeVisionModel: process.env.WHITESPACE_CLAUDE_VISION_MODEL?.trim() || 'claude-sonnet-4-6',
   groqModel: process.env.WHITESPACE_GROQ_MODEL?.trim() || 'llama-3.3-70b-versatile',
   openaiModel: process.env.WHITESPACE_OPENAI_MODEL?.trim() || 'gpt-4o-mini',
+  xaiKey: process.env.XAI_API_KEY?.trim() || '',
+  grokModel: process.env.WHITESPACE_GROK_MODEL?.trim() || 'grok-3',
 
   // Bright Data — live public ad-market recon
   brightDataToken: process.env.BRIGHTDATA_API_TOKEN?.trim() || '',
@@ -38,4 +40,5 @@ export const config = {
 
 export const hasBrightData = (): boolean => !!(config.brightDataToken && config.brightDataZone);
 export const hasAnthropic = (): boolean => !!config.anthropicKey;
-export const hasAnyLlm = (): boolean => !!(config.anthropicKey || config.groqKey || config.openaiKey);
+export const hasAnyLlm = (): boolean =>
+  !!(config.anthropicKey || config.groqKey || config.openaiKey || config.xaiKey);
