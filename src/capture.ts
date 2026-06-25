@@ -157,7 +157,10 @@ async function captureVertical(
   // query only so a slow/thin Google scrape never blocks the Meta capture).
   const sources: Array<{ platform: 'meta' | 'google'; name: string; query: string; url: string }> = [
     ...v.queries.map((q) => ({ platform: 'meta' as const, name: 'Meta Ad Library', query: q, url: META_LIBRARY(q) })),
-    ...(v.queries[0] ? [{ platform: 'google' as const, name: 'Google Search Ads', query: v.queries[0], url: GOOGLE_SEARCH(v.queries[0]) }] : []),
+    // Comparison-intent query surfaces Google's paid block far more reliably than
+    // the bare keyword (empirically: "compare auto insurance" returns ads, "auto
+    // insurance" often returns none). Still best-effort — Google's ad block is auction-timed.
+    ...(v.queries[0] ? [{ platform: 'google' as const, name: 'Google Search Ads', query: `compare ${v.queries[0]}`, url: GOOGLE_SEARCH(`compare ${v.queries[0]}`) }] : []),
   ];
 
   for (const src of sources) {
