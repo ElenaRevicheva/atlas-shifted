@@ -159,24 +159,24 @@ export async function bdSerpAds(query: string, opts: { num?: number; gl?: string
     } catch {
       return [];
     }
-    // Bright Data SERP exposes paid ads under a few shapes; gather them all.
-    let raw: any[] = [];
-    if (Array.isArray(parsed.ads)) raw = parsed.ads;
-    else if (parsed.ads && (parsed.ads.top || parsed.ads.bottom)) raw = [...(parsed.ads.top || []), ...(parsed.ads.bottom || [])];
-    else if (Array.isArray(parsed.ads_results)) raw = parsed.ads_results;
+    // Bright Data SERP exposes paid ads as top_ads / bottom_ads (+ shopping).
+    const raw: any[] = [
+      ...(Array.isArray(parsed.top_ads) ? parsed.top_ads : []),
+      ...(Array.isArray(parsed.bottom_ads) ? parsed.bottom_ads : []),
+      ...(Array.isArray(parsed.ads) ? parsed.ads : []),
+      ...(Array.isArray(parsed.shopping) ? parsed.shopping : []),
+    ];
     return raw
       .map((a: any) => {
-        const link = a.link || a.url || a.display_link || '';
-        let host = a.advertiser || a.source || a.display_link || '';
-        if (!host && link) {
-          try {
-            host = new URL(link.startsWith('http') ? link : `https://${link}`).hostname.replace(/^www\./, '');
-          } catch {
-            host = '';
-          }
+        const link = a.link || a.url || '';
+        let host = String(a.display_link || a.advertiser || a.source || link || '');
+        try {
+          host = new URL(host.startsWith('http') ? host : `https://${host}`).hostname.replace(/^www\./, '');
+        } catch {
+          /* keep raw host string */
         }
         return {
-          advertiser: String(host || 'unknown').slice(0, 80),
+          advertiser: (host || 'unknown').slice(0, 80),
           title: String(a.title || '').slice(0, 200),
           description: String(a.description || a.snippet || '').slice(0, 400),
           link: String(link).slice(0, 400),
