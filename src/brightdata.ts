@@ -119,6 +119,76 @@ export async function bdSerpSearch(
   }
 }
 
+export interface BDSerpAd {
+  advertiser: string;
+  title: string;
+  description: string;
+  link: string;
+}
+
+/**
+ * Google SEARCH ads (paid results) for a query, via the Bright Data SERP API
+ * (brd_json=1). This is the reliable Google signal: the Ads Transparency Center
+ * is a JS SPA that yields nothing to a static scrape, but the live SERP exposes
+ * the actual advertisers bidding on the vertical right now. Returns [] on failure.
+ */
+export async function bdSerpAds(query: string, opts: { num?: number; gl?: string; hl?: string } = {}): Promise<BDSerpAd[]> {
+  if (!hasBrightData()) return [];
+  const params = new URLSearchParams({
+    q: query,
+    hl: opts.hl ?? 'en',
+    gl: opts.gl ?? 'us',
+    num: String(opts.num ?? 20),
+    brd_json: '1',
+  });
+  const url = `https://www.google.com/search?${params.toString()}`;
+  try {
+    const res = await fetch(BD_API, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${config.brightDataToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ zone: config.brightDataZone, url, format: 'raw' }),
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (!res.ok) {
+      console.warn(`[bd-serp-ads] ${query.slice(0, 40)} → ${res.status}`);
+      return [];
+    }
+    let parsed: any;
+    try {
+      parsed = JSON.parse(await res.text());
+    } catch {
+      return [];
+    }
+    // Bright Data SERP exposes paid ads under a few shapes; gather them all.
+    let raw: any[] = [];
+    if (Array.isArray(parsed.ads)) raw = parsed.ads;
+    else if (parsed.ads && (parsed.ads.top || parsed.ads.bottom)) raw = [...(parsed.ads.top || []), ...(parsed.ads.bottom || [])];
+    else if (Array.isArray(parsed.ads_results)) raw = parsed.ads_results;
+    return raw
+      .map((a: any) => {
+        const link = a.link || a.url || a.display_link || '';
+        let host = a.advertiser || a.source || a.display_link || '';
+        if (!host && link) {
+          try {
+            host = new URL(link.startsWith('http') ? link : `https://${link}`).hostname.replace(/^www\./, '');
+          } catch {
+            host = '';
+          }
+        }
+        return {
+          advertiser: String(host || 'unknown').slice(0, 80),
+          title: String(a.title || '').slice(0, 200),
+          description: String(a.description || a.snippet || '').slice(0, 400),
+          link: String(link).slice(0, 400),
+        };
+      })
+      .filter((a: BDSerpAd) => a.title || a.description);
+  } catch (e) {
+    console.warn(`[bd-serp-ads] error "${query.slice(0, 40)}":`, (e as Error).message);
+    return [];
+  }
+}
+
 /** Strip tags + collapse whitespace; cap length for token efficiency. */
 export function htmlToText(html: string, cap = 12_000): string {
   return html

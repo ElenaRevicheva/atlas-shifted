@@ -24,7 +24,7 @@ import { existsSync, mkdirSync, readFileSync, appendFileSync, statSync } from 'n
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { hasBrightData } from './config.js';
-import { bdScrapingBrowserFetch, bdFetch, htmlToText } from './brightdata.js';
+import { bdScrapingBrowserFetch, bdFetch, bdSerpAds, htmlToText } from './brightdata.js';
 import { llmJson } from './llm.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -57,8 +57,9 @@ const META_LIBRARY = (q: string) =>
 // Google Ads Transparency Center — public, DSA/transparency-mandated. Best-effort
 // (JS-heavy, advertiser-centric), so we attempt one query per vertical and never
 // let a thin Google result block the Meta spine.
-const GOOGLE_TRANSPARENCY = (q: string) =>
-  `https://adstransparency.google.com/?region=US&q=${encodeURIComponent(q)}`;
+// Google signal = live SEARCH ads via the SERP API (the Transparency Center is a
+// JS SPA that yields nothing to a static scrape). The search URL is the evidence link.
+const GOOGLE_SEARCH = (q: string) => `https://www.google.com/search?q=${encodeURIComponent(q)}`;
 
 /** Panama (UTC-5, no DST) calendar date — the snapshot day-boundary. */
 function panamaDate(d = new Date()): string {
@@ -156,18 +157,31 @@ async function captureVertical(
   // query only so a slow/thin Google scrape never blocks the Meta capture).
   const sources: Array<{ platform: 'meta' | 'google'; name: string; query: string; url: string }> = [
     ...v.queries.map((q) => ({ platform: 'meta' as const, name: 'Meta Ad Library', query: q, url: META_LIBRARY(q) })),
-    ...(v.queries[0] ? [{ platform: 'google' as const, name: 'Google Ads Transparency Center', query: v.queries[0], url: GOOGLE_TRANSPARENCY(v.queries[0]) }] : []),
+    ...(v.queries[0] ? [{ platform: 'google' as const, name: 'Google Search Ads', query: v.queries[0], url: GOOGLE_SEARCH(v.queries[0]) }] : []),
   ];
 
   for (const src of sources) {
-    const html = (await bdScrapingBrowserFetch(src.url)) || (await bdFetch(src.url));
-    if (!html) {
-      console.warn(`  [${v.id}] no HTML for ${src.platform} "${src.query}"`);
-      continue;
+    let ads: RawAd[];
+    if (src.platform === 'google') {
+      const serp = await bdSerpAds(src.query).catch(() => []);
+      ads = serp.map((s) => ({
+        advertiser: s.advertiser,
+        copy: [s.title, s.description].filter(Boolean).join(' — '),
+        landingUrl: s.link || null,
+        activitySignal: 'Google search ad',
+        startedRunning: null,
+      }));
+      console.log(`  [${v.id}] google: ${ads.length} search ads`);
+    } else {
+      const html = (await bdScrapingBrowserFetch(src.url)) || (await bdFetch(src.url));
+      if (!html) {
+        console.warn(`  [${v.id}] no HTML for ${src.platform} "${src.query}"`);
+        continue;
+      }
+      ads = await extractAds(html, v.id, src.name);
     }
-    const ads = (await extractAds(html, v.id, src.name)).filter((a) => a && typeof a.copy === 'string' && a.copy.trim().length > 8);
+    ads = ads.filter((a) => a && typeof a.copy === 'string' && a.copy.trim().length > 8);
     found += ads.length;
-    if (src.platform === 'google') console.log(`  [${v.id}] google: ${ads.length} ads extracted`);
 
     for (const a of ads) {
       const advertiserName = (a.advertiser || 'unknown').toString().slice(0, 120);
