@@ -318,10 +318,14 @@ async function main() {
 
       const heating = vel >= HEAT;
       const crowded = saturation >= 0.6;
+      // Thin-sample guard: never call an actionable ENTER on a lane we've seen
+      // fewer than 2 advertisers in — a single-advertiser "open window" is noise,
+      // not signal. Defensive states (AVOID/WATCH) still apply on their own evidence.
+      const thin = distinct < 2;
       let state = 'STABLE';
       if (heating && crowded) state = 'AVOID';
       else if (heating) state = 'WATCH';
-      else if (inverseSat >= 0.5 && adjacency >= 0.3) state = 'ENTER';
+      else if (!thin && inverseSat >= 0.5 && adjacency >= 0.3) state = 'ENTER';
 
       // documented heuristic: 40% momentum + 40% open-lane + 20% adjacency-to-demand.
       const windowScore = Math.round((0.4 * vel + 0.4 * inverseSat + 0.2 * adjacency) * 1000) / 1000;
