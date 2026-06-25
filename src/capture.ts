@@ -166,7 +166,12 @@ async function captureVertical(
   for (const src of sources) {
     let ads: RawAd[];
     if (src.platform === 'google') {
-      const serp = await bdSerpAds(src.query).catch(() => []);
+      // Google's paid block is auction-timed and intermittently returned — retry
+      // a few times so we catch it when present (best-effort by design).
+      let serp: Awaited<ReturnType<typeof bdSerpAds>> = [];
+      for (let attempt = 0; attempt < 3 && serp.length === 0; attempt++) {
+        serp = await bdSerpAds(src.query).catch(() => []);
+      }
       ads = serp.map((s) => ({
         advertiser: s.advertiser,
         copy: [s.title, s.description].filter(Boolean).join(' — '),
