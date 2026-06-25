@@ -166,7 +166,14 @@ Craft ONE fresh creative concept for the open **${move.angle_id}** angle${brand 
       /* start fresh */
     }
   }
-  all[vertical] = out;
+  // Preserve any already-rendered asset/video so the daily concept re-run doesn't
+  // wipe generated creative (produce/video merge into this same entry).
+  const prev = (all[vertical] || {}) as { asset?: unknown; video?: unknown };
+  all[vertical] = {
+    ...out,
+    ...(prev.asset ? { asset: prev.asset } : {}),
+    ...(prev.video ? { video: prev.video } : {}),
+  };
   writeFileSync(OUT, JSON.stringify(all, null, 2));
 
   console.log(`\n══════ ATLAS CREATIVE CONCEPT · ${vertical} · ${latest} ══════`);

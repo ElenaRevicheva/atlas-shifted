@@ -124,7 +124,7 @@ function render(d){
     return '<div class="concept">'+
       '<div class="k">'+esc(c.vertical)+' · open window: '+esc(c.move.angle)+' ('+c.move.score+'/100)'+(c.heating_lane?(' · adjacent to heating '+esc(c.heating_lane)):'')+'</div>'+
       '<h3>'+esc(cc.concept_name||'—')+'</h3><div class="em">owns: '+esc(cc.emotion||'')+'</div>'+
-      (c.asset&&c.asset.image_file?('<img class="casset" src="'+esc(c.asset.image_file)+'" alt="generated creative" loading="lazy">'):'')+
+      (c.video&&c.video.video_file?('<video class="casset" src="'+esc(c.video.video_file)+'" controls muted loop playsinline poster="'+esc((c.asset&&c.asset.image_file)||'')+'"></video><div class="ev">🎬 generated video via '+esc(c.video.model||'')+'</div>'):(c.asset&&c.asset.image_file?('<img class="casset" src="'+esc(c.asset.image_file)+'" alt="generated creative" loading="lazy">'):''))+
       '<div class="row"><b>Hook:</b> '+esc(cc.hook||'')+'</div>'+
       '<div class="row"><b>Headline:</b> '+esc(cc.headline||'')+'</div>'+
       '<div class="row"><b>Body:</b> '+esc(cc.primary_text||'')+'</div>'+
