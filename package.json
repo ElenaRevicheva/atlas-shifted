@@ -13,6 +13,7 @@
     "dev": "tsc -p tsconfig.json && node dist/server.js",
     "cli": "tsc -p tsconfig.json && node dist/cli.js",
     "capture": "node dist/capture.js",
+    "classify": "node dist/classify.js",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

@@ -308,6 +308,40 @@ export async function llmVision(
   return llmText(sysWrap(opts.system, prompt), { maxTokens });
 }
 
+/**
+ * OpenAI text embeddings (text-embedding-3-small). DETERMINISTIC — same text
+ * always maps to the same vector, which is exactly why the classifier uses
+ * embeddings instead of free-form LLM clustering: it makes angle assignment
+ * (and therefore velocity) stable run-over-run. Returns [] on failure.
+ * Batches internally to stay well under input limits.
+ */
+export async function embedBatch(texts: string[]): Promise<number[][]> {
+  if (!config.openaiKey || texts.length === 0) return [];
+  const out: number[][] = new Array(texts.length);
+  const CHUNK = 200;
+  for (let start = 0; start < texts.length; start += CHUNK) {
+    const slice = texts.slice(start, start + CHUNK).map((t) => t.slice(0, 6000) || ' ');
+    try {
+      const res = await fetch('https://api.openai.com/v1/embeddings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.openaiKey}` },
+        body: JSON.stringify({ model: 'text-embedding-3-small', input: slice }),
+        signal: AbortSignal.timeout(90_000),
+      });
+      if (!res.ok) {
+        console.warn(`[llm] embeddings ${res.status}: ${(await res.text()).slice(0, 120)}`);
+        return [];
+      }
+      const d = (await res.json()) as { data?: Array<{ embedding: number[]; index: number }> };
+      for (const item of d.data ?? []) out[start + item.index] = item.embedding;
+    } catch (e) {
+      console.warn('[llm] embeddings failed:', (e as Error).message?.slice(0, 140));
+      return [];
+    }
+  }
+  return out;
+}
+
 export function activeLlmLabel(): string {
   if (config.anthropicKey && !claudeDead) return `Claude (${config.claudeModel})`;
   if (config.groqKey && Date.now() >= groqCooldownUntil) return `Groq (${config.groqModel})`;
