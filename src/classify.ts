@@ -107,6 +107,19 @@ function addDays(date: string, days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+/** Parse Meta's "Started running on Dec 22, 2025" → "2025-12-22" (else null). */
+function parseStarted(s: string | null): string | null {
+  if (!s) return null;
+  const m = s.match(/([A-Za-z]{3,9})\s+(\d{1,2}),?\s+(\d{4})/);
+  if (!m) return null;
+  const d = new Date(`${m[1]} ${m[2]}, ${m[3]} UTC`);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
+}
+
+function daysBetween(a: string, b: string): number {
+  return Math.round((Date.parse(`${a}T00:00:00Z`) - Date.parse(`${b}T00:00:00Z`)) / 86_400_000);
+}
+
 interface Snapshot {
   snapshot_date: string;
   vertical: string;
@@ -173,10 +186,16 @@ async function main() {
       snapshot_date TEXT, vertical TEXT, platform TEXT,
       angle_id TEXT, angle_version TEXT,
       distinct_advertisers INTEGER,
-      new_entrants_7d INTEGER,
-      entry_velocity REAL,
-      window_state TEXT,
-      window_score REAL
+      new_entrants_7d INTEGER,        -- OBSERVED (present now, absent at t-7); null until a 7-day baseline exists
+      entry_velocity REAL,            -- observed entrants/day
+      recent_launch_30d INTEGER,      -- PROXY: advertisers whose earliest ad in this angle launched <=30d before snapshot (Meta start dates)
+      launch_share REAL,              -- recent_launch_30d / distinct_advertisers (fraction of lane that is freshly launched)
+      saturation REAL,                -- distinct / max-in-vertical (0..1)
+      adjacency REAL,                 -- co-occurrence strength to the hottest heating angle (0..1)
+      window_state TEXT,              -- ENTER | WATCH | AVOID | STABLE
+      window_score REAL,
+      signal_basis TEXT,              -- observed | launch_proxy | saturation_only
+      adjacency_note TEXT
     );
   `);
 
@@ -187,62 +206,130 @@ async function main() {
     insSnap.run(s.snapshot_date, s.vertical, s.platform, s.angle_id, ANGLE_VERSION, s.advertiser_ref, s.ad_ref_url, s.first_seen_date, s.raw_text_hash, s.confidence);
   }
 
-  // ── Aggregate: distinct advertisers + 7-day entrants + velocity + window ──
-  // advertiser sets keyed by date|vertical|angle, for entrant diffing.
+  // ── Aggregate per (date, vertical) ──────────────────────────────────────
+  // Signal stack, leading → lagging:
+  //   1. launch proxy  — fraction of a lane's advertisers whose ad LAUNCHED in the
+  //      last 30d (from Meta "Started running on" dates). Observable from ONE
+  //      snapshot, so motion shows immediately instead of waiting for day 7.
+  //   2. observed 7d   — advertisers present now, absent at t-7 (real once a 7-day
+  //      baseline exists ~Jul 1). Preferred over the proxy when available.
+  //   3. adjacency     — co-occurrence: a low-saturation lane whose advertisers also
+  //      run a HEATING lane is an open window adjacent to live demand.
+  const PROXY_DAYS = 30;
+
+  // global per date|vertical|angle advertiser sets, for the observed t-7 diff.
   const advByKey = new Map<string, Set<string>>();
   for (const s of snapshots) {
     const k = `${s.snapshot_date}|${s.vertical}|${s.angle_id}`;
     (advByKey.get(k) ?? advByKey.set(k, new Set()).get(k)!).add(s.advertiser_ref);
   }
 
-  // saturation reference: max distinct advertisers in any angle within a vertical/date.
-  const maxAdvByVerticalDate = new Map<string, number>();
-  for (const [k, set] of advByKey) {
-    const [date, vertical] = k.split('|');
-    const vk = `${date}|${vertical}`;
-    maxAdvByVerticalDate.set(vk, Math.max(maxAdvByVerticalDate.get(vk) ?? 0, set.size));
+  // group snapshots by date|vertical.
+  const groups = new Map<string, Snapshot[]>();
+  for (const s of snapshots) {
+    const gk = `${s.snapshot_date}|${s.vertical}`;
+    (groups.get(gk) ?? groups.set(gk, []).get(gk)!).push(s);
   }
 
-  const insAgg = db.prepare(
-    `INSERT INTO angle_daily_agg VALUES (?,?,?,?,?,?,?,?,?,?)`,
-  );
-
+  const insAgg = db.prepare(`INSERT INTO angle_daily_agg VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
   let aggRows = 0;
-  for (const [k, set] of advByKey) {
-    const [snapshot_date, vertical, angle_id] = k.split('|') as [string, string, string];
-    const distinct = set.size;
+  const HEAT = 0.4; // heating threshold on normalized velocity/launch-share
 
-    // 7-day entrants: advertisers present now, absent 7 days ago (same vertical/angle).
-    const priorKey = `${addDays(snapshot_date, -7)}|${vertical}|${angle_id}`;
-    const prior = advByKey.get(priorKey);
-    let newEntrants: number | null = null;
-    let velocity: number | null = null;
-    if (prior) {
-      newEntrants = [...set].filter((a) => !prior.has(a)).length;
-      velocity = Math.round((newEntrants / 7) * 1000) / 1000;
+  for (const [gk, rowsG] of groups) {
+    const [snapshot_date, vertical] = gk.split('|') as [string, string];
+
+    const angleAdv = new Map<string, Set<string>>();           // angle -> advertisers
+    const firstLaunch = new Map<string, string>();             // angle|adv -> earliest launch date
+    for (const s of rowsG) {
+      (angleAdv.get(s.angle_id) ?? angleAdv.set(s.angle_id, new Set()).get(s.angle_id)!).add(s.advertiser_ref);
+      const launched = parseStarted(s.first_seen_date);
+      if (launched) {
+        const fk = `${s.angle_id}|${s.advertiser_ref}`;
+        const cur = firstLaunch.get(fk);
+        if (!cur || launched < cur) firstLaunch.set(fk, launched);
+      }
+    }
+    const hasLaunch = firstLaunch.size > 0;
+    const maxAdv = Math.max(1, ...[...angleAdv.values()].map((s) => s.size));
+
+    // per-angle: recent-launch proxy + the velocity used for heating/scoring.
+    const recentLaunch = new Map<string, number>();
+    const launchShare = new Map<string, number>();
+    const velForScore = new Map<string, number>();
+    const observed7d = new Map<string, number | null>();
+    const observedVel = new Map<string, number | null>();
+    const basis = new Map<string, string>();
+    for (const [angle, advs] of angleAdv) {
+      let recent = 0;
+      for (const adv of advs) {
+        const launched = firstLaunch.get(`${angle}|${adv}`);
+        if (launched) {
+          const age = daysBetween(snapshot_date, launched);
+          if (age >= 0 && age <= PROXY_DAYS) recent++;
+        }
+      }
+      recentLaunch.set(angle, recent);
+      const share = advs.size ? recent / advs.size : 0;
+      launchShare.set(angle, share);
+
+      const prior = advByKey.get(`${addDays(snapshot_date, -7)}|${vertical}|${angle}`);
+      if (prior) {
+        const ne = [...advs].filter((a) => !prior.has(a)).length;
+        observed7d.set(angle, ne);
+        const v = Math.round((ne / 7) * 1000) / 1000;
+        observedVel.set(angle, v);
+        velForScore.set(angle, Math.min(1, v / 1));
+        basis.set(angle, 'observed');
+      } else {
+        observed7d.set(angle, null);
+        observedVel.set(angle, null);
+        velForScore.set(angle, share);
+        basis.set(angle, hasLaunch ? 'launch_proxy' : 'saturation_only');
+      }
     }
 
-    // window scoring (documented heuristic — §7; calibrated as data accrues):
-    //   inverse_saturation = 1 - distinct/maxInVertical   (0 = most crowded, 1 = empty lane)
-    //   velocity_norm      = min(1, velocity / 1)          (entrants/day, capped)
-    //   window_score = 0.5*velocity_norm + 0.5*inverse_saturation   (until adjacency lands Day 2)
-    const maxAdv = maxAdvByVerticalDate.get(`${snapshot_date}|${vertical}`) ?? distinct;
-    const inverseSaturation = maxAdv ? 1 - distinct / maxAdv : 0;
-    const velocityNorm = velocity == null ? 0 : Math.min(1, velocity / 1);
-    const windowScore = Math.round((0.5 * velocityNorm + 0.5 * inverseSaturation) * 1000) / 1000;
+    const heatingAngles = [...velForScore.entries()].filter(([, v]) => v >= HEAT).map(([a]) => a);
 
-    // state: until a 7-day baseline exists, we can only describe saturation → STABLE.
-    let state = 'STABLE';
-    if (velocity != null) {
-      const heating = velocity >= 0.3;
-      const crowded = distinct / (maxAdv || 1) >= 0.6;
+    for (const [angle, advs] of angleAdv) {
+      const distinct = advs.size;
+      const saturation = distinct / maxAdv;
+      const inverseSat = 1 - saturation;
+      const vel = velForScore.get(angle) ?? 0;
+
+      // adjacency to demand: strongest advertiser-overlap with any HEATING angle.
+      let adjacency = 0;
+      let adjNote = '';
+      for (const A of heatingAngles) {
+        if (A === angle) continue;
+        const aSet = angleAdv.get(A)!;
+        let overlap = 0;
+        for (const adv of advs) if (aSet.has(adv)) overlap++;
+        const strength = distinct ? overlap / distinct : 0;
+        if (strength > adjacency) {
+          adjacency = strength;
+          adjNote = `adjacent to heating ${A} (${Math.round(strength * 100)}% co-occurrence)`;
+        }
+      }
+
+      const heating = vel >= HEAT;
+      const crowded = saturation >= 0.6;
+      let state = 'STABLE';
       if (heating && crowded) state = 'AVOID';
       else if (heating) state = 'WATCH';
-      else if (inverseSaturation >= 0.6) state = 'ENTER';
-    }
+      else if (inverseSat >= 0.5 && adjacency >= 0.3) state = 'ENTER';
 
-    insAgg.run(snapshot_date, vertical, 'meta', angle_id, ANGLE_VERSION, distinct, newEntrants, velocity, state, windowScore);
-    aggRows++;
+      // documented heuristic: 40% momentum + 40% open-lane + 20% adjacency-to-demand.
+      const windowScore = Math.round((0.4 * vel + 0.4 * inverseSat + 0.2 * adjacency) * 1000) / 1000;
+
+      insAgg.run(
+        snapshot_date, vertical, 'meta', angle, ANGLE_VERSION,
+        distinct, observed7d.get(angle) ?? null, observedVel.get(angle) ?? null,
+        recentLaunch.get(angle) ?? 0, Math.round((launchShare.get(angle) ?? 0) * 1000) / 1000,
+        Math.round(saturation * 1000) / 1000, Math.round(adjacency * 1000) / 1000,
+        state, windowScore, basis.get(angle) ?? 'saturation_only', adjNote || null,
+      );
+      aggRows++;
+    }
   }
 
   // ── Report (ACTION line — verify from logs) ──────────────────────────────
