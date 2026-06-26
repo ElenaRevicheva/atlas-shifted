@@ -35,6 +35,18 @@ export const config = {
 
   // Server
   port: num(process.env.PORT, 8095),
+  atlasPublicBase: (process.env.ATLAS_PUBLIC_BASE || 'https://webhook.aideazz.xyz/whitespace').replace(/\/$/, ''),
+
+  // Telegram — fleet-compatible fallbacks (send-only; no polling conflict with CTO AIPA)
+  telegramBotToken:
+    process.env.ATLAS_TELEGRAM_BOT_TOKEN?.trim() ||
+    process.env.TELEGRAM_BOT_TOKEN?.trim() ||
+    '',
+  telegramChatId:
+    process.env.ATLAS_TELEGRAM_CHAT_ID?.trim() ||
+    process.env.TELEGRAM_LEADS_DIGEST_CHAT_ID?.trim() ||
+    process.env.TELEGRAM_DAILY_BLOG_NOTIFY_CHAT_ID?.trim() ||
+    '',
 
   // Run controls
   maxCreatives: num(process.env.WHITESPACE_MAX_CREATIVES, 12),
@@ -46,3 +58,4 @@ export const hasBrightData = (): boolean => !!(config.brightDataToken && config.
 export const hasAnthropic = (): boolean => !!config.anthropicKey;
 export const hasAnyLlm = (): boolean =>
   !!(config.anthropicKey || config.groqKey || config.openaiKey || config.xaiKey);
+export const hasTelegram = (): boolean => !!(config.telegramBotToken && config.telegramChatId);

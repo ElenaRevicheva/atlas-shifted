@@ -19,6 +19,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { config } from './config.js';
 import { buildIntelligence } from './intelligence.js';
+import { sendAtlasDailyBrief } from './telegram.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = join(__dirname, '..', 'data');
@@ -143,25 +144,7 @@ function main() {
   console.log(con.join('\n'));
   console.log(`\nATLAS BRIEF DONE · ${brief.verticals.length} verticals · wrote data/brief.json + data/brief.md`);
 
-  void maybeTelegram(md.join('\n'));
-}
-
-/** Optional Telegram push — only if ATLAS_TELEGRAM_BOT_TOKEN + ATLAS_TELEGRAM_CHAT_ID set. */
-async function maybeTelegram(text: string): Promise<void> {
-  const token = process.env.ATLAS_TELEGRAM_BOT_TOKEN?.trim();
-  const chat = process.env.ATLAS_TELEGRAM_CHAT_ID?.trim();
-  if (!token || !chat) return;
-  try {
-    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chat, text: text.slice(0, 4000), parse_mode: 'Markdown', disable_web_page_preview: true }),
-      signal: AbortSignal.timeout(15_000),
-    });
-    console.log(res.ok ? '  Telegram: brief sent' : `  Telegram: ${res.status}`);
-  } catch (e) {
-    console.warn('  Telegram failed:', (e as Error).message?.slice(0, 100));
-  }
+  void sendAtlasDailyBrief(brief);
 }
 
 main();

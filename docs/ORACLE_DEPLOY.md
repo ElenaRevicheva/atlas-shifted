@@ -67,7 +67,9 @@ Uses `GITHUB_TOKEN` from `/home/ubuntu/cto-aipa/.env` to register the deploy key
 /home/ubuntu/whitespace/scripts/atlas-capture-cron.sh
 ```
 
-Pipeline: capture → classify → brief → concept → backup `captures.jsonl` to `atlas-captures` repo (HTTPS token — separate from code pull).
+Pipeline: `scripts/atlas-capture-cron.sh` → capture → classify → brief → concept → Telegram push → backup `captures.jsonl` to `atlas-captures`.
+
+**Telegram:** daily brief auto-sends after `brief.js` if `TELEGRAM_BOT_TOKEN` + chat id are in `.env`. Run `bash scripts/wire-telegram-env.sh` to copy from `cto-aipa/.env`.
 
 ---
 

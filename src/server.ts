@@ -11,7 +11,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { DatabaseSync } from 'node:sqlite';
 import { existsSync, readFileSync } from 'node:fs';
-import { config, hasBrightData, hasAnthropic, hasAnyLlm } from './config.js';
+import { config, hasBrightData, hasAnthropic, hasAnyLlm, hasTelegram } from './config.js';
 import { runWhitespace } from './agent.js';
 import { breakerState } from './llm.js';
 import { buildIntelligence, angleHistory, laneEvidence } from './intelligence.js';
@@ -35,6 +35,7 @@ app.get('/healthz', (_req, res) => {
     llm: hasAnyLlm(),
     maxCreatives: config.maxCreatives,
     breaker: breakerState(),
+    telegram: hasTelegram(),
   });
 });
 
