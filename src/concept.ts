@@ -116,7 +116,7 @@ async function main() {
     .map((e, i) => `${i + 1}. [${e.angle} · ${e.advertiser}] "${e.excerpt}"`)
     .join('\n');
 
-  const { value: concept, provider } = await llmJson<Concept>(
+  const { value: raw, provider } = await llmJson<{ concept: Concept; mutations: Array<{ hook: string; headline: string; emotion: string }> }>(
     `You are a direct-response creative director.${brand ? ` The brand is ${brand}` : ''}
 
 Atlas detected an OPEN WINDOW in the "${vertical}" market: the **${move.angle_id}** angle is low-saturation${heating ? `, but its advertisers also run the HEATING **${heating}** angle (live, growing demand)` : ''}. The play is to enter the open ${move.angle_id} lane while borrowing the proven persuasion psychology that's already converting nearby.
@@ -124,19 +124,30 @@ Atlas detected an OPEN WINDOW in the "${vertical}" market: the **${move.angle_id
 REAL ADS CURRENTLY RUNNING (your grounding — borrow what works, do not copy verbatim):
 ${evidenceBlock || '(none available)'}
 
-Craft ONE fresh creative concept for the open **${move.angle_id}** angle${brand ? ', on-brand for the brand above' : ''}. Ground the emotion and hook in the evidence. Be compliant (no false claims, no guaranteed outcomes). Return ONLY JSON:
+Craft ONE fresh creative concept for the open **${move.angle_id}** angle${brand ? ', on-brand for the brand above' : ''}. Ground the emotion and hook in the evidence. Be compliant (no false claims, no guaranteed outcomes).
+
+Also produce **3 mutation variants** — same open window, different emotional hooks (e.g. fear vs curiosity vs transformation). Return ONLY JSON:
 {
-  "concept_name": "short memorable name",
-  "emotion": "the single emotion it owns",
-  "hook": "the 1-line scroll-stopping opener",
-  "headline": "<=60 chars",
-  "primary_text": "1-2 punchy sentences",
-  "scene_concept": "one vivid sentence describing the hero VISUAL to generate (for image+video)",
-  "cta": "short CTA",
-  "image_prompt": "a detailed text-to-image prompt to render the hero visual"
+  "concept": {
+    "concept_name": "short memorable name",
+    "emotion": "the single emotion it owns",
+    "hook": "the 1-line scroll-stopping opener",
+    "headline": "<=60 chars",
+    "primary_text": "1-2 punchy sentences",
+    "scene_concept": "one vivid sentence describing the hero VISUAL to generate (for image+video)",
+    "cta": "short CTA",
+    "image_prompt": "a detailed text-to-image prompt to render the hero visual"
+  },
+  "mutations": [
+    {"hook": "...", "headline": "<=60 chars", "emotion": "..."},
+    {"hook": "...", "headline": "<=60 chars", "emotion": "..."},
+    {"hook": "...", "headline": "<=60 chars", "emotion": "..."}
+  ]
 }`,
-    { fallback: EMPTY, maxTokens: 1200 },
+    { fallback: { concept: EMPTY, mutations: [] }, maxTokens: 1800 },
   );
+  const concept = raw.concept ?? EMPTY;
+  const mutations = raw.mutations ?? [];
 
   const out = {
     vertical,
@@ -146,6 +157,7 @@ Craft ONE fresh creative concept for the open **${move.angle_id}** angle${brand 
     heating_lane: heating,
     grounding_evidence: evidence,
     concept,
+    mutations,
     producer_brief: {
       // exactly what the Atuona pipeline consumes (text -> Flux image -> Luma/Runway video)
       image_prompt: concept.image_prompt,
@@ -185,6 +197,7 @@ Craft ONE fresh creative concept for the open **${move.angle_id}** angle${brand 
   console.log(`  BODY:    ${concept.primary_text}`);
   console.log(`  SCENE:   ${concept.scene_concept}`);
   console.log(`  CTA:     ${concept.cta}`);
+  if (mutations.length) console.log(`  MUTATIONS: ${mutations.length} hook variants for A/B testing`);
   console.log(`\n  → producer_brief written for Atuona (image_prompt + scene + caption)`);
   console.log(`ATLAS CONCEPT DONE · wrote data/concepts.json[${vertical}]`);
 }

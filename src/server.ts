@@ -14,6 +14,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { config, hasBrightData, hasAnthropic, hasAnyLlm } from './config.js';
 import { runWhitespace } from './agent.js';
 import { breakerState } from './llm.js';
+import { buildIntelligence, angleHistory, laneEvidence } from './intelligence.js';
 import type { RunEvent, RunMode } from './types.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -40,8 +41,8 @@ app.get('/healthz', (_req, res) => {
 /** Atlas dashboard data: the radar board + daily brief + generated concepts. */
 app.get('/api/atlas', (_req, res) => {
   const out: Record<string, unknown> = { ok: true, board: [], brief: null, concepts: {}, snapshot_date: null, total_rows: 0, distinct_days: 0 };
+  const sqlitePath = join(DATA_DIR, 'radar.sqlite');
   try {
-    const sqlitePath = join(DATA_DIR, 'radar.sqlite');
     if (existsSync(sqlitePath)) {
       const db = new DatabaseSync(sqlitePath);
       const latest = (db.prepare('SELECT MAX(snapshot_date) d FROM angle_daily_agg').get() as { d: string } | undefined)?.d ?? null;
@@ -65,7 +66,50 @@ app.get('/api/atlas', (_req, res) => {
     const p = join(DATA_DIR, 'concepts.json');
     if (existsSync(p)) out.concepts = JSON.parse(readFileSync(p, 'utf8'));
   } catch { /* ignore */ }
+  try {
+    const p = join(DATA_DIR, 'intelligence.json');
+    if (existsSync(p)) out.intelligence = JSON.parse(readFileSync(p, 'utf8'));
+    else if (existsSync(sqlitePath) && out.snapshot_date) {
+      out.intelligence = buildIntelligence(sqlitePath, out.snapshot_date as string);
+    }
+  } catch { /* ignore */ }
   res.json(out);
+});
+
+app.get('/api/atlas/history', (req, res) => {
+  const vertical = String(req.query.vertical || '').trim();
+  const angle = String(req.query.angle || '').trim();
+  if (!vertical || !angle) {
+    res.status(400).json({ error: 'vertical and angle required' });
+    return;
+  }
+  const sqlitePath = join(DATA_DIR, 'radar.sqlite');
+  res.json({ ok: true, vertical, angle, history: angleHistory(sqlitePath, vertical, angle) });
+});
+
+app.get('/api/atlas/evidence', (req, res) => {
+  const vertical = String(req.query.vertical || '').trim();
+  const angle = String(req.query.angle || '').trim();
+  const date = String(req.query.date || '').trim();
+  if (!vertical || !angle) {
+    res.status(400).json({ error: 'vertical and angle required' });
+    return;
+  }
+  const sqlitePath = join(DATA_DIR, 'radar.sqlite');
+  let snapshot = date;
+  if (!snapshot && existsSync(sqlitePath)) {
+    const db = new DatabaseSync(sqlitePath);
+    snapshot =
+      (db.prepare('SELECT MAX(snapshot_date) d FROM angle_snapshots').get() as { d: string } | undefined)?.d ?? '';
+    db.close();
+  }
+  res.json({
+    ok: true,
+    vertical,
+    angle,
+    snapshot_date: snapshot,
+    evidence: laneEvidence(sqlitePath, snapshot, vertical, angle),
+  });
 });
 
 app.get('/api/run', async (req, res) => {

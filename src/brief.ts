@@ -18,6 +18,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { config } from './config.js';
+import { buildIntelligence } from './intelligence.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = join(__dirname, '..', 'data');
@@ -130,6 +131,10 @@ function main() {
   const footer = resilienceFooter();
   brief.resilience = footer;
   brief.provider_tiers = PROVIDER_TIERS.map(([p]) => p);
+
+  const intel = buildIntelligence(SQLITE, latest);
+  brief.intelligence = intel;
+  writeFileSync(join(DATA_DIR, 'intelligence.json'), JSON.stringify(intel, null, 2));
   md.push('---', `_${footer}_`, '', `_Public ad-library data only — no spend/CTR. Window states are hypotheses to test, ranked by observable saturation + entry momentum._`);
   con.push(`\n  ${footer}`);
 

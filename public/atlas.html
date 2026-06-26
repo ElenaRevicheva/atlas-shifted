@@ -29,10 +29,19 @@
   .stat .l{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
   h2.sec{font-family:var(--mono);font-size:12px;letter-spacing:.16em;color:var(--dim);text-transform:uppercase;margin:30px 0 14px;border-bottom:1px solid var(--line);padding-bottom:8px}
   .vcard{background:linear-gradient(180deg,var(--panel),#0e1017);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:14px}
-  .vhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .vhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px}
   .vname{font-size:16px;font-weight:600;letter-spacing:.02em}
   .vmove{font-family:var(--mono);font-size:12px;color:var(--mut)}
-  .lane{display:grid;grid-template-columns:84px 1fr 120px 64px;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--line);font-size:13.5px}
+  .intelrow{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 12px}
+  .pill{font-family:var(--mono);font-size:10px;padding:4px 9px;border-radius:999px;border:1px solid var(--line);color:var(--mut)}
+  .pill.now{background:#10231a;color:var(--ok);border-color:#1d4a36}
+  .pill.wait{background:#3a2e10;color:var(--warn);border-color:#5a4715}
+  .pill.avoid{background:#3b1418;color:var(--hot);border-color:#5a1d22}
+  .pill.fresh{background:#0c1a17;color:var(--acc);border-color:#1f4a44}
+  .absent{background:var(--panel2);border:1px dashed var(--line);border-radius:10px;padding:10px 12px;margin:8px 0;font-size:12.5px;color:var(--mut);line-height:1.45}
+  .absent b{color:var(--acc2);font-family:var(--mono);font-size:11px}
+  .lane{display:grid;grid-template-columns:84px 1fr 56px 120px 64px;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--line);font-size:13.5px;cursor:pointer}
+  .lane:hover{background:rgba(94,234,212,.04)}
   .badge{font-family:var(--mono);font-size:10px;padding:3px 7px;border-radius:6px;text-align:center;letter-spacing:.06em}
   .ENTER{background:#10231a;color:var(--ok);border:1px solid #1d4a36}
   .WATCH{background:#3a2e10;color:var(--warn);border:1px solid #5a4715}
@@ -40,6 +49,7 @@
   .STABLE{background:#15171f;color:var(--dim);border:1px solid var(--line)}
   .angle{color:var(--ink)}
   .angle .b{font-family:var(--mono);font-size:11px;color:var(--dim)}
+  .spark{width:56px;height:22px;display:block}
   .satbar{height:7px;background:#0c0e15;border-radius:4px;overflow:hidden;border:1px solid var(--line)}
   .satfill{height:100%;background:linear-gradient(90deg,var(--acc),var(--hot))}
   .score{font-family:var(--mono);font-size:13px;color:var(--acc);text-align:right}
@@ -49,12 +59,27 @@
   .concept .em{font-family:var(--mono);font-size:11.5px;color:var(--acc2)}
   .concept .row{margin-top:9px;font-size:13.5px;color:var(--mut);line-height:1.5}
   .concept .row b{color:var(--ink);font-weight:600}
+  .mutgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}
+  @media(max-width:720px){.mutgrid{grid-template-columns:1fr}.lane{grid-template-columns:72px 1fr 64px}}
+  .mut{background:#0c0e15;border:1px solid var(--line);border-radius:8px;padding:10px;font-size:12px;color:var(--mut)}
+  .mut .mh{font-family:var(--mono);font-size:10px;color:var(--acc);margin-bottom:4px}
   .casset{width:100%;max-width:300px;border-radius:10px;border:1px solid #1f4a44;margin:12px 0 4px;display:block}
   .ev{margin-top:10px;font-size:11.5px;font-family:var(--mono);color:var(--dim)}
   .ev a{color:var(--acc2);text-decoration:none}
   .note{color:var(--dim);font-size:12.5px;font-family:var(--mono);margin-top:6px}
   .loading{color:var(--mut);font-family:var(--mono);font-size:13px;padding:30px 0}
   .navlink{font-size:12px;font-family:var(--mono);color:var(--acc2);text-decoration:none}
+  .memory{font-size:12px;font-family:var(--mono);color:var(--dim);padding:6px 0;border-bottom:1px solid var(--line)}
+  .drawer{position:fixed;top:0;right:-420px;width:min(400px,92vw);height:100vh;background:var(--panel);border-left:1px solid var(--line);box-shadow:-8px 0 40px rgba(0,0,0,.5);transition:right .25s ease;z-index:100;overflow:auto;padding:20px}
+  .drawer.open{right:0}
+  .drawer h3{margin:0 0 4px;font-size:17px}
+  .drawer .sub{font-family:var(--mono);font-size:11px;color:var(--dim);margin-bottom:16px}
+  .drawer .x{float:right;background:none;border:0;color:var(--mut);font-size:22px;cursor:pointer}
+  .evitem{padding:10px 0;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--mut);line-height:1.45}
+  .evitem b{color:var(--ink);font-size:13px}
+  .evitem a{font-family:var(--mono);font-size:10px;color:var(--acc2)}
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99;display:none}
+  .overlay.open{display:block}
 </style>
 </head>
 <body>
@@ -70,24 +95,66 @@
 
   <div class="stats" id="stats"></div>
 
-  <h2 class="sec">▸ Angle Window Radar — latest snapshot</h2>
+  <h2 class="sec">▸ Atlas Intelligence — what nobody else shows</h2>
+  <div id="intel"><div class="loading">Computing alternate universes…</div></div>
+
+  <h2 class="sec">▸ Angle Window Radar — latest snapshot <span style="font-weight:400;color:var(--dim)">(click a lane for evidence)</span></h2>
   <div id="board"><div class="loading">Reading the radar…</div></div>
 
   <h2 class="sec">▸ Generated creative — DETECT → CREATE</h2>
   <div id="concepts"><div class="loading">Loading concepts…</div></div>
+
+  <h2 class="sec">▸ Market memory — prior ENTER calls</h2>
+  <div id="memory"><div class="note">Logs each ENTER signal as the time-series grows.</div></div>
+</div>
+
+<div class="overlay" id="overlay"></div>
+<div class="drawer" id="drawer">
+  <button class="x" id="drawerClose" aria-label="Close">×</button>
+  <h3 id="drawerTitle">Evidence</h3>
+  <div class="sub" id="drawerSub"></div>
+  <div id="drawerBody"><div class="loading">Loading…</div></div>
 </div>
 
 <script>
 const $=(id)=>document.getElementById(id);
 const esc=(s)=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 const pct=(x)=>Math.round((x||0)*100);
+let SNAPSHOT='';
+
+function sparkSvg(history){
+  if(!history||!history.length) return '<svg class="spark" viewBox="0 0 56 22"><text x="4" y="14" fill="#5b6072" font-size="8">—</text></svg>';
+  const pts=history.map((h,i)=>{
+    const x=history.length===1?28:(i/(history.length-1))*52+2;
+    const y=20-(h.score/100)*18;
+    return x+','+y;
+  }).join(' ');
+  return '<svg class="spark" viewBox="0 0 56 22"><polyline fill="none" stroke="#5eead4" stroke-width="1.5" points="'+pts+'"/></svg>';
+}
+
+function closeDrawer(){ $('drawer').classList.remove('open'); $('overlay').classList.remove('open'); }
+$('drawerClose').onclick=closeDrawer;
+$('overlay').onclick=closeDrawer;
+
+async function openEvidence(vertical, angle){
+  $('drawer').classList.add('open');
+  $('overlay').classList.add('open');
+  $('drawerTitle').textContent=angle.replace(/_/g,' ');
+  $('drawerSub').textContent=vertical+' · snapshot '+SNAPSHOT;
+  $('drawerBody').innerHTML='<div class="loading">Loading evidence…</div>';
+  try{
+    const r=await fetch('api/atlas/evidence?vertical='+encodeURIComponent(vertical)+'&angle='+encodeURIComponent(angle)+'&date='+encodeURIComponent(SNAPSHOT));
+    const d=await r.json();
+    $('drawerBody').innerHTML=(d.evidence||[]).map(e=>'<div class="evitem"><b>'+esc(e.advertiser)+'</b> ('+e.confidence+'% match)<br>'+esc(e.excerpt)+'<br><a href="'+esc(e.url)+'" target="_blank" rel="noopener">view in ad library ↗</a></div>').join('')||'<div class="note">No ads in this lane yet.</div>';
+  }catch(e){ $('drawerBody').innerHTML='<div class="note">Failed: '+esc(e.message)+'</div>'; }
+}
 
 fetch('api/atlas').then(r=>r.json()).then(render).catch(e=>{
   $('board').innerHTML='<div class="loading">Could not load radar: '+esc(e.message)+'</div>';
 });
 
-function render(d){
-  // stats
+async function render(d){
+  SNAPSHOT=d.snapshot_date||'';
   $('stats').innerHTML=[
     ['days tracked', d.distinct_days||0],
     ['ads in radar', d.total_rows||0],
@@ -95,32 +162,55 @@ function render(d){
     ['snapshot', d.snapshot_date||'—'],
   ].map(([l,n])=>'<div class="stat"><div class="n">'+esc(n)+'</div><div class="l">'+esc(l)+'</div></div>').join('');
 
-  // shrug footer from brief
   const res=d.brief&&d.brief.resilience;
   $('shrug').textContent=res||'⌐ Atlas shrugs — multi-tier LLM failover armed.';
 
-  // board
+  const intel=d.intelligence||{};
+  const intelByV={};
+  for(const v of (intel.verticals||[])) intelByV[v.vertical]=v;
+  $('intel').innerHTML=(d.board||[]).slice(0,3).map(v=>{
+    const iv=intelByV[v.vertical];
+    if(!iv) return '';
+    const wc=iv.wait_cost;
+    const hl=iv.half_life;
+    const pills=(wc?('<span class="pill '+(wc.verdict==='BUILD NOW'?'now':wc.verdict==='WAIT'?'wait':'avoid')+'">'+esc(wc.verdict)+'</span>'):'')+
+      (hl?('<span class="pill fresh">~'+hl.est_days_remaining+'d half-life · '+hl.opportunity_remaining_pct+'% room</span>'):'');
+    const absent=(iv.absent_universe||[]).slice(0,2).map(a=>'<div class="absent"><b>ABSENT · '+esc(a.angle_id)+'</b> — '+esc(a.opportunity)+(a.adjacent_heat?' (demand nearby: '+esc(a.adjacent_heat)+')':'')+'</div>').join('');
+    return '<div class="vcard"><div class="vname">'+esc(v.vertical)+'</div><div class="intelrow">'+pills+'</div>'+
+      (wc?('<div class="note">Wait cost: '+esc(wc.reason)+'</div>'):'')+absent+'</div>';
+  }).join('')||'<div class="note">Intelligence layer activates after first brief run.</div>';
+
   const briefByV={};
   if(d.brief&&d.brief.verticals) for(const v of d.brief.verticals) briefByV[v.vertical]=v;
-  $('board').innerHTML=(d.board||[]).map(v=>{
+
+  const histCache={};
+  async function hist(v,a){ const k=v+'|'+a; if(histCache[k]) return histCache[k]; try{ const r=await fetch('api/atlas/history?vertical='+encodeURIComponent(v)+'&angle='+encodeURIComponent(a)); const j=await r.json(); histCache[k]=j.history||[]; return histCache[k]; }catch{return [];} }
+
+  const boardEl=$('board');
+  boardEl.innerHTML='';
+  for(const v of (d.board||[])){
     const mv=briefByV[v.vertical];
     const moveTxt=mv?(' · MOVE → '+esc(mv.move.state)+' '+esc(mv.move.angle)+' ('+mv.move.score+'/100)'):'';
-    const lanes=v.angles.map(a=>(
-      '<div class="lane">'+
+    const lanes=[];
+    for(const a of v.angles){
+      const h=await hist(v.vertical,a.angle_id);
+      lanes.push('<div class="lane" data-v="'+esc(v.vertical)+'" data-a="'+esc(a.angle_id)+'">'+
         '<span class="badge '+esc(a.window_state)+'">'+esc(a.window_state)+'</span>'+
         '<span class="angle">'+esc(a.angle_id)+' <span class="b">'+a.distinct_advertisers+' adv · '+esc(a.signal_basis)+(a.adjacency_note?(' · '+esc(a.adjacency_note)):'')+'</span></span>'+
+        sparkSvg(h)+
         '<span class="satbar"><span class="satfill" style="width:'+pct(a.saturation)+'%"></span></span>'+
-        '<span class="score">'+pct(a.window_score)+'</span>'+
-      '</div>'
-    )).join('');
-    return '<div class="vcard"><div class="vhead"><span class="vname">'+esc(v.vertical)+'</span><span class="vmove">'+moveTxt+'</span></div>'+lanes+'</div>';
-  }).join('')||'<div class="loading">No radar data yet.</div>';
+        '<span class="score">'+pct(a.window_score)+'</span></div>');
+    }
+    boardEl.insertAdjacentHTML('beforeend','<div class="vcard"><div class="vhead"><span class="vname">'+esc(v.vertical)+'</span><span class="vmove">'+moveTxt+'</span></div>'+lanes.join('')+'</div>');
+  }
+  if(!(d.board||[]).length) boardEl.innerHTML='<div class="loading">No radar data yet.</div>';
+  boardEl.querySelectorAll('.lane').forEach(el=>el.onclick=()=>openEvidence(el.dataset.v, el.dataset.a));
 
-  // concepts
   const cs=Object.values(d.concepts||{});
   $('concepts').innerHTML=cs.length? cs.map(c=>{
     const cc=c.concept||{};
     const ev=(c.grounding_evidence||[]).slice(0,2).map(e=>'<a href="'+esc(e.url)+'" target="_blank" rel="noopener">['+esc(e.angle)+' · '+esc(e.advertiser)+']</a>').join(' ');
+    const muts=(c.mutations||[]).map((m,i)=>'<div class="mut"><div class="mh">V'+(i+2)+' · '+esc(m.emotion)+'</div>'+esc(m.hook)+'<br><b style="color:var(--ink)">'+esc(m.headline)+'</b></div>').join('');
     return '<div class="concept">'+
       '<div class="k">'+esc(c.vertical)+' · open window: '+esc(c.move.angle)+' ('+c.move.score+'/100)'+(c.heating_lane?(' · adjacent to heating '+esc(c.heating_lane)):'')+'</div>'+
       '<h3>'+esc(cc.concept_name||'—')+'</h3><div class="em">owns: '+esc(cc.emotion||'')+'</div>'+
@@ -130,12 +220,16 @@ function render(d){
       '<div class="row"><b>Body:</b> '+esc(cc.primary_text||'')+'</div>'+
       '<div class="row"><b>Scene (→ Atuona):</b> '+esc(cc.scene_concept||'')+'</div>'+
       '<div class="row"><b>CTA:</b> '+esc(cc.cta||'')+'</div>'+
+      (muts?('<div class="row"><b>Mutations (A/B hooks):</b></div><div class="mutgrid">'+muts+'</div>'):'')+
       (ev?('<div class="ev">grounded in real ads: '+ev+'</div>'):'')+
     '</div>';
   }).join('') : '<div class="loading">No concepts generated yet.</div>';
 
+  const mem=(intel.memory||[]);
+  $('memory').innerHTML=mem.length? mem.map(m=>'<div class="memory">'+esc(m.snapshot_date)+' · '+esc(m.vertical)+' · ENTER <b>'+esc(m.angle_id)+'</b> ('+Math.round(m.window_score*100)+'/100)</div>').join('') : '<div class="note">No ENTER signals logged yet — memory grows each morning.</div>';
+
   if((d.distinct_days||0)<2){
-    $('board').insertAdjacentHTML('beforeend','<div class="note">⏳ Momentum sparklines activate as the daily time-series accrues — Atlas started watching on the snapshot above and captures one new day every morning (Panama time).</div>');
+    boardEl.insertAdjacentHTML('beforeend','<div class="note">⏳ Sparklines fill in as daily snapshots accrue — one new day every morning (Panama time).</div>');
   }
 }
 </script>
