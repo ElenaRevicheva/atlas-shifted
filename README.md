@@ -3,6 +3,7 @@
 > **Live demo:** https://webhook.aideazz.xyz/whitespace/atlas.html
 > **On-demand whitespace finder:** https://webhook.aideazz.xyz/whitespace/
 > **Plain-English reality check (contest prep):** [docs/CONTEST_REALITY_CHECK.md](./docs/CONTEST_REALITY_CHECK.md)
+> **Contest submit checklist:** [docs/CONTEST_SUBMIT.md](./docs/CONTEST_SUBMIT.md)
 > **Market analysis + why Atlas wins:** [docs/MARKET_ANALYSIS.md](./docs/MARKET_ANALYSIS.md)
 > **Backup / restore before v2:** [docs/BACKUP_RESTORE.md](./docs/BACKUP_RESTORE.md)
 > Built for the It's Today Media Build Challenge · by Elena Revicheva (AIdeazz)

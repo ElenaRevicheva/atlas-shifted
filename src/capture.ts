@@ -283,16 +283,41 @@ async function main() {
   let totalFound = 0;
   let totalWritten = 0;
   let totalDupes = 0;
+  const zeroWriteVerticals: typeof SEED_VERTICALS = [];
+
   for (const v of targets) {
     try {
+      const before = seenKeys.size;
       const r = await captureVertical(v, snapshotDate, seenKeys);
       totalFound += r.found;
       totalWritten += r.written;
       totalDupes += r.dupes;
       console.log(`  [${v.id}] found=${r.found} written=${r.written} dupes=${r.dupes}`);
+      if (!only && r.written === 0 && seenKeys.size === before) zeroWriteVerticals.push(v);
       if (!only) await sleep(config.metaVerticalPauseMs);
     } catch (e) {
       console.error(`  [${v.id}] ERROR: ${(e as Error).message?.slice(0, 160)}`);
+      if (!only) zeroWriteVerticals.push(v);
+    }
+  }
+
+  // Second pass: Meta timeouts often hit one vertical per run — retry empties after a cool-down.
+  if (!only && zeroWriteVerticals.length > 0) {
+    console.log(
+      `RETRY PASS · ${zeroWriteVerticals.length} vertical(s) wrote 0 today: ${zeroWriteVerticals.map((v) => v.id).join(', ')}`,
+    );
+    await sleep(config.metaVerticalPauseMs * 2);
+    for (const v of zeroWriteVerticals) {
+      try {
+        const r = await captureVertical(v, snapshotDate, seenKeys);
+        totalFound += r.found;
+        totalWritten += r.written;
+        totalDupes += r.dupes;
+        console.log(`  [${v.id}] retry found=${r.found} written=${r.written} dupes=${r.dupes}`);
+        await sleep(config.metaVerticalPauseMs);
+      } catch (e) {
+        console.error(`  [${v.id}] retry ERROR: ${(e as Error).message?.slice(0, 160)}`);
+      }
     }
   }
 

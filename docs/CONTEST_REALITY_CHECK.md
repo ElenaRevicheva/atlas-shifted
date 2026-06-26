@@ -18,14 +18,16 @@ Atlas is a bot that **watches real ads in public libraries every day**, figures 
 
 | Piece | What it actually does | Status (honest) |
 |-------|----------------------|-----------------|
-| **Daily capture** | Pulls live ads from Meta Ad Library (+ some Google search ads) for 5 verticals, saves every ad to a log file | ✅ **Works** — 189 ads captured so far (Jun 25 snapshot) |
+| **Daily capture** | Pulls live ads from Meta Ad Library (+ some Google search ads) for 5 verticals, saves every ad to a log file | ✅ **Works** — 286+ ads, 2 snapshot days (Jun 25–26), solar retry fixed |
 | **Classifier** | Sorts each ad into 8 angle types (pain, social proof, urgency, etc.) using AI embeddings | ✅ **Works** |
 | **Radar board** | Shows each vertical with ENTER / WATCH / AVOID / STABLE labels and scores | ✅ **Works** — live on atlas.html |
 | **Daily brief** | Picks the best “MOVE” per vertical with reasons | ✅ **Works** |
 | **Creative Director** | Writes hook, headline, body, scene — tied to real ads it saw | ✅ **Works** — expat_language + auto_insurance done |
 | **Producer (Atuona)** | Makes a real `.jpg` image + `.mp4` video for concepts | ✅ **Works** — both files load in browser |
 | **Whitespace finder** | You type any vertical → live ad scan → battle plan in ~1–2 min | ✅ **Works** — tested with “solar”, got 12 live Meta ads |
-| **Morning cron** | Runs capture → classify → brief → concept → backup without you | ✅ **Scheduled** — 9 AM Panama daily |
+| **Morning cron** | Runs capture → classify → brief → concept → backup without you | ✅ **Scheduled** — 9 AM Panama daily; auto-retry pass for failed verticals |
+| **Telegram brief** | Daily MOVE summary pushed to Telegram after brief | ✅ **Works** — send-only, no polling conflict |
+| **Meta capture hardening** | 3 retries, 90s timeout, solar-first, Scraping Browser CDP when configured | ✅ **Deployed** — see `docs/BRIGHTDATA_BROWSER_SETUP.md` for max reliability |
 | **Off-VM backup** | Pushes the log to private `atlas-captures` repo | ✅ **In cron script** — verify commits on GitHub |
 | **7-day velocity charts** | Sparklines showing angle momentum over time | ❌ **Not built yet** — needs more days of data first |
 | **TikTok / Taboola** | More ad platforms | ❌ **Not in this build** — on the roadmap |

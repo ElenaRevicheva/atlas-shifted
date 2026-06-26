@@ -71,7 +71,9 @@ Pipeline: `scripts/atlas-capture-cron.sh` → capture → classify → brief →
 
 **Telegram:** daily brief auto-sends after `brief.js` if `TELEGRAM_BOT_TOKEN` + chat id are in `.env`. Run `bash scripts/wire-telegram-env.sh` to copy from `cto-aipa/.env`.
 
-**Meta capture reliability:** add `BRIGHTDATA_BROWSER_AUTH=brd-customer-XXX-zone-scraping_browser:PASSWORD` from Bright Data → Scraping Browser zone → Overview. Optional: `META_AD_LIBRARY_ACCESS_TOKEN` for Graph API (US commercial still needs browser). Tune with `WHITESPACE_META_FETCH_*` env vars.
+**Meta capture reliability:** add `BRIGHTDATA_BROWSER_AUTH` per [BRIGHTDATA_BROWSER_SETUP.md](./BRIGHTDATA_BROWSER_SETUP.md). Run `bash scripts/wire-brightdata-env.sh` on deploy.
+
+**Contest pre-flight:** `bash scripts/contest-verify.sh`
 
 ---
 
