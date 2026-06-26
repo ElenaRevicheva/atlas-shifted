@@ -23,8 +23,9 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, appendFileSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { hasBrightData } from './config.js';
-import { bdScrapingBrowserFetch, bdFetch, bdSerpAds, htmlToText } from './brightdata.js';
+import { hasBrightData, config } from './config.js';
+import { bdMetaAdLibraryFetch, bdSerpAds, htmlToText } from './brightdata.js';
+import { metaApiSearchAds } from './meta-api.js';
 import { llmJson } from './llm.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -48,6 +49,21 @@ const SEED_VERTICALS: Array<{ id: string; queries: string[] }> = [
     queries: ['learn spanish', 'move abroad spanish', 'spanish for expats', 'relocation language'],
   },
 ];
+
+/** Solar first — Meta timeouts often hit late verticals after rate pressure. */
+const VERTICAL_ORDER = ['solar', 'auto_insurance', 'debt_finance', 'health_supplements', 'expat_language'];
+
+function orderVerticals(targets: typeof SEED_VERTICALS): typeof SEED_VERTICALS {
+  return [...targets].sort((a, b) => {
+    const ia = VERTICAL_ORDER.indexOf(a.id);
+    const ib = VERTICAL_ORDER.indexOf(b.id);
+    return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+  });
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
+}
 
 const META_LIBRARY = (q: string) =>
   `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=${encodeURIComponent(
@@ -126,6 +142,18 @@ ${text}
   return Array.isArray(value) ? value : [];
 }
 
+/** Fetch Meta Ad Library HTML with retries + pause between attempts. */
+async function fetchMetaHtml(verticalId: string, query: string, url: string): Promise<string | null> {
+  const retries = config.metaFetchRetries;
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    const html = await bdMetaAdLibraryFetch(url);
+    if (html && html.length > 800) return html;
+    console.warn(`  [${verticalId}] meta "${query}" attempt ${attempt}/${retries} — no usable HTML`);
+    if (attempt < retries) await sleep(config.metaFetchPauseMs);
+  }
+  return null;
+}
+
 /** Load dedup keys already present for a given snapshot_date (idempotency). */
 function existingKeysForDate(snapshotDate: string): Set<string> {
   const keys = new Set<string>();
@@ -181,12 +209,22 @@ async function captureVertical(
       }));
       console.log(`  [${v.id}] google: ${ads.length} search ads`);
     } else {
-      const html = (await bdScrapingBrowserFetch(src.url)) || (await bdFetch(src.url));
-      if (!html) {
-        console.warn(`  [${v.id}] no HTML for ${src.platform} "${src.query}"`);
-        continue;
+      // Official API first (structured; works for political/EU commercial — US affiliate often empty).
+      const apiAds = await metaApiSearchAds(src.query);
+      if (apiAds.length > 0) {
+        ads = apiAds;
+        console.log(`  [${v.id}] meta-api: ${ads.length} ads for "${src.query}"`);
+      } else {
+        const html = await fetchMetaHtml(v.id, src.query, src.url);
+        if (!html) {
+          console.warn(`  [${v.id}] no HTML for ${src.platform} "${src.query}" after ${config.metaFetchRetries} attempts`);
+          continue;
+        }
+        ads = await extractAds(html, v.id, src.name);
+        console.log(`  [${v.id}] meta-scrape: ${ads.length} ads for "${src.query}"`);
       }
-      ads = await extractAds(html, v.id, src.name);
+      // Stagger Meta calls so Bright Data isn't hammered back-to-back.
+      await sleep(config.metaFetchPauseMs);
     }
     ads = ads.filter((a) => a && typeof a.copy === 'string' && a.copy.trim().length > 8);
     found += ads.length;
@@ -233,7 +271,7 @@ async function main() {
 
   const snapshotDate = panamaDate();
   const only = process.argv[2]?.trim();
-  const targets = only ? SEED_VERTICALS.filter((s) => s.id === only) : SEED_VERTICALS;
+  const targets = orderVerticals(only ? SEED_VERTICALS.filter((s) => s.id === only) : SEED_VERTICALS);
   if (targets.length === 0) {
     console.error(`unknown vertical "${only}". Known: ${SEED_VERTICALS.map((s) => s.id).join(', ')}`);
     process.exit(1);
@@ -252,6 +290,7 @@ async function main() {
       totalWritten += r.written;
       totalDupes += r.dupes;
       console.log(`  [${v.id}] found=${r.found} written=${r.written} dupes=${r.dupes}`);
+      if (!only) await sleep(config.metaVerticalPauseMs);
     } catch (e) {
       console.error(`  [${v.id}] ERROR: ${(e as Error).message?.slice(0, 160)}`);
     }

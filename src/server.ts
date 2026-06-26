@@ -11,7 +11,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { DatabaseSync } from 'node:sqlite';
 import { existsSync, readFileSync } from 'node:fs';
-import { config, hasBrightData, hasAnthropic, hasAnyLlm, hasTelegram } from './config.js';
+import { config, hasBrightData, hasAnthropic, hasAnyLlm, hasTelegram, hasBrightDataBrowser, hasMetaAdLibraryApi } from './config.js';
 import { runWhitespace } from './agent.js';
 import { breakerState } from './llm.js';
 import { buildIntelligence, angleHistory, laneEvidence } from './intelligence.js';
@@ -31,6 +31,8 @@ app.get('/healthz', (_req, res) => {
   res.json({
     ok: hasAnyLlm(),
     brightData: hasBrightData(),
+    brightDataBrowser: hasBrightDataBrowser(),
+    metaAdLibraryApi: hasMetaAdLibraryApi(),
     anthropic: hasAnthropic(),
     llm: hasAnyLlm(),
     maxCreatives: config.maxCreatives,

@@ -5,13 +5,16 @@
  * Exposes the three primitives WHITESPACE needs:
  *   - bdFetch              Web Unlocker raw fetch (cheap, static/light-JS pages)
  *   - bdSerpSearch         SERP API via Web Unlocker proxy + brd_json=1
- *   - bdScrapingBrowserFetch  full headless render for JS-gated ad libraries
+ *   - bdScrapingBrowserFetch  Web Unlocker + render:true (legacy Meta fallback)
+ *   - bdBrowserApiFetch    Scraping Browser zone via CDP (best for Meta Ad Library)
+ *   - bdMetaAdLibraryFetch orchestrator: Browser API → unlocker render → plain fetch
  *   - bdSmartFetch         orchestrator: unlock first, escalate to browser if thin
  *
  * All return null/[] on failure or when not configured, so the pipeline can
  * degrade to its synthetic-evidence path instead of crashing.
  */
-import { config, hasBrightData } from './config.js';
+import puppeteer from 'puppeteer-core';
+import { config, hasBrightData, hasBrightDataBrowser } from './config.js';
 
 const BD_API = 'https://api.brightdata.com/request';
 
@@ -23,7 +26,7 @@ export interface BDSerpResult {
 }
 
 /** Fetch a URL through Web Unlocker; returns raw body (HTML/markdown) or null. */
-export async function bdFetch(url: string, timeoutMs = 25_000): Promise<string | null> {
+export async function bdFetch(url: string, timeoutMs = 45_000): Promise<string | null> {
   if (!hasBrightData()) return null;
   try {
     const res = await fetch(BD_API, {
@@ -43,8 +46,8 @@ export async function bdFetch(url: string, timeoutMs = 25_000): Promise<string |
   }
 }
 
-/** Full headless render — for JS-gated ad libraries (Meta/TikTok). */
-export async function bdScrapingBrowserFetch(url: string, timeoutMs = 50_000): Promise<string | null> {
+/** Web Unlocker with render:true — legacy fallback when Scraping Browser zone is absent. */
+export async function bdScrapingBrowserFetch(url: string, timeoutMs = config.metaFetchTimeoutMs): Promise<string | null> {
   if (!hasBrightData()) return null;
   try {
     const res = await fetch(BD_API, {
@@ -62,6 +65,51 @@ export async function bdScrapingBrowserFetch(url: string, timeoutMs = 50_000): P
     console.warn(`[bd-browser] fetch error ${url}:`, (e as Error).message);
     return null;
   }
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+/** Bright Data Scraping Browser (CDP) — recommended for Meta Ad Library. */
+export async function bdBrowserApiFetch(url: string, timeoutMs = config.metaFetchTimeoutMs): Promise<string | null> {
+  if (!hasBrightDataBrowser()) return null;
+  const auth = config.brightDataBrowserAuth;
+  let browser;
+  try {
+    browser = await puppeteer.connect({ browserWSEndpoint: `wss://${auth}@brd.superproxy.io:9222` });
+    const page = await browser.newPage();
+    page.setDefaultNavigationTimeout(timeoutMs);
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: timeoutMs });
+    // Meta Ad Library lazy-loads ad cards after initial paint.
+    await page.waitForSelector('div[role="article"], [data-testid], div.x1yztbdb', { timeout: 20_000 }).catch(() => {});
+    await sleep(6_000);
+    const html = await page.content();
+    return html.length > 800 ? html : null;
+  } catch (e) {
+    console.warn(`[bd-browser-api] fetch error ${url}:`, (e as Error).message);
+    return null;
+  } finally {
+    await browser?.close().catch(() => {});
+  }
+}
+
+/**
+ * Meta Ad Library fetch chain: Scraping Browser zone → unlocker render → plain fetch.
+ * Callers should retry (see capture.ts).
+ */
+export async function bdMetaAdLibraryFetch(url: string, timeoutMs = config.metaFetchTimeoutMs): Promise<string | null> {
+  if (hasBrightDataBrowser()) {
+    const browserHtml = await bdBrowserApiFetch(url, timeoutMs);
+    if (browserHtml) {
+      console.log(`[bd-meta] Browser API OK (${browserHtml.length} bytes)`);
+      return browserHtml;
+    }
+    console.warn('[bd-meta] Browser API failed — falling back to Web Unlocker render');
+  }
+  const rendered = await bdScrapingBrowserFetch(url, timeoutMs);
+  if (rendered && rendered.length > 800) return rendered;
+  return bdFetch(url, Math.min(timeoutMs, 45_000));
 }
 
 /** Unlock first; escalate to Scraping Browser when the body is thin/JS-gated. */
@@ -200,4 +248,4 @@ export function htmlToText(html: string, cap = 12_000): string {
     .slice(0, cap);
 }
 
-export { hasBrightData };
+export { hasBrightData, hasBrightDataBrowser };

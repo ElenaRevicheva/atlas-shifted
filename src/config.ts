@@ -28,6 +28,24 @@ export const config = {
   // Bright Data — live public ad-market recon
   brightDataToken: process.env.BRIGHTDATA_API_TOKEN?.trim() || '',
   brightDataZone: process.env.BRIGHTDATA_ZONE?.trim() || '',
+  // Scraping Browser zone credentials: brd-customer-XXX-zone-YYY:password
+  brightDataBrowserAuth: process.env.BRIGHTDATA_BROWSER_AUTH?.trim() || '',
+
+  // Meta Ad Library Graph API (optional — US commercial ads still need browser scrape)
+  metaAdLibraryToken: process.env.META_AD_LIBRARY_ACCESS_TOKEN?.trim() || '',
+  metaGraphVersion: process.env.META_GRAPH_VERSION?.trim() || 'v21.0',
+  metaApiCountries: (process.env.META_API_COUNTRIES || 'US')
+    .split(',')
+    .map((c) => c.trim().toUpperCase())
+    .filter(Boolean),
+  metaApiPageSize: num(process.env.META_API_PAGE_SIZE, 100),
+  metaApiMaxPages: num(process.env.META_API_MAX_PAGES, 3),
+
+  // Meta page fetch tuning (Bright Data browser / unlocker)
+  metaFetchTimeoutMs: num(process.env.WHITESPACE_META_FETCH_TIMEOUT_MS, 90_000),
+  metaFetchRetries: num(process.env.WHITESPACE_META_FETCH_RETRIES, 3),
+  metaFetchPauseMs: num(process.env.WHITESPACE_META_FETCH_PAUSE_MS, 4_000),
+  metaVerticalPauseMs: num(process.env.WHITESPACE_META_VERTICAL_PAUSE_MS, 5_000),
 
   // Atuona Producer — image render via Replicate/Flux (the fleet's proven path)
   replicateToken: process.env.REPLICATE_API_TOKEN?.trim() || '',
@@ -55,6 +73,8 @@ export const config = {
 };
 
 export const hasBrightData = (): boolean => !!(config.brightDataToken && config.brightDataZone);
+export const hasBrightDataBrowser = (): boolean => !!config.brightDataBrowserAuth;
+export const hasMetaAdLibraryApi = (): boolean => !!config.metaAdLibraryToken;
 export const hasAnthropic = (): boolean => !!config.anthropicKey;
 export const hasAnyLlm = (): boolean =>
   !!(config.anthropicKey || config.groqKey || config.openaiKey || config.xaiKey);
