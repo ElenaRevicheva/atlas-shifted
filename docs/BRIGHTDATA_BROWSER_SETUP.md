@@ -8,22 +8,32 @@
 
 ## One-time setup (~5 minutes)
 
+**Option A — Dashboard (recommended; API key may lack zone-create permission):**
+
 1. Log in at [brightdata.com](https://brightdata.com) (same account as `web_unlocker1`).
 
 2. **My Proxies** → **Scraping Browser** → **Get started** / **Add proxy**.
 
 3. Name the zone e.g. `atlas_scraping_browser` (cannot rename later).
 
-4. Open the zone → **Overview** tab → copy:
-   - Username: `brd-customer-XXXXX-zone-atlas_scraping_browser`
-   - Password: (zone password)
+4. Open the zone → **Overview** tab → copy **username:password** (one line).
 
 5. On Oracle VM:
    ```bash
-   ssh -i ~/.ssh/ssh-key-2026-01-07private.key ubuntu@170.9.242.90
-   echo 'BRIGHTDATA_BROWSER_AUTH=brd-customer-XXXXX-zone-atlas_scraping_browser:YOUR_PASSWORD' >> /home/ubuntu/whitespace/.env
+   mkdir -p /home/ubuntu/.secrets
+   echo 'brd-customer-XXXXX-zone-atlas_scraping_browser:YOUR_PASSWORD' > /home/ubuntu/.secrets/atlas-brightdata-browser
+   chmod 600 /home/ubuntu/.secrets/atlas-brightdata-browser
+   bash /home/ubuntu/whitespace/scripts/setup-brightdata-browser.sh
    pm2 restart whitespace --update-env
    ```
+
+**Option B — API auto-create** (requires Admin/Ops API key with zone-create permission):
+```bash
+bash /home/ubuntu/whitespace/scripts/setup-brightdata-browser.sh
+# Set BRIGHTDATA_CUSTOMER_ID if script asks (Account settings → Profile)
+```
+
+**What stays unchanged:** `BRIGHTDATA_ZONE=web_unlocker1` for Google SERP and fleet enrich — Scraping Browser is Meta-only, additive fallback chain.
 
 6. Verify:
    ```bash

@@ -15,7 +15,7 @@ HZ=$(curl -sf --max-time 10 http://127.0.0.1:8095/healthz 2>/dev/null || echo '{
 echo "$HZ" | grep -q '"ok":true' && ok "healthz ok" || bad "healthz down"
 echo "$HZ" | grep -q '"brightData":true' && ok "Bright Data wired" || bad "Bright Data missing"
 echo "$HZ" | grep -q '"telegram":true' && ok "Telegram wired" || bad "Telegram missing"
-echo "$HZ" | grep -q '"brightDataBrowser":true' && ok "Scraping Browser zone (best Meta path)" || echo "  WARN Scraping Browser not set — see docs/BRIGHTDATA_BROWSER_SETUP.md"
+echo "$HZ" | grep -q '"brightDataBrowser":true' && ok "Scraping Browser zone (best Meta path)" || echo "  INFO Web Unlocker + retries active (Scraping Browser optional — docs/BRIGHTDATA_BROWSER_SETUP.md)"
 
 # Data
 if [[ -f data/captures.jsonl ]]; then
