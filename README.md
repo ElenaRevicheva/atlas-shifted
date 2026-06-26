@@ -2,7 +2,7 @@
 
 > **Live demo:** https://webhook.aideazz.xyz/whitespace/atlas.html  
 > **Try any vertical:** https://webhook.aideazz.xyz/whitespace/  
-> **Built for:** [It's Today Media Build Challenge](https://www.itstoday.media/) · Elena Revicheva · [AIdeazz](https://aideazz.xyz)
+> **Built for:** [It's Today Media Build Challenge](https://www.itstoday.media/) · Elena Revicheva · [AIdeazz](https://aideazz.xyz/portfolio)
 
 ---
 
@@ -53,7 +53,7 @@ Week 1–2: wire **TikTok and Taboola** into the same angle ontology so all four
 
 ### Additional notes (optional)
 
-I’m an AI-augmented builder: I ship production systems with Claude Code and Cursor, not slide decks. This submission is live software — 292+ real ads captured, 2 days of time-series (growing daily), Bright Data Scraping Browser + Web Unlocker, 4-tier LLM failover, daily cron, off-site backup. I’m a solo founder and single parent; I designed for **unattended operation** because I can’t babysit dashboards. Happy to walk through the radar, the evidence trail, or the Oracle deployment on a call. Portfolio: [aideazz.xyz](https://aideazz.xyz) · proof doc: [PRODUCT_PROOF.md](./docs/PRODUCT_PROOF.md)
+I’m an AI-augmented builder: I ship production systems with Claude Code and Cursor, not slide decks. This submission is live software — 292+ real ads captured, 2 days of time-series (growing daily), Bright Data Scraping Browser + Web Unlocker, 4-tier LLM failover, daily cron, off-site backup. I’m a solo founder and single parent; I designed for **unattended operation** because I can’t babysit dashboards. Happy to walk through the radar, the evidence trail, or the Oracle deployment on a call. Portfolio: [aideazz.xyz/portfolio](https://aideazz.xyz/portfolio) · proof doc: [PRODUCT_PROOF.md](./docs/PRODUCT_PROOF.md)
 
 ---
 
@@ -128,4 +128,4 @@ npm start   # http://localhost:8095
 
 ---
 
-_Built by Elena Revicheva · [AIdeazz](https://aideazz.xyz). Public repo — this engine doubles as an AIdeazz marketing capability regardless of contest outcome._
+_Built by Elena Revicheva · [AIdeazz](https://aideazz.xyz/portfolio). Public repo — this engine doubles as an AIdeazz marketing capability regardless of contest outcome._
