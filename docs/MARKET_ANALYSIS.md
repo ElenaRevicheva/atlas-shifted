@@ -1,6 +1,6 @@
 # Market Analysis — Why Atlas, Why Now, Why It's Today Media
 
-**Plain English · for vibe coders · June 26, 2026**
+**Plain English · for business reviewers · June 26, 2026**
 
 ---
 

@@ -1,6 +1,6 @@
 # Atlas Shifted — What We Built (Plain English)
 
-**For:** vibe coders, judges, and anyone who wants the truth without engineer-speak  
+**For:** judges, hiring reviewers, and anyone who wants the truth without engineer-speak  
 **Contest:** [It's Today Media $5,000 Build Challenge](https://www.itstoday.media/) — submit by **July 4, 2026**  
 **Live demo:** https://webhook.aideazz.xyz/whitespace/atlas.html  
 **On-demand tool:** https://webhook.aideazz.xyz/whitespace/  
@@ -18,7 +18,7 @@ Atlas is a bot that **watches real ads in public libraries every day**, figures 
 
 | Piece | What it actually does | Status (honest) |
 |-------|----------------------|-----------------|
-| **Daily capture** | Pulls live ads from Meta Ad Library (+ some Google search ads) for 5 verticals, saves every ad to a log file | ✅ **Works** — 286+ ads, 2 snapshot days (Jun 25–26), solar retry fixed |
+| **Daily capture** | Pulls live ads from Meta Ad Library (+ some Google search ads) for 5 verticals, saves every ad to a log file | ✅ **Works** — 290+ ads, 2 snapshot days, Scraping Browser live |
 | **Classifier** | Sorts each ad into 8 angle types (pain, social proof, urgency, etc.) using AI embeddings | ✅ **Works** |
 | **Radar board** | Shows each vertical with ENTER / WATCH / AVOID / STABLE labels and scores | ✅ **Works** — live on atlas.html |
 | **Daily brief** | Picks the best “MOVE” per vertical with reasons | ✅ **Works** |

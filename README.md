@@ -1,112 +1,133 @@
-# Atlas Shifted AIPA — autonomous marketing strategist
+# Atlas Shifted — autonomous marketing strategist
 
-> **Live demo:** https://webhook.aideazz.xyz/whitespace/atlas.html
-> **On-demand whitespace finder:** https://webhook.aideazz.xyz/whitespace/
-> **Plain-English reality check (contest prep):** [docs/CONTEST_REALITY_CHECK.md](./docs/CONTEST_REALITY_CHECK.md)
-> **Contest submit checklist:** [docs/CONTEST_SUBMIT.md](./docs/CONTEST_SUBMIT.md)
-> **Market analysis + why Atlas wins:** [docs/MARKET_ANALYSIS.md](./docs/MARKET_ANALYSIS.md)
-> **Backup / restore before v2:** [docs/BACKUP_RESTORE.md](./docs/BACKUP_RESTORE.md)
-> Built for the It's Today Media Build Challenge · by Elena Revicheva (AIdeazz)
-
-Atlas watches the public ad market, **detects which creative angle is opening before it saturates**, generates an **evidence-grounded creative concept** for it, and **renders the actual asset**. It compresses *market observation → test-ready campaign concept* from days to minutes.
-
-Every other tool surfaces the *proven winner* — which herds every buyer into the same saturating angle. Atlas does the opposite: it finds the **open window**, timed by observable entry velocity, with a sourced evidence trail.
-
-**Public data only. No spend / CTR / ROAS is claimed or needed** — those aren't in public ad libraries, so we never pretend to see them. Window states are ranked *hypotheses to test*, not guarantees. The MVP **detects** (what's accelerating now); it does **not** *predict*.
+> **Live demo:** https://webhook.aideazz.xyz/whitespace/atlas.html  
+> **Try any vertical:** https://webhook.aideazz.xyz/whitespace/  
+> **Built for:** [It's Today Media Build Challenge](https://www.itstoday.media/) · Elena Revicheva · [AIdeazz](https://aideazz.xyz)
 
 ---
 
-## The loop (proven end-to-end, live)
+## What problem this solves (for a media buyer)
+
+Most ad-intelligence tools answer: *“What creative is already winning?”*  
+That herds every buyer into the **same angle**. Margins collapse.
+
+**Atlas answers a different question:** *“Which creative angle is still open — adjacent to what’s heating up, but not saturated yet?”*
+
+Then it **closes the loop**: daily brief → evidence-grounded concept → rendered image (and video when available). A buyer goes from *“what’s the market doing?”* to *“here’s something we can test today”* in minutes — not a research sprint.
+
+**Honest scope:** public ad libraries only. No spend, CTR, or ROAS claims. Every MOVE is a **hypothesis to test**, ranked by observable saturation and entry momentum — not a prediction engine.
+
+---
+
+## Verify in 60 seconds (no install)
+
+1. Open the **[live radar](https://webhook.aideazz.xyz/whitespace/atlas.html)** — five affiliate verticals with ENTER / WATCH / STABLE labels.
+2. Click a vertical — the evidence drawer shows **real ad copy** from public libraries (clickable sources).
+3. Scroll to **generated creative** — image loads for expat_language / auto_insurance.
+4. Open the **[whitespace finder](https://webhook.aideazz.xyz/whitespace/)** — type `solar` → live Meta scan → battle plan in ~2 minutes.
+
+**Production proof:** runs unattended every morning on Oracle Cloud (capture → classify → brief → Telegram). Health: `https://webhook.aideazz.xyz/whitespace/healthz`
+
+---
+
+## Submission form — copy/paste answers
+
+Use these at your [private submission link](https://www.itstoday.media/submit/946c809e-7e69-4686-a72a-92f593d4423c):
+
+| Field | Answer |
+|-------|--------|
+| **Demo URL** | `https://webhook.aideazz.xyz/whitespace/atlas.html` |
+| **GitHub repo** | `https://github.com/ElenaRevicheva/atlas-shifted` |
+
+### What does this tool do?
+
+Atlas is a daily marketing intelligence agent for affiliate media buying. Every morning it pulls live ads from the Meta Ad Library (and Google Search ads when available) across five verticals, classifies each ad into eight creative angles (pain point, social proof, urgency, authority, etc.), and scores which angles are **entering**, **heating**, or **saturating**. It delivers a daily MOVE brief — what to test and what to avoid — with real ad excerpts as evidence. For the top opportunity it writes a campaign concept grounded in those ads and renders the creative asset. It runs on a production server without manual steps: capture, classify, brief, Telegram push, backup. Public data only; no fake performance metrics.
+
+### Why did you build THIS one?
+
+Because your business lives and dies on **timing creative angles across platforms** — and every tool I’ve used optimizes for copying winners, not finding whitespace. I built Atlas to mirror how a sharp media buyer actually thinks: watch what’s entering the market, avoid lanes that are crowding, move on adjacent angles before everyone else, and ship creative fast enough to test. I didn’t stop at a dashboard — I closed the loop to concept + asset because research that doesn’t reach production is shelfware. I run nine other AI agents in production for my own company (AIdeazz) on the same Oracle stack; Atlas is that same “agent that runs itself” pattern applied directly to your world. I also dogfood it: the expat-language vertical matches EspaLuz, my live language-learning product — real ICP keywords, not generic demos.
+
+### What would you build next if this became your full-time job?
+
+Week 1–2: wire **TikTok and Taboola** into the same angle ontology so all four of your buying platforms share one radar — the architecture is ready, Meta is the spine today. Week 3–4: **landing-page message match** — score where ad promise and LP copy diverge (the leak that kills affiliate ROI after the click). Month 2: **Atlas Intelligence Layer** — creative half-life, cost-of-waiting on a heating angle, and accumulated market memory so each daily snapshot compounds instead of resetting. Month 3: team workflows — Slack/Telegram alerts tuned to buyer vertical, A/B hook variants auto-generated from the evidence drawer, and HubSpot or your CRM wired so every MOVE creates a trackable test ticket. I’ve already shipped multi-agent HubSpot ingestion and Bright Data research layers in production; this is extending that stack to your media team’s daily rhythm.
+
+### Additional notes (optional)
+
+I’m an AI-augmented builder: I ship production systems with Claude Code and Cursor, not slide decks. This submission is live software — 292+ real ads captured, 2 days of time-series (growing daily), Bright Data Scraping Browser + Web Unlocker, 4-tier LLM failover, daily cron, off-site backup. I’m a solo founder and single parent; I designed for **unattended operation** because I can’t babysit dashboards. Happy to walk through the radar, the evidence trail, or the Oracle deployment on a call. Portfolio: [aideazz.xyz](https://aideazz.xyz) · deeper proof doc: [CONTEST_REALITY_CHECK.md](./docs/CONTEST_REALITY_CHECK.md)
+
+---
+
+## About the builder
+
+**Elena Revicheva** — solo founder, AI-augmented builder, 13+ months running a production AI agent fleet on Oracle Cloud ($0/month infra). Nine live agents (CTO co-pilot, EspaLuz tutor, job hunter, trading, etc.) with health checks, Telegram ops, and HubSpot CRM integration. Atlas reuses the Bright Data web layer built during the Bright Data / lablab hackathon (Web Unlocker + Scraping Browser + SERP) — same credentials, new product aimed at media-buying whitespace.
+
+---
+
+## The daily loop (live in production)
 
 ```
 Observe → Understand → Detect → Brief → Create → Ship
 ```
 
-| Stage | What it does | Implementation |
-|---|---|---|
-| **Observe** | Capture every active ad for 5 verticals daily into an append-only log | `capture.ts` → Meta Ad Library (Bright Data) + Google Search ads (SERP) |
-| **Understand** | Classify each ad into a frozen 8-angle ontology | `classify.ts` → OpenAI embeddings → nearest centroid |
-| **Detect** | Score each angle: saturation, entry velocity, adjacency → ENTER/WATCH/AVOID | `classify.ts` aggregate → `radar.sqlite` |
-| **Brief** | Rank the daily MOVE + lanes to AVOID, with evidence | `brief.ts` → Atlas Daily Brief |
-| **Create** | Ground a fresh creative concept in the real winning ads of the adjacent lane | `concept.ts` → Creative Director |
-| **Ship** | Render the actual image (video best-effort) for the concept | `produce.ts` / `video.ts` → Atuona pipeline |
+| Stage | What it does |
+|-------|----------------|
+| **Observe** | Capture active ads for 5 verticals → append-only log |
+| **Understand** | Classify each ad into 8 frozen angles (embeddings) |
+| **Detect** | Score saturation + entry velocity → ENTER / WATCH / AVOID |
+| **Brief** | Daily MOVE per vertical + Telegram push |
+| **Create** | Evidence-grounded concept from real winning ads |
+| **Ship** | Render image (+ video best-effort) |
 
-The analysis pipeline runs **unattended every morning** (cron, Panama time): `capture → classify → brief → concept → backup`.
-
----
-
-## Why this is defensible (honest moat — nothing is "uncopyable")
-
-1. **Cross-platform angle unification** — one ontology applied across platforms. Incumbents are platform-siloed because unifying transparency surfaces is tedious, not impossible. We do the tedious part.
-2. **A live, accumulating time-series**, started Day 0. No contest entrant can backfill a continuous angle-movement record at submission. (Incumbents with multi-year archives *could* backfill retroactively — so this is a first-mover continuous-observation + demo advantage, not a permanent market moat.)
-3. **It's an agent on a production fleet**, not a SaaS dashboard — health-checked, log-verified, resilient.
-
-**Signal honesty (removes the killer probes):**
-- Lead with **rising-entrant velocity** (additions to public libraries are observable and unambiguous).
-- A **launch proxy** (from Meta "Started running on" dates) shows momentum from a single snapshot, before the 7-day window matures.
-- Treat **ad disappearances as low-confidence** — public libraries show only *active* ads, so an exit may be a pause, not abandonment. We never headline a decay claim on exits.
-- **Freeze the angle taxonomy per `angle_version`**; compare deltas only within a version, so velocity is real signal, not reclassification drift.
-- **Thin-sample guard:** never call an actionable ENTER on a lane with fewer than 2 advertisers.
+Cron: **9 AM Panama daily** · `capture → classify → brief → concept → backup`
 
 ---
 
-## Data sources (honest, per platform)
+## Data sources (honest)
 
 | Platform | Method | Status |
-|---|---|---|
-| **Meta Ad Library** | Bright Data Scraping Browser + LLM extraction | ✅ **Solid spine** — 100+ ads/day across 5 verticals |
-| **Google Search ads** | Bright Data SERP API (`top_ads`/`bottom_ads`) | ⚠️ **Best-effort** — Google's paid block is auction-timed and intermittently returned; the collector parses it correctly and unifies it into the radar *when present* (verified with real advertisers, e.g. Progressive), but Google does not reliably surface ads on demand |
-| TikTok / Taboola | — | 🔜 documented next |
-
-The architecture is cross-platform; **Meta is the reliable live spine.** Google is wired and fires when its ad block appears — stated plainly rather than overclaimed.
+|----------|--------|--------|
+| **Meta Ad Library** | Bright Data Scraping Browser + LLM extraction | ✅ Primary spine — 290+ ads captured |
+| **Google Search ads** | Bright Data SERP (`top_ads` / `bottom_ads`) | ⚠️ Best-effort — present when Google serves paid results |
+| TikTok / Taboola | — | 🔜 next (same ontology) |
 
 ---
 
-## Resilience — "Atlas shrugs"
+## Resilience
 
-Atlas shrugs off provider outages and still ships. All proven live *during this build*:
-- **LLM:** 4-tier failover `Claude → Groq → OpenAI → Grok`. Anthropic credits died mid-build; Atlas finished on OpenAI. Grok green-tested.
-- **Image:** `Flux (Replicate) → OpenAI images`. Replicate ran out of credit; Atlas shipped the EspaLuz image via `gpt-image-1`.
-- **Video:** `Runway → Luma`, models env-overridable. (Both accounts currently dry → the still image stands; honest fallback, no crash.)
-- **Storage:** the JSONL log is the source of truth; `radar.sqlite` is a disposable projection rebuilt from it — a corrupt projection can never harm the irreplaceable time-series. The JSONL is backed up off-VM daily.
-
-Every Atlas Daily Brief footer reports which tiers are armed — the shrug is a feature you can see.
+- **LLM:** Claude → Groq → OpenAI → Grok (proven when Anthropic credits died mid-build)
+- **Images:** Flux → OpenAI fallback
+- **Video:** Runway → Luma (best-effort)
+- **Data:** JSONL is source of truth; SQLite rebuilds from it; daily GitHub backup
 
 ---
 
-## The frozen angle ontology (v1)
+## Angle ontology (v1, frozen)
 
 `pain_point` · `social_proof` · `urgency_scarcity` · `authority` · `curiosity_gap` · `transformation` · `fear_loss` · `novelty`
 
 ---
 
-## Required answers
+## Run locally
 
-**What does this tool do?**
-A cross-platform angle-window radar for affiliate media buying. It reads public ad-transparency data (Meta solid, Google best-effort), classifies every active ad into a frozen taxonomy of creative angles, and tracks the velocity of advertiser entry per angle per vertical — surfacing ENTER (open windows), WATCH (heating), AVOID (saturating), each with a clickable evidence trail and live momentum. For the top opportunity it generates an evidence-grounded creative concept and renders the asset. Public data only.
-
-**Why this one?**
-Because every tool surfaces *proven winners*, which herds every buyer into the crowding angle. For an affiliate operation buying across platforms where ROI is everything, the lever is *timing the open window* — and closing the loop into creative. I led with the observable rising-entrant signal so every number survives a follow-up, and wired it into generation so it drives production, not just a dashboard.
-
-**What would you build next?**
-Finish TikTok + Taboola so all four platforms share one ontology; a landing-page message-match layer (score where ad promise and LP diverge); and the Atlas Intelligence Layer — creative half-life, opportunity-cost-of-waiting, and accumulated market memory that turns snapshots into compounding intelligence. I run this exact agent pattern in production at AIdeazz today, where the same loop generates EspaLuz creative for my own marketing engine.
+```bash
+cp .env.example .env
+npm install && npm run build
+npm run capture && npm run classify && npm run brief
+npm run concept expat_language && npm run produce expat_language
+npm start   # http://localhost:8095
+```
 
 ---
 
-## Run it
+## Docs
 
-```bash
-cp .env.example .env        # ANTHROPIC/GROQ/OPENAI/XAI + BRIGHTDATA_* + REPLICATE + RUNWAY/LUMA
-npm install && npm run build
-npm run capture                  # observe → captures.jsonl
-npm run classify                 # → radar.sqlite (angle_snapshots + angle_daily_agg)
-npm run brief                    # Atlas Daily Brief
-npm run concept expat_language   # evidence-grounded creative concept
-npm run produce expat_language   # render the image
-npm run video   expat_language   # render the video (best-effort)
-npm start                        # serve the dashboard (:8095)
-```
+| Doc | Purpose |
+|-----|---------|
+| [CONTEST_REALITY_CHECK.md](./docs/CONTEST_REALITY_CHECK.md) | Plain-English proof — what works, what doesn’t |
+| [CONTEST_SUBMIT.md](./docs/CONTEST_SUBMIT.md) | Submit checklist + judge script |
+| [MARKET_ANALYSIS.md](./docs/MARKET_ANALYSIS.md) | Why Atlas fits affiliate media buying |
+| [ORACLE_DEPLOY.md](./docs/ORACLE_DEPLOY.md) | Production deployment |
 
-Production discipline carried from the AIdeazz fleet: green build → swap, secrets isolated in `.env`, verify from logs not config, no silent failures, public/transparency-mandated data only.
+---
 
-_Built by Elena Revicheva · [AIdeazz](https://aideazz.xyz). You own your code — this engine doubles as an AIdeazz marketing capability regardless of outcome._
+_Built by Elena Revicheva · [AIdeazz](https://aideazz.xyz). Public repo — this engine doubles as an AIdeazz marketing capability regardless of contest outcome._
