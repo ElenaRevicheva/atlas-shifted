@@ -21,12 +21,12 @@ Then it **closes the loop**: daily brief → evidence-grounded concept → rende
 
 ## Verify in 60 seconds (no install)
 
-1. Open the **[live radar](https://webhook.aideazz.xyz/whitespace/atlas.html)** — five affiliate verticals with ENTER / WATCH / STABLE labels.
-2. Click a vertical — the evidence drawer shows **real ad copy** from public libraries (clickable sources).
-3. Scroll to **generated creative** — image loads for expat_language / auto_insurance.
-4. Open the **[whitespace finder](https://webhook.aideazz.xyz/whitespace/)** — type `solar` → live Meta scan → battle plan in ~2 minutes.
+1. Open the **[live radar](https://webhook.aideazz.xyz/whitespace/atlas.html)** — five affiliate verticals with ENTER / WATCH / AVOID / STABLE labels.
+2. Click a vertical — the evidence drawer shows **real ad copy** from Meta and Google (clickable source URLs).
+3. Scroll to **generated creative** — image (and video for expat_language) loads for expat_language / auto_insurance.
+4. Open the **[whitespace finder](https://webhook.aideazz.xyz/whitespace/)** — type `solar` → live Meta + TikTok Creative Center scan → battle plan in ~2 minutes.
 
-**Production proof:** runs unattended every morning on Oracle Cloud (capture → classify → brief → Telegram). Health: `https://webhook.aideazz.xyz/whitespace/healthz`
+**Production proof:** daily cron on Oracle Cloud (capture → classify → brief → concept → Telegram → backup). Health: `https://webhook.aideazz.xyz/whitespace/healthz` · last verify: **292 ads, 2 snapshot days, contest-verify PASS**
 
 ---
 
@@ -41,7 +41,7 @@ Use these at your [private submission link](https://www.itstoday.media/submit/94
 
 ### What does this tool do?
 
-Atlas is a daily marketing intelligence agent for affiliate media buying. Every morning it pulls live ads from the Meta Ad Library (and Google Search ads when available) across five verticals, classifies each ad into eight creative angles (pain point, social proof, urgency, authority, etc.), and scores which angles are **entering**, **heating**, or **saturating**. It delivers a daily MOVE brief — what to test and what to avoid — with real ad excerpts as evidence. For the top opportunity it writes a campaign concept grounded in those ads and renders the creative asset. It runs on a production server without manual steps: capture, classify, brief, Telegram push, backup. Public data only; no fake performance metrics.
+Atlas is a daily marketing intelligence agent for affiliate media buying. Every morning it pulls live ads from the Meta Ad Library and Google Search ads (when available) across five verticals, classifies each ad into eight creative angles (pain point, social proof, urgency, authority, etc.), and scores which angles are **entering** (ENTER), **heating adjacent** (WATCH + adjacency notes), **crowded** (AVOID), or **stable**. It delivers a daily MOVE brief — what to test and what to avoid — with real ad excerpts as evidence. For the top opportunity it writes a campaign concept grounded in those ads and renders the creative asset (image + video when available). The on-demand **whitespace finder** scans Meta and TikTok Creative Center for any vertical you type; Taboola native is next on the same angle taxonomy so all four buying platforms can share one radar. It runs on a production server without manual steps: capture, classify, brief, Telegram push, backup. Public data only; no fake performance metrics.
 
 ### Why did you build THIS one?
 
@@ -49,11 +49,11 @@ Because your business lives and dies on **timing creative angles across platform
 
 ### What would you build next if this became your full-time job?
 
-Week 1–2: wire **TikTok and Taboola** into the same angle ontology so all four of your buying platforms share one radar — the architecture is ready, Meta is the spine today. Week 3–4: **landing-page message match** — score where ad promise and LP copy diverge (the leak that kills affiliate ROI after the click). Month 2: **Atlas Intelligence Layer** — creative half-life, cost-of-waiting on a heating angle, and accumulated market memory so each daily snapshot compounds instead of resetting. Month 3: team workflows — Slack/Telegram alerts tuned to buyer vertical, A/B hook variants auto-generated from the evidence drawer, and HubSpot or your CRM wired so every MOVE creates a trackable test ticket. I’ve already shipped multi-agent HubSpot ingestion and Bright Data research layers in production; this is extending that stack to your media team’s daily rhythm.
+Week 1–2: add **Taboola native** and fold **TikTok into the daily cron** (TikTok Creative Center already works in the on-demand finder) so all four buying platforms share one radar — Meta is the spine today. Week 3–4: **landing-page message match** — score where ad promise and LP copy diverge (the leak that kills affiliate ROI after the click). Month 2: **Atlas Intelligence Layer** — 7-day entry-velocity sparklines (2 snapshot days live now, compounding daily), creative half-life, cost-of-waiting on a heating angle, and accumulated market memory. Month 3: team workflows — Slack/Telegram alerts tuned to buyer vertical, A/B hook variants auto-generated from the evidence drawer, and HubSpot or your CRM wired so every MOVE creates a trackable test ticket. I’ve already shipped multi-agent HubSpot ingestion and Bright Data research layers in production; this is extending that stack to your media team’s daily rhythm.
 
 ### Additional notes (optional)
 
-I’m an AI-augmented builder: I ship production systems with Claude Code and Cursor, not slide decks. This submission is live software — 292+ real ads captured, 2 days of time-series (growing daily), Bright Data Scraping Browser + Web Unlocker, 4-tier LLM failover, daily cron, off-site backup. I’m a solo founder and single parent; I designed for **unattended operation** because I can’t babysit dashboards. Happy to walk through the radar, the evidence trail, or the Oracle deployment on a call. Portfolio: [aideazz.xyz/portfolio](https://aideazz.xyz/portfolio) · proof doc: [PRODUCT_PROOF.md](./docs/PRODUCT_PROOF.md)
+I’m an AI-augmented builder: I ship production systems with Claude Code and Cursor, not slide decks. This submission is live software — **292 real ads captured**, **2 snapshot days** (7-day velocity charts grow as the daily cron runs), Bright Data Scraping Browser + Web Unlocker, 4-tier LLM failover, daily cron at 9 AM Panama, Telegram brief push, off-site GitHub backup. Daily pipeline: Meta (~96% of captures) + Google best-effort; finder adds TikTok on demand. I’m a solo founder and single parent; I designed for **unattended operation** because I can’t babysit dashboards. Happy to walk through the radar, the evidence trail, or the Oracle deployment on a call. Portfolio: [aideazz.xyz/portfolio](https://aideazz.xyz/portfolio) · proof doc: [PRODUCT_PROOF.md](./docs/PRODUCT_PROOF.md)
 
 ---
 
@@ -71,24 +71,27 @@ Observe → Understand → Detect → Brief → Create → Ship
 
 | Stage | What it does |
 |-------|----------------|
-| **Observe** | Capture active ads for 5 verticals → append-only log |
+| **Observe** | Daily: Meta + Google (best-effort) for 5 verticals → append-only log |
 | **Understand** | Classify each ad into 8 frozen angles (embeddings) |
-| **Detect** | Score saturation + entry velocity → ENTER / WATCH / AVOID |
+| **Detect** | Score saturation + launch proxies → ENTER / WATCH / AVOID / STABLE |
 | **Brief** | Daily MOVE per vertical + Telegram push |
-| **Create** | Evidence-grounded concept from real winning ads |
-| **Ship** | Render image (+ video best-effort) |
+| **Create** | Evidence-grounded concept from real ads in the lane |
+| **Ship** | Render image (+ video best-effort) for top opportunities |
 
-Cron: **9 AM Panama daily** · `capture → classify → brief → concept → backup`
+Cron: **9 AM Panama daily** · `capture → classify → brief → concept → backup` · on-demand finder: Meta + TikTok
 
 ---
 
 ## Data sources (honest)
 
-| Platform | Method | Status |
-|----------|--------|--------|
-| **Meta Ad Library** | Bright Data Scraping Browser + LLM extraction | ✅ Primary spine — 290+ ads captured |
-| **Google Search ads** | Bright Data SERP (`top_ads` / `bottom_ads`) | ⚠️ Best-effort — present when Google serves paid results |
-| TikTok / Taboola | — | 🔜 next (same ontology) |
+| Platform | Daily cron | Whitespace finder | Method |
+|----------|------------|-------------------|--------|
+| **Meta Ad Library** | ✅ Primary | ✅ | Bright Data Scraping Browser + LLM extraction (~282/292 ads) |
+| **Google Search ads** | ⚠️ Best-effort | ✅ | Bright Data SERP — when Google serves paid results |
+| **TikTok Creative Center** | — | ✅ | Bright Data scrape of top ads |
+| **Taboola native** | — | — | 🔜 Next (same 8-angle ontology) |
+
+**Scoring honesty:** ENTER / WATCH / AVOID / STABLE from distinct advertisers + launch proxies. Full 7-day entry-velocity sparklines need more daily snapshots (2 days live; cron compounding).
 
 ---
 
