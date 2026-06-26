@@ -74,7 +74,7 @@ Atlas is the only tool in this contest that combines:
 | **Problem selection** | ✅ Affiliate media buying = angle timing + creative speed — core to their P&L |
 | **Does it work?** | ✅ Live demo, real ads, real video — verified Jun 26 |
 | **Code quality** | ✅ TypeScript, disposable SQLite projection, JSONL source of truth |
-| **README story** | ✅ What / why this / what's next — in README + CONTEST_REALITY_CHECK |
+| **README story** | ✅ What / why / what's next — in README + PRODUCT_PROOF |
 
 **Realistic rating:** Top-tier if you demo live and don't oversell sparklines/history before days accrue.
 

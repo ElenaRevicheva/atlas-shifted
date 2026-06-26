@@ -32,5 +32,5 @@ ensure_default WHITESPACE_META_VERTICAL_PAUSE_MS 5000
 
 if ! grep -q '^BRIGHTDATA_BROWSER_AUTH=' "$ENV" 2>/dev/null; then
   echo "NOTE: BRIGHTDATA_BROWSER_AUTH not set — Meta uses Web Unlocker render (works, but add Scraping Browser zone for contest-grade reliability)"
-  echo "      See docs/BRIGHTDATA_BROWSER_SETUP.md"
+  echo "      See _internal-docs/BRIGHTDATA_BROWSER_SETUP.md (local ops)"
 fi

@@ -53,7 +53,7 @@ Week 1–2: wire **TikTok and Taboola** into the same angle ontology so all four
 
 ### Additional notes (optional)
 
-I’m an AI-augmented builder: I ship production systems with Claude Code and Cursor, not slide decks. This submission is live software — 292+ real ads captured, 2 days of time-series (growing daily), Bright Data Scraping Browser + Web Unlocker, 4-tier LLM failover, daily cron, off-site backup. I’m a solo founder and single parent; I designed for **unattended operation** because I can’t babysit dashboards. Happy to walk through the radar, the evidence trail, or the Oracle deployment on a call. Portfolio: [aideazz.xyz](https://aideazz.xyz) · deeper proof doc: [CONTEST_REALITY_CHECK.md](./docs/CONTEST_REALITY_CHECK.md)
+I’m an AI-augmented builder: I ship production systems with Claude Code and Cursor, not slide decks. This submission is live software — 292+ real ads captured, 2 days of time-series (growing daily), Bright Data Scraping Browser + Web Unlocker, 4-tier LLM failover, daily cron, off-site backup. I’m a solo founder and single parent; I designed for **unattended operation** because I can’t babysit dashboards. Happy to walk through the radar, the evidence trail, or the Oracle deployment on a call. Portfolio: [aideazz.xyz](https://aideazz.xyz) · proof doc: [PRODUCT_PROOF.md](./docs/PRODUCT_PROOF.md)
 
 ---
 
@@ -123,10 +123,8 @@ npm start   # http://localhost:8095
 
 | Doc | Purpose |
 |-----|---------|
-| [CONTEST_REALITY_CHECK.md](./docs/CONTEST_REALITY_CHECK.md) | Plain-English proof — what works, what doesn’t |
-| [CONTEST_SUBMIT.md](./docs/CONTEST_SUBMIT.md) | Submit checklist + judge script |
+| [PRODUCT_PROOF.md](./docs/PRODUCT_PROOF.md) | Plain-English verification — what works, how to check |
 | [MARKET_ANALYSIS.md](./docs/MARKET_ANALYSIS.md) | Why Atlas fits affiliate media buying |
-| [ORACLE_DEPLOY.md](./docs/ORACLE_DEPLOY.md) | Production deployment |
 
 ---
 
