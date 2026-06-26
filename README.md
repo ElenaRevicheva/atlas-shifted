@@ -2,6 +2,7 @@
 
 > **Live demo:** https://webhook.aideazz.xyz/whitespace/atlas.html
 > **On-demand whitespace finder:** https://webhook.aideazz.xyz/whitespace/
+> **Plain-English reality check (contest prep):** [docs/CONTEST_REALITY_CHECK.md](./docs/CONTEST_REALITY_CHECK.md)
 > Built for the It's Today Media Build Challenge · by Elena Revicheva (AIdeazz)
 
 Atlas watches the public ad market, **detects which creative angle is opening before it saturates**, generates an **evidence-grounded creative concept** for it, and **renders the actual asset**. It compresses *market observation → test-ready campaign concept* from days to minutes.
