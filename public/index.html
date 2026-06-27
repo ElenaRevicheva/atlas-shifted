@@ -79,12 +79,13 @@
   .hn{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:#04231f;border:1px solid #1f4a44;color:var(--acc);font-family:var(--mono);font-size:12px;margin-right:8px}
   .footnote{margin-top:18px;text-align:center;font-family:var(--mono);font-size:11.5px;color:var(--dim);line-height:1.7}
   .footnote a{color:var(--acc2);text-decoration:none}
-  .trackcta{margin-top:18px;padding:16px 18px;background:#0c1a17;border:1px solid #1f4a44;border-radius:12px;display:flex;flex-wrap:wrap;align-items:center;gap:12px}
-  .trackcta p{margin:0;font-size:13.5px;color:var(--mut);flex:1;min-width:200px}
-  .trackcta p b{color:var(--ink)}
-  .trackcta a{display:inline-block;background:var(--acc);color:#04231f;font-weight:700;text-decoration:none;border-radius:10px;padding:10px 18px;font-size:14px}
-  .trackcta a:hover{filter:brightness(1.08)}
-  .trackcta .sub{font-family:var(--mono);font-size:10.5px;color:var(--dim);width:100%;margin-top:2px}
+  .trackcta{margin-top:18px;padding:16px 18px;background:linear-gradient(180deg,#0c1a17,#081512);border:2px solid var(--acc);border-radius:14px;display:none;flex-direction:column;align-items:stretch;gap:12px;box-shadow:0 0 24px rgba(94,234,212,.12)}
+  .trackcta.show{display:flex}
+  .trackcta p{margin:0;font-size:14px;color:var(--ink);line-height:1.45}
+  .trackcta p b{color:var(--acc)}
+  .trackbtn{display:block;text-align:center;background:var(--acc);color:#04231f !important;font-weight:800;text-decoration:none !important;border-radius:12px;padding:14px 22px;font-size:16px;cursor:pointer;letter-spacing:.02em;box-shadow:0 4px 20px rgba(94,234,212,.35)}
+  .trackbtn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+  .trackcta .sub{font-family:var(--mono);font-size:11px;color:var(--dim);text-align:center}
 </style>
 </head>
 <body>
@@ -115,15 +116,14 @@
     </div>
   </div>
 
-  <div class="how">
-    <div class="howstep"><span class="hn">1</span>Pick a vertical or offer — Atlas points its radar at that market.</div>
-    <div class="howstep"><span class="hn">2</span>It mines the live ad libraries via Bright Data and deconstructs every running ad into its angle.</div>
-    <div class="howstep"><span class="hn">3</span>You get the open angle almost nobody is running — ranked, with a clickable evidence trail.</div>
-  </div>
-  <div class="footnote">Public ad-transparency data only · <b style="color:var(--mut)">One-shot discovery</b> — not daily tracking. To watch a market over time with ENTER/WATCH scores, <a href="atlas.html">add it to Atlas radar ↗</a> · part of the <a href="atlas.html">Atlas Shifted</a> engine · <a href="https://aideazz.xyz/portfolio" target="_blank" rel="noopener">aideazz.xyz/portfolio ↗</a></div>
-
   <div class="results" id="results">
     <div class="deg" id="deg"></div>
+
+    <div class="trackcta" id="trackCtaTop">
+      <p>✅ Whitespace found — <b>next step:</b> add this market to daily radar for ENTER/WATCH scores every morning.</p>
+      <a id="trackLinkTop" class="trackbtn" href="atlas.html">📡 Add to Atlas radar →</a>
+      <div class="sub">One click · capture today · auto-refresh 9 AM Panama</div>
+    </div>
 
     <div class="sec">
       <div class="rec">
@@ -132,9 +132,9 @@
         <p id="recRationale"></p>
         <span class="conf" id="recConf"></span>
         <div class="adj" id="recAdj"></div>
-        <div class="trackcta" id="trackCta" style="display:none">
-          <p>Like this market? <b>Track it daily</b> — ENTER/WATCH scores, morning refresh, campaign export.</p>
-          <a id="trackLink" href="atlas.html">Add to Atlas radar →</a>
+        <div class="trackcta" id="trackCta">
+          <p>Like this market? <b>Track it daily</b> — ENTER/WATCH, campaigns, export.</p>
+          <a id="trackLink" class="trackbtn" href="atlas.html">📡 Add to Atlas radar →</a>
           <div class="sub">Opens radar · captures today's ads · saved for 9 AM Panama cron</div>
         </div>
       </div>
@@ -179,8 +179,21 @@
       <div id="evidence"></div>
     </div>
 
+    <div class="trackcta" id="trackCtaBottom">
+      <p>Ready to track <b id="trackLabel"></b> daily?</p>
+      <a id="trackLinkBottom" class="trackbtn" href="atlas.html">📡 Add to Atlas radar →</a>
+    </div>
+
     <div class="meta" id="meta"></div>
   </div>
+
+  <div class="how">
+    <div class="howstep"><span class="hn">1</span>Pick a vertical or offer — Atlas points its radar at that market.</div>
+    <div class="howstep"><span class="hn">2</span>It mines the live ad libraries via Bright Data and deconstructs every running ad into its angle.</div>
+    <div class="howstep"><span class="hn">3</span>You get the open angle almost nobody is running — ranked, with a clickable evidence trail.</div>
+  </div>
+  <div class="footnote">Public ad-transparency data only · <b style="color:var(--mut)">One-shot discovery</b> — not daily tracking. To watch a market over time with ENTER/WATCH scores, use the green <b style="color:var(--acc)">Add to Atlas radar</b> button above after your scan · part of the <a href="atlas.html">Atlas Shifted</a> engine · <a href="https://aideazz.xyz/portfolio" target="_blank" rel="noopener">aideazz.xyz/portfolio ↗</a></div>
+
 </div>
 
 <script>
@@ -292,10 +305,19 @@ function render(p){
   else deg.style.display='none';
 
   if(lastQuery){
-    $('trackLink').href='atlas.html?q='+encodeURIComponent(lastQuery)+'&track=1';
-    $('trackCta').style.display='flex';
+    const trackHref='atlas.html?q='+encodeURIComponent(lastQuery)+'&track=1';
+    for(const id of ['trackLink','trackLinkTop','trackLinkBottom']){
+      const el=$(id); if(el) el.href=trackHref;
+    }
+    $('trackLabel').textContent=lastQuery;
+    for(const id of ['trackCta','trackCtaTop','trackCtaBottom']){
+      const el=$(id); if(el) el.classList.add('show');
+    }
+    $('trackCtaTop').scrollIntoView({behavior:'smooth',block:'start'});
   } else {
-    $('trackCta').style.display='none';
+    for(const id of ['trackCta','trackCtaTop','trackCtaBottom']){
+      const el=$(id); if(el) el.classList.remove('show');
+    }
   }
 }
 
