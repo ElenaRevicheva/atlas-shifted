@@ -117,6 +117,15 @@
   .hero-note{margin-top:12px;font-size:12.5px;color:var(--warn);font-family:var(--mono);line-height:1.45;display:none}
   .concept-pending{background:var(--panel2);border:1px dashed var(--line)}
   .concept-pending .pending-msg{color:var(--mut);font-size:13.5px;line-height:1.55;margin-top:8px}
+  .shiprow{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+  .shipbtn{background:transparent;color:var(--acc);font-weight:600;border:1px solid #1f4a44;border-radius:10px;padding:9px 16px;font-size:13px;cursor:pointer;font-family:var(--mono)}
+  .shipbtn:hover:not(:disabled){background:#0c1a17}
+  .shipbtn:disabled{opacity:.45;cursor:wait}
+  .shipfeed{font-family:var(--mono);font-size:11.5px;color:var(--mut);margin-top:10px;line-height:1.5;display:none}
+  .shipfeed.show{display:block}
+  .shipfeed .ok{color:var(--acc)}
+  .shipfeed .bad{color:var(--hot)}
+  .shipfeed div{padding:2px 0}
 </style>
 </head>
 <body>
@@ -188,6 +197,14 @@ const esc=(s)=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;'
 const pct=(x)=>Math.round((x||0)*100);
 let SNAPSHOT='';
 let ATLAS_DATA=null;
+let shipBusyVertical='';
+const SHIP_TOKEN=new URLSearchParams(location.search).get('ship_token')||'';
+
+function assetSrc(path,generatedAt){
+  if(!path) return '';
+  const bust=generatedAt?'?v='+encodeURIComponent(String(generatedAt).slice(0,19)):'';
+  return path+bust;
+}
 
 function confLabel(score){ return score>=70?'high':score>=40?'medium':'low'; }
 
@@ -297,14 +314,33 @@ async function openEvidence(vertical, angle){
   }catch(e){ $('drawerBody').innerHTML='<div class="note">Failed: '+esc(e.message)+'</div>'; }
 }
 
-function conceptCardHtml(c){
+function conceptShipHtml(c, shipCfg){
+  const hasAsset=c.asset&&c.asset.image_file;
+  const hasVideo=c.video&&c.video.video_file;
+  if(hasVideo||!shipCfg||!shipCfg.image) return '';
+  const label=hasAsset
+    ? (shipCfg.video?'Generate video (~3 min)':'Generate still only')
+    : 'Generate creative (~3 min)';
+  return '<div class="shiprow">'+
+    '<button type="button" class="shipbtn" data-v="'+esc(c.vertical)+'">'+label+'</button>'+
+    '<div class="shipfeed" id="shipfeed-'+esc(c.vertical)+'"></div></div>';
+}
+
+function conceptCardHtml(c, shipCfg){
   const cc=c.concept||{};
   const ev=(c.grounding_evidence||[]).slice(0,2).map(e=>'<a href="'+esc(e.url)+'" target="_blank" rel="noopener">['+esc(e.angle)+' · '+esc(e.advertiser)+']</a>').join(' ');
   const muts=(c.mutations||[]).map((m,i)=>'<div class="mut"><div class="mh">V'+(i+2)+' · '+esc(m.emotion)+'</div>'+esc(m.hook)+'<br><b style="color:var(--ink)">'+esc(m.headline)+'</b></div>').join('');
+  const imgAt=c.asset&&c.asset.generated_at;
+  const vidAt=c.video&&c.video.generated_at;
+  const media=(c.video&&c.video.video_file
+    ?('<video class="casset" src="'+esc(assetSrc(c.video.video_file,vidAt))+'" controls muted loop playsinline poster="'+esc(assetSrc((c.asset&&c.asset.image_file)||'',imgAt))+'"></video><div class="ev">generated video · '+esc(c.video.model||'')+'</div>')
+    :(c.asset&&c.asset.image_file
+      ?('<img class="casset" src="'+esc(assetSrc(c.asset.image_file,imgAt))+'" alt="generated creative" loading="lazy"><div class="ev">generated still · '+esc(c.asset.model||'')+'</div>')
+      :'<div class="note">Visual asset pending — copy is live; click Generate creative below to ship image + video.</div>'));
   return '<div class="concept" id="concept-'+esc(c.vertical)+'">'+
     '<div class="k">'+esc(c.vertical)+' · open window: '+esc(c.move.angle)+' ('+c.move.score+'/100)'+(c.heating_lane?(' · adjacent to heating '+esc(c.heating_lane)):'')+'</div>'+
     '<h3>'+esc(cc.concept_name||'—')+'</h3><div class="em">owns: '+esc(cc.emotion||'')+'</div>'+
-    (c.video&&c.video.video_file?('<video class="casset" src="'+esc(c.video.video_file)+'" controls muted loop playsinline poster="'+esc((c.asset&&c.asset.image_file)||'')+'"></video><div class="ev">generated video · '+esc(c.video.model||'')+'</div>'):(c.asset&&c.asset.image_file?('<img class="casset" src="'+esc(c.asset.image_file)+'" alt="generated creative" loading="lazy">'):'<div class="note">Visual asset pending — copy is live; image generates on produce pass.</div>'))+
+    media+
     '<div class="row"><b>Hook:</b> '+esc(cc.hook||'')+'</div>'+
     '<div class="row"><b>Headline:</b> '+esc(cc.headline||'')+'</div>'+
     '<div class="row"><b>Body:</b> '+esc(cc.primary_text||'')+'</div>'+
@@ -312,6 +348,7 @@ function conceptCardHtml(c){
     '<div class="row"><b>CTA:</b> '+esc(cc.cta||'')+'</div>'+
     (muts?('<div class="row"><b>Mutations (A/B hooks):</b></div><div class="mutgrid">'+muts+'</div>'):'')+
     (ev?('<div class="ev">grounded in real ads: '+ev+'</div>'):'')+
+    conceptShipHtml(c, shipCfg)+
   '</div>';
 }
 
@@ -326,6 +363,7 @@ function conceptPendingHtml(vertical, move){
 
 function renderConceptSection(d, focusVertical){
   const concepts=d.concepts||{};
+  const shipCfg=d.ship||{};
   const briefVs=(d.brief?.verticals||[]).map(v=>v.vertical);
   const boardVs=(d.board||[]).map(b=>b.vertical);
   const order=[...new Set([focusVertical,...briefVs,...boardVs].filter(Boolean))];
@@ -333,7 +371,7 @@ function renderConceptSection(d, focusVertical){
   for(const v of (d.brief?.verticals||[])) briefByV[v.vertical]=v;
   const html=[];
   for(const v of order){
-    if(concepts[v]) html.push(conceptCardHtml(concepts[v]));
+    if(concepts[v]) html.push(conceptCardHtml(concepts[v], shipCfg));
     else html.push(conceptPendingHtml(v, briefByV[v]?.move));
   }
   return html.length? html.join('') : '<div class="loading">No concepts generated yet — add a vertical to radar.</div>';
@@ -411,6 +449,94 @@ function runTrack(fromWhitespace){
 }
 function verticalSlug(s){ return s.trim().toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'').slice(0,48)||'custom'; }
 
+function shipFeed(vertical, stage, msg, cls){
+  const el=document.getElementById('shipfeed-'+vertical);
+  if(!el) return;
+  el.classList.add('show');
+  const d=document.createElement('div');
+  d.innerHTML='<span class="'+(cls||'ok')+'">'+esc(stage)+'</span> · '+esc(msg);
+  el.appendChild(d);
+  el.scrollTop=el.scrollHeight;
+}
+
+function setShipButtons(disabled, activeVertical){
+  document.querySelectorAll('.shipbtn').forEach(btn=>{
+    btn.disabled=disabled;
+    if(disabled&&btn.dataset.v===activeVertical){
+      btn.textContent='Generating…';
+    }
+  });
+}
+
+function runShip(vertical){
+  if(shipBusyVertical||!vertical) return;
+  const cfg=ATLAS_DATA&&ATLAS_DATA.ship;
+  if(!cfg||!cfg.image){
+    shipFeed(vertical,'error','Image providers not configured on server','bad');
+    return;
+  }
+  if(cfg.tokenRequired&&!SHIP_TOKEN){
+    shipFeed(vertical,'error','Add ?ship_token=… to the URL for live generation','bad');
+    return;
+  }
+  shipBusyVertical=vertical;
+  setShipButtons(true, vertical);
+  const feedEl=document.getElementById('shipfeed-'+vertical);
+  if(feedEl) feedEl.innerHTML='';
+  shipFeed(vertical,'start','DETECT→CREATE→SHIP — image then video…','ok');
+  let url='api/atlas/ship?vertical='+encodeURIComponent(vertical)+'&stage=all';
+  if(SHIP_TOKEN) url+='&token='+encodeURIComponent(SHIP_TOKEN);
+  const es=new EventSource(url);
+  es.onmessage=(m)=>{
+    let e; try{e=JSON.parse(m.data);}catch{return;}
+    shipFeed(e.stage,e.message||'', e.stage==='error'?'bad':'ok');
+    if(e.stage==='done'){
+      es.close();
+      shipBusyVertical='';
+      setShipButtons(false);
+      fetch('api/atlas').then(r=>r.json()).then(d=>{
+        ATLAS_DATA=d;
+        $('concepts').innerHTML=renderConceptSection(d, vertical);
+        bindShipButtons();
+        const card=document.getElementById('concept-'+vertical);
+        if(card) card.scrollIntoView({behavior:'smooth',block:'start'});
+        shipFeed(vertical,'done','Card refreshed — scroll up if needed','ok');
+      });
+    }
+    if(e.stage==='error'){
+      es.close();
+      shipBusyVertical='';
+      if(ATLAS_DATA){
+        $('concepts').innerHTML=renderConceptSection(ATLAS_DATA, vertical);
+        bindShipButtons();
+      } else {
+        setShipButtons(false);
+      }
+    }
+  };
+  es.addEventListener('close',()=>{
+    es.close();
+    if(shipBusyVertical===vertical){
+      shipBusyVertical='';
+      setShipButtons(false);
+    }
+  });
+  es.onerror=()=>{
+    if(shipBusyVertical===vertical){
+      shipFeed(vertical,'error','stream closed — check server logs','bad');
+      shipBusyVertical='';
+      setShipButtons(false);
+    }
+    es.close();
+  };
+}
+
+function bindShipButtons(){
+  document.querySelectorAll('.shipbtn').forEach(btn=>{
+    btn.onclick=()=>runShip(btn.dataset.v);
+  });
+}
+
 $('scanTrack').onclick=runTrack;
 $('scanQ').addEventListener('keydown',e=>{ if(e.key==='Enter') runTrack(); });
 const urlParams=new URLSearchParams(location.search);
@@ -480,6 +606,7 @@ async function render(d){
   boardEl.querySelectorAll('.lane').forEach(el=>el.onclick=()=>openEvidence(el.dataset.v, el.dataset.a));
 
   $('concepts').innerHTML=renderConceptSection(d, pickDefaultVertical(d.brief));
+  bindShipButtons();
 
   const mem=(intel.memory||[]);
   $('memory').innerHTML=mem.length? mem.map(m=>'<div class="memory">'+esc(m.snapshot_date)+' · '+esc(m.vertical)+' · ENTER <b>'+esc(m.angle_id)+'</b> ('+Math.round(m.window_score*100)+'/100)</div>').join('') : '<div class="note">No ENTER signals logged yet — memory grows each morning.</div>';

@@ -70,6 +70,13 @@ export const config = {
   maxCreatives: num(process.env.WHITESPACE_MAX_CREATIVES, 12),
   maxToolCalls: num(process.env.WHITESPACE_MAX_TOOL_CALLS, 10),
   runTimeoutMs: num(process.env.WHITESPACE_RUN_TIMEOUT_MS, 180_000),
+
+  // Optional gate for /api/atlas/ship (Generate creative). Open when unset.
+  shipToken: process.env.ATLAS_SHIP_TOKEN?.trim() || '',
+
+  // Video providers (Runway → Luma failover in video.ts)
+  runwayKey: process.env.RUNWAY_API_KEY?.trim() || '',
+  lumaKey: process.env.LUMA_API_KEY?.trim() || '',
 };
 
 export const hasBrightData = (): boolean => !!(config.brightDataToken && config.brightDataZone);
@@ -79,3 +86,6 @@ export const hasAnthropic = (): boolean => !!config.anthropicKey;
 export const hasAnyLlm = (): boolean =>
   !!(config.anthropicKey || config.groqKey || config.openaiKey || config.xaiKey);
 export const hasTelegram = (): boolean => !!(config.telegramBotToken && config.telegramChatId);
+export const hasImageProviders = (): boolean => !!(config.replicateToken || config.openaiKey);
+export const hasVideoProviders = (): boolean => !!(config.runwayKey || config.lumaKey);
+export const shipTokenRequired = (): boolean => !!config.shipToken;

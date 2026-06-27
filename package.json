@@ -18,6 +18,7 @@
     "telegram-bot": "node dist/telegram-bot.js",
     "concept": "node dist/concept.js",
     "produce": "node dist/produce.js",
+    "video": "node dist/video.js",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

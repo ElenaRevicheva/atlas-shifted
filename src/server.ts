@@ -13,7 +13,18 @@ import { DatabaseSync } from 'node:sqlite';
 import { existsSync, readFileSync, writeFileSync, unlinkSync, statSync } from 'node:fs';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { config, hasBrightData, hasAnthropic, hasAnyLlm, hasTelegram, hasBrightDataBrowser, hasMetaAdLibraryApi } from './config.js';
+import {
+  config,
+  hasBrightData,
+  hasAnthropic,
+  hasAnyLlm,
+  hasTelegram,
+  hasBrightDataBrowser,
+  hasMetaAdLibraryApi,
+  hasImageProviders,
+  hasVideoProviders,
+  shipTokenRequired,
+} from './config.js';
 import { runWhitespace } from './agent.js';
 import { breakerState } from './llm.js';
 import { buildIntelligence, angleHistory, laneEvidence } from './intelligence.js';
@@ -27,6 +38,9 @@ const ROOT = join(__dirname, '..');
 const execFileAsync = promisify(execFile);
 const TRACK_LOCK = join(DATA_DIR, '.track.lock');
 const TRACK_LOCK_MAX_MS = 30 * 60 * 1000;
+const SHIP_LOCK = join(DATA_DIR, '.ship.lock');
+const SHIP_LOCK_MAX_MS = 25 * 60 * 1000;
+const VERTICAL_ID = /^[a-z][a-z0-9_]{0,47}$/;
 
 type SseSend = (stage: string, message: string, extra?: Record<string, unknown>) => void;
 
@@ -48,6 +62,42 @@ function releaseTrackLock(): void {
   try {
     if (existsSync(TRACK_LOCK)) unlinkSync(TRACK_LOCK);
   } catch { /* ignore */ }
+}
+
+function acquireShipLock(): boolean {
+  try {
+    if (existsSync(SHIP_LOCK)) {
+      const age = Date.now() - statSync(SHIP_LOCK).mtimeMs;
+      if (age < SHIP_LOCK_MAX_MS) return false;
+      unlinkSync(SHIP_LOCK);
+    }
+    writeFileSync(SHIP_LOCK, `${process.pid} ${new Date().toISOString()}`);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function releaseShipLock(): void {
+  try {
+    if (existsSync(SHIP_LOCK)) unlinkSync(SHIP_LOCK);
+  } catch { /* ignore */ }
+}
+
+function readConceptEntry(vertical: string): Record<string, unknown> | null {
+  const p = join(DATA_DIR, 'concepts.json');
+  if (!existsSync(p)) return null;
+  try {
+    const all = JSON.parse(readFileSync(p, 'utf8')) as Record<string, Record<string, unknown>>;
+    return all[vertical] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function shipTokenOk(token: string): boolean {
+  if (!shipTokenRequired()) return true;
+  return token === config.shipToken;
 }
 
 function sseHeaders(res: express.Response): void {
@@ -83,6 +133,11 @@ app.get('/healthz', (_req, res) => {
     maxCreatives: config.maxCreatives,
     breaker: breakerState(),
     telegram: hasTelegram(),
+    ship: {
+      image: hasImageProviders(),
+      video: hasVideoProviders(),
+      tokenRequired: shipTokenRequired(),
+    },
   });
 });
 
@@ -125,6 +180,11 @@ app.get('/api/atlas', (_req, res) => {
     out.tracked_verticals = readTrackedVerticals();
     out.seed_verticals = [...SEED_IDS];
   } catch { /* ignore */ }
+  out.ship = {
+    image: hasImageProviders(),
+    video: hasVideoProviders(),
+    tokenRequired: shipTokenRequired(),
+  };
   res.json(out);
 });
 
@@ -237,6 +297,109 @@ app.get('/api/atlas/track', async (req, res) => {
     send('error', (e as Error).message || 'track failed', { pct: 100 });
   } finally {
     releaseTrackLock();
+    clearInterval(ka);
+    res.write('event: close\ndata: {}\n\n');
+    res.end();
+  }
+});
+
+/** Render still + video for a vertical that already has concept copy (DETECT→CREATE→SHIP). */
+app.get('/api/atlas/ship', async (req, res) => {
+  const vertical = String(req.query.vertical || '').trim();
+  const token = String(req.query.token || '').trim();
+  const force = String(req.query.force || '') === '1';
+  const stage = String(req.query.stage || 'all').trim();
+
+  if (!vertical || !VERTICAL_ID.test(vertical)) {
+    res.status(400).json({ error: 'invalid vertical id' });
+    return;
+  }
+  if (!shipTokenOk(token)) {
+    res.status(403).json({ error: 'ship token required or invalid' });
+    return;
+  }
+  const entry = readConceptEntry(vertical);
+  if (!entry) {
+    res.status(404).json({ error: `no concept for "${vertical}" — add to radar or wait for daily capture` });
+    return;
+  }
+  const brief = entry as {
+    producer_brief?: { image_prompt?: string };
+    concept?: { image_prompt?: string };
+    asset?: { image_file?: string };
+    video?: { video_file?: string };
+  };
+  const hasPrompt = !!(brief.producer_brief?.image_prompt || brief.concept?.image_prompt);
+  if (!hasPrompt) {
+    res.status(422).json({ error: 'concept has no image prompt — run concept first' });
+    return;
+  }
+  if (!hasImageProviders()) {
+    res.status(503).json({ error: 'image providers not configured (REPLICATE_API_TOKEN or OPENAI_API_KEY)' });
+    return;
+  }
+  if ((stage === 'video' || stage === 'all') && !brief.asset?.image_file && stage !== 'all') {
+    res.status(422).json({ error: 'no still image yet — run stage=all or produce first' });
+    return;
+  }
+  if (!acquireShipLock()) {
+    res.status(409).json({ error: 'Another creative ship is in progress — try again in a few minutes.' });
+    return;
+  }
+
+  sseHeaders(res);
+  const send: SseSend = (stageName, message, extra) => {
+    res.write(`data: ${JSON.stringify({ stage: stageName, message, vertical, ...extra })}\n\n`);
+  };
+  const ka = setInterval(() => res.write(': keep-alive\n\n'), 15_000);
+
+  const needImage = (stage === 'all' || stage === 'image') && (!brief.asset?.image_file || force);
+  const needVideo =
+    (stage === 'all' || stage === 'video') &&
+    hasVideoProviders() &&
+    (!brief.video?.video_file || force);
+
+  try {
+    send('start', `Shipping creative for "${vertical}"…`, { pct: 5, need_image: needImage, need_video: needVideo });
+
+    if (needImage) {
+      send('produce', 'Rendering still image (Flux → OpenAI fallback)…', { pct: 15 });
+      await execFileAsync('node', [join(ROOT, 'dist', 'produce.js'), vertical], {
+        cwd: ROOT,
+        timeout: 180_000,
+      });
+      send('produce', 'Still image shipped', { pct: 55 });
+    } else if (brief.asset?.image_file) {
+      send('produce', 'Still image already on file — skipping render', { pct: 55, skipped: true });
+    }
+
+    if (needVideo) {
+      send('video', 'Animating 5s clip (Runway → Luma fallback)…', { pct: 60 });
+      try {
+        await execFileAsync('node', [join(ROOT, 'dist', 'video.js'), vertical], {
+          cwd: ROOT,
+          timeout: 600_000,
+        });
+        send('video', 'Video shipped', { pct: 95 });
+      } catch (e) {
+        const code = (e as { code?: number }).code;
+        if (code === 2) {
+          send('video', 'Video providers dry — still image stands (honest fallback).', { pct: 95, partial: true });
+        } else {
+          throw e;
+        }
+      }
+    } else if (brief.video?.video_file) {
+      send('video', 'Video already on file — skipping render', { pct: 95, skipped: true });
+    } else if (!hasVideoProviders()) {
+      send('video', 'Video providers not configured — still image only.', { pct: 95, partial: true });
+    }
+
+    send('done', `Creative ready for "${vertical}" — refresh card below`, { pct: 100 });
+  } catch (e) {
+    send('error', (e as Error).message || 'ship failed', { pct: 100 });
+  } finally {
+    releaseShipLock();
     clearInterval(ka);
     res.write('event: close\ndata: {}\n\n');
     res.end();
