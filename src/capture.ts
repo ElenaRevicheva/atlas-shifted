@@ -22,7 +22,7 @@
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, appendFileSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { hasBrightData, config } from './config.js';
 import { bdMetaAdLibraryFetch, bdSerpAds, htmlToText } from './brightdata.js';
 import { metaApiSearchAds } from './meta-api.js';
@@ -262,6 +262,33 @@ async function captureVertical(
   return { found, written, dupes };
 }
 
+/** Slug for ad-hoc verticals typed in the UI (not in SEED_VERTICALS). */
+export function verticalSlug(label: string): string {
+  const s = label
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_|_$/g, '');
+  return (s || 'custom').slice(0, 48);
+}
+
+/** Capture one UI-typed vertical into today's snapshot (Meta + Google best-effort). */
+export async function captureAdHoc(label: string): Promise<{ id: string; found: number; written: number; dupes: number }> {
+  if (!hasBrightData()) throw new Error('Bright Data not configured');
+  const q = label.trim();
+  if (!q) throw new Error('empty vertical');
+  mkdirSync(DATA_DIR, { recursive: true });
+  const snapshotDate = panamaDate();
+  const v = { id: verticalSlug(q), queries: [q] };
+  const seenKeys = existingKeysForDate(snapshotDate);
+  let r = await captureVertical(v, snapshotDate, seenKeys);
+  if (r.written === 0) {
+    await sleep(config.metaVerticalPauseMs * 2);
+    r = await captureVertical(v, snapshotDate, seenKeys);
+  }
+  return { id: v.id, ...r };
+}
+
 async function main() {
   if (!hasBrightData()) {
     console.error('FATAL: Bright Data not configured (BRIGHTDATA_API_TOKEN + BRIGHTDATA_ZONE). Cannot capture.');
@@ -329,7 +356,10 @@ async function main() {
   );
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+const isMain = import.meta.url === pathToFileURL(process.argv[1] ?? '').href;
+if (isMain) {
+  main().catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
+}

@@ -80,6 +80,33 @@
   .evitem a{font-family:var(--mono);font-size:10px;color:var(--acc2)}
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99;display:none}
   .overlay.open{display:block}
+  .scan{background:linear-gradient(180deg,var(--panel),#0e1017);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:0 0 22px}
+  .scan .hint{font-size:12.5px;color:var(--dim);margin:0 0 12px;line-height:1.45}
+  .scanrow{display:flex;gap:10px;flex-wrap:wrap}
+  .scanrow input{flex:1;min-width:220px;background:#0c0e15;border:1px solid var(--line);border-radius:10px;color:var(--ink);font-size:15px;padding:12px 14px;outline:none}
+  .scanrow input:focus{border-color:var(--acc)}
+  .scanrow button{background:var(--acc);color:#04231f;font-weight:700;border:0;border-radius:10px;padding:0 16px;font-size:13.5px;cursor:pointer;font-family:var(--mono)}
+  .scanrow button.secondary{background:#0c0e15;color:var(--mut);border:1px solid var(--line)}
+  .scanrow button:disabled{opacity:.45;cursor:default}
+  .scanfeed{font-family:var(--mono);font-size:12px;color:var(--mut);margin-top:12px;max-height:120px;overflow:auto;border-left:2px solid var(--line);padding-left:10px}
+  .scanfeed div{padding:2px 0}
+  .scanfeed .ok{color:var(--acc)}
+  .scanfeed .bad{color:var(--hot)}
+  .scanout{margin-top:14px;display:none}
+  .scanout .rec{background:var(--panel2);border:1px solid #1f4a44;border-radius:12px;padding:14px;font-size:13.5px;color:var(--mut);line-height:1.5}
+  .scanout .rec h4{margin:0 0 6px;color:var(--acc);font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+  .scanout .rec b{color:var(--ink)}
+  .hero{background:linear-gradient(180deg,#15212b,#101820);border:1px solid #1f4a44;border-radius:16px;padding:20px 22px;margin:0 0 22px}
+  .hero .lab{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--acc);text-transform:uppercase;margin-bottom:14px}
+  .hero .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;font-size:14px}
+  @media(max-width:640px){.hero .grid{grid-template-columns:1fr}}
+  .hero .k{font-family:var(--mono);font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
+  .hero .v{color:var(--ink);font-weight:600;line-height:1.4}
+  .hero .v.big{font-size:18px}
+  .hero select{background:#0c0e15;border:1px solid var(--line);border-radius:8px;color:var(--ink);font-size:14px;padding:8px 10px;width:100%;max-width:280px}
+  .herobtns{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+  .herobtns button{background:var(--acc);color:#04231f;font-weight:700;border:0;border-radius:10px;padding:10px 18px;font-size:13.5px;cursor:pointer;font-family:var(--sans)}
+  .herobtns button.secondary{background:#0c0e15;color:var(--mut);border:1px solid var(--line)}
 </style>
 </head>
 <body>
@@ -92,6 +119,35 @@
   </header>
   <div class="tag">Atlas watches the public ad market, <b>detects which creative angle is opening before it saturates</b>, and generates the evidence-grounded creative for it. <b>Public data only</b> — no spend/CTR; window states are ranked hypotheses, not guarantees.</div>
   <div class="shrug" id="shrug">⌐ loading resilience…</div>
+
+  <div class="hero" id="hero" style="display:none">
+    <div class="lab">▸ Today's move</div>
+    <div style="margin-bottom:12px">
+      <div class="k">Vertical</div>
+      <select id="heroVertical"></select>
+    </div>
+    <div class="grid">
+      <div><div class="k">Recommendation</div><div class="v big" id="heroRec">—</div></div>
+      <div><div class="k">Confidence</div><div class="v" id="heroConf">—</div></div>
+      <div style="grid-column:1/-1"><div class="k">Reason</div><div class="v" id="heroWhy">—</div></div>
+      <div style="grid-column:1/-1"><div class="k">Action</div><div class="v">Launch campaign test</div></div>
+    </div>
+    <div class="herobtns">
+      <button type="button" id="heroView">View campaign</button>
+      <button type="button" id="heroExport" class="secondary">Export test</button>
+    </div>
+  </div>
+
+  <div class="scan">
+    <div class="hint">Type any vertical or offer — no code changes. <b style="color:var(--ink)">Live scan</b> = instant battle plan (Meta + TikTok). <b style="color:var(--ink)">Add to radar</b> = capture today’s ads and show ENTER/WATCH scores on the board below.</div>
+    <div class="scanrow">
+      <input id="scanQ" placeholder="e.g. medicare advantage, AI language tutor, fractional CTO" autocomplete="off" />
+      <button id="scanLive">Live scan</button>
+      <button id="scanTrack" class="secondary">Add to radar</button>
+    </div>
+    <div class="scanfeed" id="scanFeed" style="display:none"></div>
+    <div class="scanout" id="scanOut"></div>
+  </div>
 
   <div class="stats" id="stats"></div>
 
@@ -121,6 +177,71 @@ const $=(id)=>document.getElementById(id);
 const esc=(s)=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 const pct=(x)=>Math.round((x||0)*100);
 let SNAPSHOT='';
+let ATLAS_DATA=null;
+
+function confLabel(score){ return score>=70?'high':score>=40?'medium':'low'; }
+
+function pickDefaultVertical(brief){
+  const vs=brief?.verticals||[];
+  const enter=vs.filter(v=>v.move?.state==='ENTER').sort((a,b)=>(b.move?.score||0)-(a.move?.score||0));
+  if(enter.length) return enter[0].vertical;
+  return [...vs].sort((a,b)=>(b.move?.score||0)-(a.move?.score||0))[0]?.vertical||'';
+}
+
+function buildExportText(vertical){
+  const brief=ATLAS_DATA?.brief; const concepts=ATLAS_DATA?.concepts||{};
+  const v=(brief?.verticals||[]).find(x=>x.vertical===vertical);
+  const c=concepts[vertical];
+  if(!v) return '';
+  const m=v.move; const cc=c?.concept||{};
+  const visual=c?.asset?.image_file||cc.scene_concept||'';
+  const lines=[
+    'ATLAS CAMPAIGN EXPORT · '+(brief.snapshot_date||SNAPSHOT),'Vertical: '+vertical,'',
+    'Campaign:',cc.concept_name||(m.state+' '+m.angle),'',
+    'Audience:','US buyers — '+vertical.replace(/_/g,' ')+' · angle '+m.angle.replace(/_/g,' '),'',
+    'Hook:',cc.hook||'—','Headline:',cc.headline||'—','Primary text:',cc.primary_text||'—','',
+    'Visual:',visual,'CTA:',cc.cta||'—','',
+    'Landing angle:',m.state+' '+m.angle+' — '+m.why,'',
+    'Why Atlas picked it:',m.why,
+    (c?.grounding_evidence||[]).slice(0,2).map(e=>'• '+e.advertiser+': "'+e.excerpt.slice(0,100)+'…"').join('\n')
+  ];
+  return lines.filter(x=>x!==undefined).join('\n');
+}
+
+function downloadExport(vertical){
+  const text=buildExportText(vertical);
+  if(!text) return;
+  const blob=new Blob([text],{type:'text/plain'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='atlas-campaign-'+vertical+'-'+(SNAPSHOT||'export')+'.txt';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function renderHero(vertical){
+  const brief=ATLAS_DATA?.brief;
+  if(!brief?.verticals?.length){ $('hero').style.display='none'; return; }
+  const sel=$('heroVertical');
+  sel.innerHTML='';
+  for(const v of brief.verticals){
+    const o=document.createElement('option');
+    o.value=v.vertical; o.textContent=v.vertical.replace(/_/g,' ');
+    sel.appendChild(o);
+  }
+  if(!vertical) vertical=pickDefaultVertical(brief);
+  sel.value=vertical;
+  sel.onchange=()=>renderHero(sel.value);
+  $('heroView').onclick=()=>{ const el=document.getElementById('concept-'+sel.value); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); else $('concepts').scrollIntoView({behavior:'smooth'}); };
+  $('heroExport').onclick=()=>downloadExport(sel.value);
+  const row=brief.verticals.find(v=>v.vertical===vertical);
+  if(!row){ $('hero').style.display='none'; return; }
+  const m=row.move;
+  $('heroRec').innerHTML='<span class="badge '+esc(m.state)+'" style="display:inline-block;margin-right:6px">'+esc(m.state)+'</span>'+esc(m.angle.replace(/_/g,' '));
+  $('heroConf').textContent=confLabel(m.score)+' ('+m.score+'/100)';
+  $('heroWhy').textContent=m.why||'—';
+  $('hero').style.display='block';
+}
 
 function sparkSvg(history){
   if(!history||!history.length) return '<svg class="spark" viewBox="0 0 56 22"><text x="4" y="14" fill="#5b6072" font-size="8">—</text></svg>';
@@ -153,7 +274,76 @@ fetch('api/atlas').then(r=>r.json()).then(render).catch(e=>{
   $('board').innerHTML='<div class="loading">Could not load radar: '+esc(e.message)+'</div>';
 });
 
+let scanBusy=false;
+function scanFeed(stage,msg,cls){
+  const el=$('scanFeed');
+  el.style.display='block';
+  const d=document.createElement('div');
+  d.innerHTML='<span class="'+(cls||'ok')+'">'+esc(stage)+'</span> · '+esc(msg);
+  el.appendChild(d);
+  el.scrollTop=el.scrollHeight;
+}
+function scanFinish(){ scanBusy=false; $('scanLive').disabled=false; $('scanTrack').disabled=false; }
+
+function renderLiveScan(p){
+  const r=p.recommendation||{};
+  $('scanOut').style.display='block';
+  $('scanOut').innerHTML='<div class="rec"><h4>Recommended whitespace angle</h4><b>'+esc(r.angle||'—')+'</b> · confidence '+esc(r.confidence||0)+'/100<br><br>'+esc(r.rationale||'')+
+    ((p.evidence&&p.evidence.length)?('<br><br><span style="color:var(--dim)">Evidence:</span> '+p.evidence.slice(0,3).map(e=>'<a href="'+esc(e.sourceUrl)+'" target="_blank" rel="noopener">'+esc(e.advertiser||'ad')+'</a>').join(' · ')):'' )+
+    '</div>';
+}
+
+function runLiveScan(){
+  if(scanBusy) return;
+  const v=$('scanQ').value.trim();
+  if(!v) return;
+  scanBusy=true; $('scanLive').disabled=true; $('scanTrack').disabled=true;
+  $('scanFeed').innerHTML=''; $('scanOut').style.display='none';
+  scanFeed('start','connecting…');
+  const es=new EventSource('api/run?vertical='+encodeURIComponent(v)+'&mode=media_buyer');
+  es.onmessage=(m)=>{
+    let e; try{e=JSON.parse(m.data);}catch{return;}
+    scanFeed(e.stage,e.message||'', e.stage==='error'?'bad':'ok');
+    if(e.stage==='done'&&e.data){ renderLiveScan(e.data); es.close(); scanFinish(); }
+    if(e.stage==='error'){ es.close(); scanFinish(); }
+  };
+  es.addEventListener('close',()=>{ es.close(); scanFinish(); });
+  es.onerror=()=>{ if(scanBusy) scanFeed('error','stream closed','bad'); es.close(); scanFinish(); };
+}
+
+function runTrack(){
+  if(scanBusy) return;
+  const v=$('scanQ').value.trim();
+  if(!v) return;
+  scanBusy=true; $('scanLive').disabled=true; $('scanTrack').disabled=true;
+  $('scanFeed').innerHTML=''; $('scanOut').style.display='none';
+  scanFeed('start','adding to radar…');
+  const es=new EventSource('api/atlas/track?vertical='+encodeURIComponent(v));
+  es.onmessage=(m)=>{
+    let e; try{e=JSON.parse(m.data);}catch{return;}
+    scanFeed(e.stage,e.message||'', e.stage==='error'?'bad':'ok');
+    if(e.stage==='done'){
+      es.close();
+      scanFinish();
+      fetch('api/atlas').then(r=>r.json()).then(render).then(()=>{
+        scanFeed('refresh','Radar board reloaded — look for "'+(e.vertical_id||verticalSlug(v))+'"','ok');
+      });
+    }
+    if(e.stage==='error'){ es.close(); scanFinish(); }
+  };
+  es.addEventListener('close',()=>{ es.close(); scanFinish(); });
+  es.onerror=()=>{ if(scanBusy) scanFeed('error','stream closed','bad'); es.close(); scanFinish(); };
+}
+function verticalSlug(s){ return s.trim().toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'').slice(0,48)||'custom'; }
+
+$('scanLive').onclick=runLiveScan;
+$('scanTrack').onclick=runTrack;
+$('scanQ').addEventListener('keydown',e=>{ if(e.key==='Enter') runLiveScan(); });
+const qParam=new URLSearchParams(location.search).get('q');
+if(qParam){ $('scanQ').value=qParam; }
+
 async function render(d){
+  ATLAS_DATA=d;
   SNAPSHOT=d.snapshot_date||'';
   $('stats').innerHTML=[
     ['days tracked', d.distinct_days||0],
@@ -164,6 +354,7 @@ async function render(d){
 
   const res=d.brief&&d.brief.resilience;
   $('shrug').textContent=res||'⌐ Atlas shrugs — multi-tier LLM failover armed.';
+  renderHero(pickDefaultVertical(d.brief));
 
   const intel=d.intelligence||{};
   const intelByV={};
@@ -211,7 +402,7 @@ async function render(d){
     const cc=c.concept||{};
     const ev=(c.grounding_evidence||[]).slice(0,2).map(e=>'<a href="'+esc(e.url)+'" target="_blank" rel="noopener">['+esc(e.angle)+' · '+esc(e.advertiser)+']</a>').join(' ');
     const muts=(c.mutations||[]).map((m,i)=>'<div class="mut"><div class="mh">V'+(i+2)+' · '+esc(m.emotion)+'</div>'+esc(m.hook)+'<br><b style="color:var(--ink)">'+esc(m.headline)+'</b></div>').join('');
-    return '<div class="concept">'+
+    return '<div class="concept" id="concept-'+esc(c.vertical)+'">'+
       '<div class="k">'+esc(c.vertical)+' · open window: '+esc(c.move.angle)+' ('+c.move.score+'/100)'+(c.heating_lane?(' · adjacent to heating '+esc(c.heating_lane)):'')+'</div>'+
       '<h3>'+esc(cc.concept_name||'—')+'</h3><div class="em">owns: '+esc(cc.emotion||'')+'</div>'+
       (c.video&&c.video.video_file?('<video class="casset" src="'+esc(c.video.video_file)+'" controls muted loop playsinline poster="'+esc((c.asset&&c.asset.image_file)||'')+'"></video><div class="ev">🎬 generated video via '+esc(c.video.model||'')+'</div>'):(c.asset&&c.asset.image_file?('<img class="casset" src="'+esc(c.asset.image_file)+'" alt="generated creative" loading="lazy">'):''))+

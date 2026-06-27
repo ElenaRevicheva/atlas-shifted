@@ -10,7 +10,9 @@ import express from 'express';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { DatabaseSync } from 'node:sqlite';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, unlinkSync, statSync } from 'node:fs';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import { config, hasBrightData, hasAnthropic, hasAnyLlm, hasTelegram, hasBrightDataBrowser, hasMetaAdLibraryApi } from './config.js';
 import { runWhitespace } from './agent.js';
 import { breakerState } from './llm.js';
@@ -20,6 +22,48 @@ import type { RunEvent, RunMode } from './types.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = join(__dirname, '..', 'public');
 const DATA_DIR = join(__dirname, '..', 'data');
+const ROOT = join(__dirname, '..');
+const execFileAsync = promisify(execFile);
+const TRACK_LOCK = join(DATA_DIR, '.track.lock');
+const TRACK_LOCK_MAX_MS = 30 * 60 * 1000;
+
+type SseSend = (stage: string, message: string, extra?: Record<string, unknown>) => void;
+
+function acquireTrackLock(): boolean {
+  try {
+    if (existsSync(TRACK_LOCK)) {
+      const age = Date.now() - statSync(TRACK_LOCK).mtimeMs;
+      if (age < TRACK_LOCK_MAX_MS) return false;
+      unlinkSync(TRACK_LOCK);
+    }
+    writeFileSync(TRACK_LOCK, `${process.pid} ${new Date().toISOString()}`);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function releaseTrackLock(): void {
+  try {
+    if (existsSync(TRACK_LOCK)) unlinkSync(TRACK_LOCK);
+  } catch { /* ignore */ }
+}
+
+function sseHeaders(res: express.Response): void {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+    'X-Accel-Buffering': 'no',
+  });
+}
+
+async function runClassifyBrief(send?: SseSend): Promise<void> {
+  send?.('classify', 'Rebuilding angle radar from captures…', { pct: 72 });
+  await execFileAsync('node', [join(ROOT, 'dist', 'classify.js')], { cwd: ROOT });
+  send?.('brief', 'Writing daily MOVE brief…', { pct: 88 });
+  await execFileAsync('node', [join(ROOT, 'dist', 'brief.js')], { cwd: ROOT });
+}
 
 const app = express();
 app.disable('x-powered-by');
@@ -123,18 +167,12 @@ app.get('/api/run', async (req, res) => {
     return;
   }
 
-  res.writeHead(200, {
-    'Content-Type': 'text/event-stream',
-    'Cache-Control': 'no-cache, no-transform',
-    Connection: 'keep-alive',
-    'X-Accel-Buffering': 'no',
-  });
+  sseHeaders(res);
 
   const send = (e: RunEvent) => {
     res.write(`data: ${JSON.stringify(e)}\n\n`);
   };
 
-  // Keep-alive comments so proxies don't drop a long run.
   const ka = setInterval(() => res.write(': keep-alive\n\n'), 15_000);
 
   try {
@@ -142,6 +180,49 @@ app.get('/api/run', async (req, res) => {
   } catch (e) {
     send({ stage: 'error', message: (e as Error).message || 'run failed' });
   } finally {
+    clearInterval(ka);
+    res.write('event: close\ndata: {}\n\n');
+    res.end();
+  }
+});
+
+/** Capture a UI-typed vertical → classify → brief → refresh radar board. Append-only; never deletes captures. */
+app.get('/api/atlas/track', async (req, res) => {
+  const vertical = String(req.query.vertical || '').trim();
+  if (!vertical) {
+    res.status(400).json({ error: 'missing vertical' });
+    return;
+  }
+  if (!hasBrightData()) {
+    res.status(503).json({ error: 'Bright Data not configured' });
+    return;
+  }
+  if (!acquireTrackLock()) {
+    res.status(409).json({ error: 'Another track capture is in progress — try again in a few minutes.' });
+    return;
+  }
+
+  sseHeaders(res);
+  const send: SseSend = (stage, message, extra) => {
+    res.write(`data: ${JSON.stringify({ stage, message, ...extra })}\n\n`);
+  };
+  const ka = setInterval(() => res.write(': keep-alive\n\n'), 15_000);
+
+  try {
+    send('capture', `Capturing live ads for "${vertical}"…`, { pct: 8 });
+    const { captureAdHoc } = await import('./capture-adhoc.js');
+    const cap = await captureAdHoc(vertical);
+    send('capture', `Captured ${cap.written} ads (${cap.found} found) → vertical id "${cap.id}"`, { pct: 55, vertical_id: cap.id });
+    if (cap.written === 0) {
+      send('error', 'No ads captured — Meta may have timed out. Try Live scan instead.', { pct: 100 });
+      return;
+    }
+    await runClassifyBrief(send);
+    send('done', `Radar updated — look for "${cap.id}" on the board`, { pct: 100, vertical_id: cap.id });
+  } catch (e) {
+    send('error', (e as Error).message || 'track failed', { pct: 100 });
+  } finally {
+    releaseTrackLock();
     clearInterval(ka);
     res.write('event: close\ndata: {}\n\n');
     res.end();
