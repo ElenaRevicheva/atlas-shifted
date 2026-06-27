@@ -16,7 +16,7 @@
  *   - Capture must not depend on a single LLM provider — Groq→OpenAI failover,
  *     Claude skipped once its credit breaker trips.
  *
- * Run:  node dist/capture.js            (all seed verticals)
+ * Run:  node dist/capture.js            (all seed + tracked verticals)
  *       node dist/capture.js solar      (one vertical id)
  */
 import { createHash } from 'node:crypto';
@@ -27,39 +27,22 @@ import { hasBrightData, config } from './config.js';
 import { bdMetaAdLibraryFetch, bdSerpAds, htmlToText } from './brightdata.js';
 import { metaApiSearchAds } from './meta-api.js';
 import { llmJson } from './llm.js';
+import {
+  getCaptureTargets,
+  knownVerticalIds,
+  orderVerticals,
+  registerTrackedVertical,
+  verticalSlug,
+  type VerticalDef,
+} from './verticals.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = join(__dirname, '..', 'data');
 const JSONL = join(DATA_DIR, 'captures.jsonl');
 
 /**
- * Seed verticals — the judge's affiliate world + AIdeazz dogfood (expat_language).
- * `queries` is frozen per vertical (like the taxonomy): it defines the population
- * we measure, so changing it mid-series would corrupt velocity. expat_language
- * uses EspaLuz's real ICP keywords (relocators with language anxiety), not generic
- * "learn spanish", so the dogfood signal is about the market EspaLuz actually serves.
+ * Seed verticals live in verticals.ts (also user-tracked + jsonl backfill for daily cron).
  */
-const SEED_VERTICALS: Array<{ id: string; queries: string[] }> = [
-  { id: 'auto_insurance', queries: ['auto insurance'] },
-  { id: 'solar', queries: ['solar panels'] },
-  { id: 'debt_finance', queries: ['debt relief'] },
-  { id: 'health_supplements', queries: ['health supplement'] },
-  {
-    id: 'expat_language',
-    queries: ['learn spanish', 'move abroad spanish', 'spanish for expats', 'relocation language'],
-  },
-];
-
-/** Solar first — Meta timeouts often hit late verticals after rate pressure. */
-const VERTICAL_ORDER = ['solar', 'auto_insurance', 'debt_finance', 'health_supplements', 'expat_language'];
-
-function orderVerticals(targets: typeof SEED_VERTICALS): typeof SEED_VERTICALS {
-  return [...targets].sort((a, b) => {
-    const ia = VERTICAL_ORDER.indexOf(a.id);
-    const ib = VERTICAL_ORDER.indexOf(b.id);
-    return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
-  });
-}
 
 function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
@@ -262,24 +245,19 @@ async function captureVertical(
   return { found, written, dupes };
 }
 
-/** Slug for ad-hoc verticals typed in the UI (not in SEED_VERTICALS). */
-export function verticalSlug(label: string): string {
-  const s = label
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '_')
-    .replace(/^_|_$/g, '');
-  return (s || 'custom').slice(0, 48);
-}
+/** Slug for ad-hoc verticals typed in the UI (not in seed list). Re-exported for API consumers. */
+export { verticalSlug } from './verticals.js';
 
 /** Capture one UI-typed vertical into today's snapshot (Meta + Google best-effort). */
 export async function captureAdHoc(label: string): Promise<{ id: string; found: number; written: number; dupes: number }> {
   if (!hasBrightData()) throw new Error('Bright Data not configured');
   const q = label.trim();
   if (!q) throw new Error('empty vertical');
+  registerTrackedVertical(q);
   mkdirSync(DATA_DIR, { recursive: true });
   const snapshotDate = panamaDate();
-  const v = { id: verticalSlug(q), queries: [q] };
+  const id = verticalSlug(q);
+  const v = getCaptureTargets(id)[0] ?? { id, queries: [q] };
   const seenKeys = existingKeysForDate(snapshotDate);
   let r = await captureVertical(v, snapshotDate, seenKeys);
   if (r.written === 0) {
@@ -298,19 +276,21 @@ async function main() {
 
   const snapshotDate = panamaDate();
   const only = process.argv[2]?.trim();
-  const targets = orderVerticals(only ? SEED_VERTICALS.filter((s) => s.id === only) : SEED_VERTICALS);
+  const targets = orderVerticals(only ? getCaptureTargets(only) : getCaptureTargets());
   if (targets.length === 0) {
-    console.error(`unknown vertical "${only}". Known: ${SEED_VERTICALS.map((s) => s.id).join(', ')}`);
+    console.error(`unknown vertical "${only}". Known: ${knownVerticalIds().join(', ')}`);
     process.exit(1);
   }
 
   const seenKeys = existingKeysForDate(snapshotDate);
-  console.log(`ATLAS CAPTURE · snapshot_date=${snapshotDate} (Panama) · ${targets.length} verticals · ${seenKeys.size} rows already today`);
+  console.log(
+    `ATLAS CAPTURE · snapshot_date=${snapshotDate} (Panama) · ${targets.length} verticals (${targets.map((v) => v.id).join(', ')}) · ${seenKeys.size} rows already today`,
+  );
 
   let totalFound = 0;
   let totalWritten = 0;
   let totalDupes = 0;
-  const zeroWriteVerticals: typeof SEED_VERTICALS = [];
+  const zeroWriteVerticals: VerticalDef[] = [];
 
   for (const v of targets) {
     try {

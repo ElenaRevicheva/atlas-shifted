@@ -17,6 +17,7 @@ import { config, hasBrightData, hasAnthropic, hasAnyLlm, hasTelegram, hasBrightD
 import { runWhitespace } from './agent.js';
 import { breakerState } from './llm.js';
 import { buildIntelligence, angleHistory, laneEvidence } from './intelligence.js';
+import { readTrackedVerticals, SEED_IDS } from './verticals.js';
 import type { RunEvent, RunMode } from './types.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -120,6 +121,10 @@ app.get('/api/atlas', (_req, res) => {
       out.intelligence = buildIntelligence(sqlitePath, out.snapshot_date as string);
     }
   } catch { /* ignore */ }
+  try {
+    out.tracked_verticals = readTrackedVerticals();
+    out.seed_verticals = [...SEED_IDS];
+  } catch { /* ignore */ }
   res.json(out);
 });
 
@@ -209,10 +214,12 @@ app.get('/api/atlas/track', async (req, res) => {
   const ka = setInterval(() => res.write(': keep-alive\n\n'), 15_000);
 
   try {
+    send('register', `Registering "${vertical}" for daily radar capture…`, { pct: 4 });
     send('capture', `Capturing live ads for "${vertical}"…`, { pct: 8 });
     const { captureAdHoc } = await import('./capture-adhoc.js');
     const cap = await captureAdHoc(vertical);
     send('capture', `Captured ${cap.written} ads (${cap.found} found) → vertical id "${cap.id}"`, { pct: 55, vertical_id: cap.id });
+    send('register', `Saved to daily cron — "${cap.id}" refreshes every morning at 9 AM Panama`, { pct: 62, vertical_id: cap.id });
     if (cap.written === 0) {
       send('error', 'No ads captured — Meta may have timed out. Try Live scan instead.', { pct: 100 });
       return;

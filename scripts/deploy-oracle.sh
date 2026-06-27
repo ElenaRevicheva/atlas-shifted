@@ -20,6 +20,8 @@ bash scripts/wire-brightdata-env.sh
 
 bash scripts/setup-brightdata-browser.sh || true
 
+bash scripts/setup-atlas-cron.sh
+
 node dist/brief.js
 
 pm2 restart whitespace --update-env
