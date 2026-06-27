@@ -8,7 +8,7 @@ cd "$WS"
 node dist/capture.js >> "$LOG" 2>&1
 node dist/classify.js >> "$LOG" 2>&1
 node dist/brief.js >> "$LOG" 2>&1
-node dist/concept.js expat_language >> "$LOG" 2>&1
+node dist/concept.js --all-with-data >> "$LOG" 2>&1
 TOKEN=$(grep -m1 '^GITHUB_TOKEN=' /home/ubuntu/cto-aipa/.env | cut -d= -f2- | tr -d '\r')
 if [[ -d "$WS/data/.git" ]]; then
   cd "$WS/data"

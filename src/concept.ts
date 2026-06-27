@@ -17,7 +17,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { llmJson, activeLlmLabel } from './llm.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -77,23 +77,21 @@ const EMPTY: Concept = {
   concept_name: '', emotion: '', hook: '', headline: '', primary_text: '', scene_concept: '', cta: '', image_prompt: '',
 };
 
-async function main() {
-  if (!existsSync(SQLITE)) {
-    console.error('no radar.sqlite — run classify first');
-    process.exit(1);
-  }
-  const vertical = (process.argv[2] || 'expat_language').trim();
+/** Generate and persist concept for one vertical. Throws if radar has no rows for it. */
+export async function generateConceptForVertical(vertical: string): Promise<void> {
+  if (!existsSync(SQLITE)) throw new Error('no radar.sqlite — run classify first');
+  vertical = vertical.trim();
   const db = new DatabaseSync(SQLITE);
   const latest = (db.prepare('SELECT MAX(snapshot_date) d FROM angle_daily_agg').get() as { d: string } | undefined)?.d;
   if (!latest) {
-    console.error('no aggregate rows');
-    process.exit(1);
+    db.close();
+    throw new Error('no aggregate rows');
   }
 
   const aggRows = db.prepare('SELECT * FROM angle_daily_agg WHERE vertical=? AND snapshot_date=?').all(vertical, latest) as unknown as AggRow[];
   if (aggRows.length === 0) {
-    console.error(`no data for vertical "${vertical}"`);
-    process.exit(1);
+    db.close();
+    throw new Error(`no data for vertical "${vertical}"`);
   }
   const move = pickMove(aggRows)!;
   const heating = heatingFromNote(move.adjacency_note);
@@ -202,7 +200,46 @@ Also produce **3 mutation variants** — same open window, different emotional h
   console.log(`ATLAS CONCEPT DONE · wrote data/concepts.json[${vertical}]`);
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+/** All verticals with data on the latest snapshot — for daily cron. */
+export function verticalsWithRadarData(): string[] {
+  if (!existsSync(SQLITE)) return [];
+  const db = new DatabaseSync(SQLITE);
+  const latest = (db.prepare('SELECT MAX(snapshot_date) d FROM angle_daily_agg').get() as { d: string } | undefined)?.d;
+  if (!latest) {
+    db.close();
+    return [];
+  }
+  const rows = db
+    .prepare('SELECT DISTINCT vertical FROM angle_daily_agg WHERE snapshot_date=? ORDER BY vertical')
+    .all(latest) as Array<{ vertical: string }>;
+  db.close();
+  return rows.map((r) => r.vertical);
+}
+
+async function main() {
+  const arg = (process.argv[2] || 'expat_language').trim();
+  if (arg === '--all-with-data') {
+    const ids = verticalsWithRadarData();
+    if (!ids.length) {
+      console.error('no verticals in radar');
+      process.exit(1);
+    }
+    for (const v of ids) {
+      try {
+        await generateConceptForVertical(v);
+      } catch (e) {
+        console.error(`concept skip ${v}:`, (e as Error).message);
+      }
+    }
+    return;
+  }
+  await generateConceptForVertical(arg);
+}
+
+const isMain = import.meta.url === pathToFileURL(process.argv[1] ?? '').href;
+if (isMain) {
+  main().catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
+}

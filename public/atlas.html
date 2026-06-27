@@ -81,7 +81,9 @@
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99;display:none}
   .overlay.open{display:block}
   .scan{background:linear-gradient(180deg,var(--panel),#0e1017);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:0 0 22px}
-  .scan .hint{font-size:12.5px;color:var(--dim);margin:0 0 12px;line-height:1.45}
+  .scan .hint{font-size:13px;color:var(--dim);margin:0 0 12px;line-height:1.55;font-weight:400}
+  .scan .hint a{color:var(--acc2);text-decoration:none}
+  .scan .hint a:hover{text-decoration:underline}
   .scanrow{display:flex;gap:10px;flex-wrap:wrap}
   .scanrow input{flex:1;min-width:220px;background:#0c0e15;border:1px solid var(--line);border-radius:10px;color:var(--ink);font-size:15px;padding:12px 14px;outline:none}
   .scanrow input:focus{border-color:var(--acc)}
@@ -112,6 +114,9 @@
   .herobtns{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
   .herobtns button{background:var(--acc);color:#04231f;font-weight:700;border:0;border-radius:10px;padding:10px 18px;font-size:13.5px;cursor:pointer;font-family:var(--sans)}
   .herobtns button.secondary{background:#0c0e15;color:var(--mut);border:1px solid var(--line)}
+  .hero-note{margin-top:12px;font-size:12.5px;color:var(--warn);font-family:var(--mono);line-height:1.45;display:none}
+  .concept-pending{background:var(--panel2);border:1px dashed var(--line)}
+  .concept-pending .pending-msg{color:var(--mut);font-size:13.5px;line-height:1.55;margin-top:8px}
 </style>
 </head>
 <body>
@@ -141,10 +146,11 @@
       <button type="button" id="heroView">View campaign</button>
       <button type="button" id="heroExport" class="secondary">Export test</button>
     </div>
+    <div class="hero-note" id="heroNote"></div>
   </div>
 
   <div class="scan" id="scan">
-    <div class="hint"><b style="color:var(--ink)">Add to radar</b> — captures today's ads, scores ENTER/WATCH on the board below, and <b style="color:var(--ink)">refreshes automatically every morning</b> (9 AM Panama). For instant one-shot angle discovery without daily memory, use <a class="navlink" href="./">WHITESPACE →</a></div>
+    <div class="hint">Optional: add a market to daily tracking. Atlas captures ads each morning (9 AM Panama), scores angles on the board, and builds campaign copy for that vertical. For a one-time scan without memory, use <a href="./">WHITESPACE</a>.</div>
     <div class="scanrow">
       <input id="scanQ" placeholder="e.g. personal ai companions, medicare advantage, fractional CTO" autocomplete="off" />
       <button id="scanTrack">Add to radar</button>
@@ -223,6 +229,13 @@ function downloadExport(vertical){
   URL.revokeObjectURL(a.href);
 }
 
+function showHeroNote(msg){
+  const el=$('heroNote');
+  if(!msg){ el.style.display='none'; el.textContent=''; return; }
+  el.textContent=msg;
+  el.style.display='block';
+}
+
 function renderHero(vertical){
   const brief=ATLAS_DATA?.brief;
   if(!brief?.verticals?.length){ $('hero').style.display='none'; return; }
@@ -235,8 +248,18 @@ function renderHero(vertical){
   }
   if(!vertical) vertical=pickDefaultVertical(brief);
   sel.value=vertical;
-  sel.onchange=()=>renderHero(sel.value);
-  $('heroView').onclick=()=>{ const el=document.getElementById('concept-'+sel.value); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); else $('concepts').scrollIntoView({behavior:'smooth'}); };
+  sel.onchange=()=>{ showHeroNote(''); renderHero(sel.value); };
+  $('heroView').onclick=()=>{
+    const v=sel.value;
+    showHeroNote('');
+    const c=ATLAS_DATA?.concepts?.[v];
+    const el=document.getElementById('concept-'+v);
+    if(c&&el){ el.scrollIntoView({behavior:'smooth',block:'start'}); return; }
+    if(el){ el.scrollIntoView({behavior:'smooth',block:'start'}); showHeroNote('Campaign copy for this vertical is still generating — check back after add-to-radar or tomorrow\'s capture.'); return; }
+    showHeroNote('No campaign for this vertical yet. Add it below or wait for the next daily capture.');
+    $('scanQ').value=v.replace(/_/g,' ');
+    $('scan').scrollIntoView({behavior:'smooth',block:'start'});
+  };
   $('heroExport').onclick=()=>downloadExport(sel.value);
   const row=brief.verticals.find(v=>v.vertical===vertical);
   if(!row){ $('hero').style.display='none'; return; }
@@ -274,6 +297,48 @@ async function openEvidence(vertical, angle){
   }catch(e){ $('drawerBody').innerHTML='<div class="note">Failed: '+esc(e.message)+'</div>'; }
 }
 
+function conceptCardHtml(c){
+  const cc=c.concept||{};
+  const ev=(c.grounding_evidence||[]).slice(0,2).map(e=>'<a href="'+esc(e.url)+'" target="_blank" rel="noopener">['+esc(e.angle)+' · '+esc(e.advertiser)+']</a>').join(' ');
+  const muts=(c.mutations||[]).map((m,i)=>'<div class="mut"><div class="mh">V'+(i+2)+' · '+esc(m.emotion)+'</div>'+esc(m.hook)+'<br><b style="color:var(--ink)">'+esc(m.headline)+'</b></div>').join('');
+  return '<div class="concept" id="concept-'+esc(c.vertical)+'">'+
+    '<div class="k">'+esc(c.vertical)+' · open window: '+esc(c.move.angle)+' ('+c.move.score+'/100)'+(c.heating_lane?(' · adjacent to heating '+esc(c.heating_lane)):'')+'</div>'+
+    '<h3>'+esc(cc.concept_name||'—')+'</h3><div class="em">owns: '+esc(cc.emotion||'')+'</div>'+
+    (c.video&&c.video.video_file?('<video class="casset" src="'+esc(c.video.video_file)+'" controls muted loop playsinline poster="'+esc((c.asset&&c.asset.image_file)||'')+'"></video><div class="ev">generated video · '+esc(c.video.model||'')+'</div>'):(c.asset&&c.asset.image_file?('<img class="casset" src="'+esc(c.asset.image_file)+'" alt="generated creative" loading="lazy">'):'<div class="note">Visual asset pending — copy is live; image generates on produce pass.</div>'))+
+    '<div class="row"><b>Hook:</b> '+esc(cc.hook||'')+'</div>'+
+    '<div class="row"><b>Headline:</b> '+esc(cc.headline||'')+'</div>'+
+    '<div class="row"><b>Body:</b> '+esc(cc.primary_text||'')+'</div>'+
+    '<div class="row"><b>Scene:</b> '+esc(cc.scene_concept||'')+'</div>'+
+    '<div class="row"><b>CTA:</b> '+esc(cc.cta||'')+'</div>'+
+    (muts?('<div class="row"><b>Mutations (A/B hooks):</b></div><div class="mutgrid">'+muts+'</div>'):'')+
+    (ev?('<div class="ev">grounded in real ads: '+ev+'</div>'):'')+
+  '</div>';
+}
+
+function conceptPendingHtml(vertical, move){
+  const mv=move?(' · MOVE '+esc(move.state)+' '+esc(move.angle.replace(/_/g,' '))):'';
+  return '<div class="concept concept-pending" id="concept-'+esc(vertical)+'">'+
+    '<div class="k">'+esc(vertical)+mv+'</div>'+
+    '<h3>Campaign not generated yet</h3>'+
+    '<p class="pending-msg">Radar data exists for this vertical, but creative copy has not been built yet. Use <b>Add to radar</b> below or wait for the next morning capture — then View campaign will show copy grounded in today\'s ads (not another vertical).</p>'+
+  '</div>';
+}
+
+function renderConceptSection(d, focusVertical){
+  const concepts=d.concepts||{};
+  const briefVs=(d.brief?.verticals||[]).map(v=>v.vertical);
+  const boardVs=(d.board||[]).map(b=>b.vertical);
+  const order=[...new Set([focusVertical,...briefVs,...boardVs].filter(Boolean))];
+  const briefByV={};
+  for(const v of (d.brief?.verticals||[])) briefByV[v.vertical]=v;
+  const html=[];
+  for(const v of order){
+    if(concepts[v]) html.push(conceptCardHtml(concepts[v]));
+    else html.push(conceptPendingHtml(v, briefByV[v]?.move));
+  }
+  return html.length? html.join('') : '<div class="loading">No concepts generated yet — add a vertical to radar.</div>';
+}
+
 fetch('api/atlas').then(r=>r.json()).then(render).catch(e=>{
   $('board').innerHTML='<div class="loading">Could not load radar: '+esc(e.message)+'</div>';
 });
@@ -304,6 +369,7 @@ function stageLabel(stage){
   if(stage==='capture'||stage==='register') return 'Capturing ads…';
   if(stage==='classify') return 'Scoring angles…';
   if(stage==='brief') return 'Writing brief…';
+  if(stage==='concept') return 'Writing campaign…';
   return 'Adding to radar…';
 }
 
@@ -413,24 +479,7 @@ async function render(d){
   if(!(d.board||[]).length) boardEl.innerHTML='<div class="loading">No radar data yet.</div>';
   boardEl.querySelectorAll('.lane').forEach(el=>el.onclick=()=>openEvidence(el.dataset.v, el.dataset.a));
 
-  const cs=Object.values(d.concepts||{});
-  $('concepts').innerHTML=cs.length? cs.map(c=>{
-    const cc=c.concept||{};
-    const ev=(c.grounding_evidence||[]).slice(0,2).map(e=>'<a href="'+esc(e.url)+'" target="_blank" rel="noopener">['+esc(e.angle)+' · '+esc(e.advertiser)+']</a>').join(' ');
-    const muts=(c.mutations||[]).map((m,i)=>'<div class="mut"><div class="mh">V'+(i+2)+' · '+esc(m.emotion)+'</div>'+esc(m.hook)+'<br><b style="color:var(--ink)">'+esc(m.headline)+'</b></div>').join('');
-    return '<div class="concept" id="concept-'+esc(c.vertical)+'">'+
-      '<div class="k">'+esc(c.vertical)+' · open window: '+esc(c.move.angle)+' ('+c.move.score+'/100)'+(c.heating_lane?(' · adjacent to heating '+esc(c.heating_lane)):'')+'</div>'+
-      '<h3>'+esc(cc.concept_name||'—')+'</h3><div class="em">owns: '+esc(cc.emotion||'')+'</div>'+
-      (c.video&&c.video.video_file?('<video class="casset" src="'+esc(c.video.video_file)+'" controls muted loop playsinline poster="'+esc((c.asset&&c.asset.image_file)||'')+'"></video><div class="ev">🎬 generated video via '+esc(c.video.model||'')+'</div>'):(c.asset&&c.asset.image_file?('<img class="casset" src="'+esc(c.asset.image_file)+'" alt="generated creative" loading="lazy">'):''))+
-      '<div class="row"><b>Hook:</b> '+esc(cc.hook||'')+'</div>'+
-      '<div class="row"><b>Headline:</b> '+esc(cc.headline||'')+'</div>'+
-      '<div class="row"><b>Body:</b> '+esc(cc.primary_text||'')+'</div>'+
-      '<div class="row"><b>Scene (→ Atuona):</b> '+esc(cc.scene_concept||'')+'</div>'+
-      '<div class="row"><b>CTA:</b> '+esc(cc.cta||'')+'</div>'+
-      (muts?('<div class="row"><b>Mutations (A/B hooks):</b></div><div class="mutgrid">'+muts+'</div>'):'')+
-      (ev?('<div class="ev">grounded in real ads: '+ev+'</div>'):'')+
-    '</div>';
-  }).join('') : '<div class="loading">No concepts generated yet.</div>';
+  $('concepts').innerHTML=renderConceptSection(d, pickDefaultVertical(d.brief));
 
   const mem=(intel.memory||[]);
   $('memory').innerHTML=mem.length? mem.map(m=>'<div class="memory">'+esc(m.snapshot_date)+' · '+esc(m.vertical)+' · ENTER <b>'+esc(m.angle_id)+'</b> ('+Math.round(m.window_score*100)+'/100)</div>').join('') : '<div class="note">No ENTER signals logged yet — memory grows each morning.</div>';

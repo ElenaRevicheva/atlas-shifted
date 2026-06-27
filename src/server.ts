@@ -225,6 +225,13 @@ app.get('/api/atlas/track', async (req, res) => {
       return;
     }
     await runClassifyBrief(send);
+    send('concept', `Generating campaign creative for "${cap.id}"…`, { pct: 92, vertical_id: cap.id });
+    try {
+      await execFileAsync('node', [join(ROOT, 'dist', 'concept.js'), cap.id], { cwd: ROOT });
+      send('concept', `Campaign brief ready for "${cap.id}"`, { pct: 96, vertical_id: cap.id });
+    } catch (e) {
+      send('concept', `Campaign copy skipped: ${(e as Error).message}`, { pct: 96, vertical_id: cap.id });
+    }
     send('done', `Radar updated — look for "${cap.id}" on the board`, { pct: 100, vertical_id: cap.id });
   } catch (e) {
     send('error', (e as Error).message || 'track failed', { pct: 100 });
