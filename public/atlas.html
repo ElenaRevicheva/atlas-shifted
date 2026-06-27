@@ -85,9 +85,10 @@
   .scanrow{display:flex;gap:10px;flex-wrap:wrap}
   .scanrow input{flex:1;min-width:220px;background:#0c0e15;border:1px solid var(--line);border-radius:10px;color:var(--ink);font-size:15px;padding:12px 14px;outline:none}
   .scanrow input:focus{border-color:var(--acc)}
-  .scanrow button{background:var(--acc);color:#04231f;font-weight:700;border:0;border-radius:10px;padding:0 16px;font-size:13.5px;cursor:pointer;font-family:var(--mono)}
+  .scanrow button{background:var(--acc);color:#04231f;font-weight:700;border:0;border-radius:10px;padding:0 16px;font-size:13.5px;cursor:pointer;font-family:var(--mono);min-width:132px}
   .scanrow button.secondary{background:#0c0e15;color:var(--mut);border:1px solid var(--line)}
-  .scanrow button:disabled{opacity:.45;cursor:default}
+  .scanrow button:disabled:not(.running){opacity:.45;cursor:default}
+  .scanrow button.running{opacity:1;cursor:wait;min-width:160px}
   .scanfeed{font-family:var(--mono);font-size:12px;color:var(--mut);margin-top:12px;max-height:120px;overflow:auto;border-left:2px solid var(--line);padding-left:10px}
   .scanfeed div{padding:2px 0}
   .scanfeed .ok{color:var(--acc)}
@@ -278,6 +279,14 @@ fetch('api/atlas').then(r=>r.json()).then(render).catch(e=>{
 });
 
 let scanBusy=false;
+const TRACK_BTN='Add to radar';
+function setTrackRunning(running,label){
+  const btn=$('scanTrack');
+  scanBusy=running;
+  btn.disabled=running;
+  btn.textContent=label||(running?'Working…':TRACK_BTN);
+  btn.classList.toggle('running',!!running);
+}
 function scanFeed(stage,msg,cls){
   const el=$('scanFeed');
   el.style.display='block';
@@ -286,7 +295,17 @@ function scanFeed(stage,msg,cls){
   el.appendChild(d);
   el.scrollTop=el.scrollHeight;
 }
-function scanFinish(){ scanBusy=false; $('scanTrack').disabled=false; }
+function scanFinish(ok){
+  setTrackRunning(false);
+  if(ok){ $('scanTrack').textContent='Added ✓'; setTimeout(()=>{ $('scanTrack').textContent=TRACK_BTN; },4000); }
+}
+
+function stageLabel(stage){
+  if(stage==='capture'||stage==='register') return 'Capturing ads…';
+  if(stage==='classify') return 'Scoring angles…';
+  if(stage==='brief') return 'Writing brief…';
+  return 'Adding to radar…';
+}
 
 function renderTrackedList(d){
   const custom=(d.tracked_verticals||[]);
@@ -297,28 +316,32 @@ function renderTrackedList(d){
     custom.map(v=>'<span class="chip"><b>'+esc(v.label)+'</b></span>').join('')+'</div>';
 }
 
-function runTrack(){
+function runTrack(fromWhitespace){
   if(scanBusy) return;
   const v=$('scanQ').value.trim();
   if(!v) return;
-  scanBusy=true; $('scanTrack').disabled=true;
+  setTrackRunning(true,'Adding to radar…');
   $('scanFeed').innerHTML='';
+  if(fromWhitespace) scanFeed('link','From WHITESPACE — finishing add to radar automatically','ok');
   scanFeed('start','adding to radar…');
   const es=new EventSource('api/atlas/track?vertical='+encodeURIComponent(v));
   es.onmessage=(m)=>{
     let e; try{e=JSON.parse(m.data);}catch{return;}
     scanFeed(e.stage,e.message||'', e.stage==='error'?'bad':'ok');
+    if(e.stage&&e.stage!=='error'&&e.stage!=='done') setTrackRunning(true,stageLabel(e.stage));
     if(e.stage==='done'){
       es.close();
-      scanFinish();
+      scanFinish(true);
       fetch('api/atlas').then(r=>r.json()).then(render).then(()=>{
         scanFeed('refresh','Radar board reloaded — look for "'+(e.vertical_id||verticalSlug(v))+'"','ok');
+        const el=document.getElementById('concept-'+(e.vertical_id||verticalSlug(v)));
+        if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
       });
     }
-    if(e.stage==='error'){ es.close(); scanFinish(); }
+    if(e.stage==='error'){ es.close(); scanFinish(false); }
   };
-  es.addEventListener('close',()=>{ es.close(); scanFinish(); });
-  es.onerror=()=>{ if(scanBusy) scanFeed('error','stream closed','bad'); es.close(); scanFinish(); };
+  es.addEventListener('close',()=>{ es.close(); if(scanBusy) scanFinish(false); });
+  es.onerror=()=>{ if(scanBusy) scanFeed('error','stream closed','bad'); es.close(); scanFinish(false); };
 }
 function verticalSlug(s){ return s.trim().toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'').slice(0,48)||'custom'; }
 
@@ -329,8 +352,9 @@ const qParam=urlParams.get('q');
 const trackParam=urlParams.get('track');
 if(qParam){ $('scanQ').value=qParam; }
 if(qParam&&trackParam==='1'){
+  history.replaceState(null,'',qParam?'atlas.html?q='+encodeURIComponent(qParam):'atlas.html');
   $('scan').scrollIntoView({behavior:'smooth',block:'start'});
-  setTimeout(()=>{ if(!$('scanQ').value.trim()) $('scanQ').value=qParam; runTrack(); }, 500);
+  setTimeout(()=>{ if(!$('scanQ').value.trim()) $('scanQ').value=qParam; runTrack(true); }, 500);
 }
 
 async function render(d){
