@@ -79,6 +79,12 @@
   .hn{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:#04231f;border:1px solid #1f4a44;color:var(--acc);font-family:var(--mono);font-size:12px;margin-right:8px}
   .footnote{margin-top:18px;text-align:center;font-family:var(--mono);font-size:11.5px;color:var(--dim);line-height:1.7}
   .footnote a{color:var(--acc2);text-decoration:none}
+  .trackcta{margin-top:18px;padding:16px 18px;background:#0c1a17;border:1px solid #1f4a44;border-radius:12px;display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+  .trackcta p{margin:0;font-size:13.5px;color:var(--mut);flex:1;min-width:200px}
+  .trackcta p b{color:var(--ink)}
+  .trackcta a{display:inline-block;background:var(--acc);color:#04231f;font-weight:700;text-decoration:none;border-radius:10px;padding:10px 18px;font-size:14px}
+  .trackcta a:hover{filter:brightness(1.08)}
+  .trackcta .sub{font-family:var(--mono);font-size:10.5px;color:var(--dim);width:100%;margin-top:2px}
 </style>
 </head>
 <body>
@@ -126,6 +132,11 @@
         <p id="recRationale"></p>
         <span class="conf" id="recConf"></span>
         <div class="adj" id="recAdj"></div>
+        <div class="trackcta" id="trackCta" style="display:none">
+          <p>Like this market? <b>Track it daily</b> — ENTER/WATCH scores, morning refresh, campaign export.</p>
+          <a id="trackLink" href="atlas.html">Add to Atlas radar →</a>
+          <div class="sub">Opens radar · captures today's ads · saved for 9 AM Panama cron</div>
+        </div>
       </div>
     </div>
 
@@ -196,10 +207,12 @@ document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{
 paintChips();
 
 let running=false;
+let lastQuery='';
 function run(){
   if(running) return;
   const v=$('q').value.trim();
   if(!v) return;
+  lastQuery=v;
   running=true; $('go').disabled=true;
   $('status').style.display='block';
   $('results').style.display='none';
@@ -277,6 +290,13 @@ function render(p){
   const deg=$('deg');
   if(m.degraded&&m.notes&&m.notes.length){ deg.style.display='block'; deg.textContent='⚠ '+m.notes.join('  '); }
   else deg.style.display='none';
+
+  if(lastQuery){
+    $('trackLink').href='atlas.html?q='+encodeURIComponent(lastQuery)+'&track=1';
+    $('trackCta').style.display='flex';
+  } else {
+    $('trackCta').style.display='none';
+  }
 }
 
 $('go').onclick=run;

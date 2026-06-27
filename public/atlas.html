@@ -142,7 +142,7 @@
     </div>
   </div>
 
-  <div class="scan">
+  <div class="scan" id="scan">
     <div class="hint"><b style="color:var(--ink)">Add to radar</b> — captures today's ads, scores ENTER/WATCH on the board below, and <b style="color:var(--ink)">refreshes automatically every morning</b> (9 AM Panama). For instant one-shot angle discovery without daily memory, use <a class="navlink" href="./">WHITESPACE →</a></div>
     <div class="scanrow">
       <input id="scanQ" placeholder="e.g. personal ai companions, medicare advantage, fractional CTO" autocomplete="off" />
@@ -324,8 +324,14 @@ function verticalSlug(s){ return s.trim().toLowerCase().replace(/[^a-z0-9]+/g,'_
 
 $('scanTrack').onclick=runTrack;
 $('scanQ').addEventListener('keydown',e=>{ if(e.key==='Enter') runTrack(); });
-const qParam=new URLSearchParams(location.search).get('q');
+const urlParams=new URLSearchParams(location.search);
+const qParam=urlParams.get('q');
+const trackParam=urlParams.get('track');
 if(qParam){ $('scanQ').value=qParam; }
+if(qParam&&trackParam==='1'){
+  $('scan').scrollIntoView({behavior:'smooth',block:'start'});
+  setTimeout(()=>{ if(!$('scanQ').value.trim()) $('scanQ').value=qParam; runTrack(); }, 500);
+}
 
 async function render(d){
   ATLAS_DATA=d;
