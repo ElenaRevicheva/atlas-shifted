@@ -8,7 +8,7 @@
  * Writes data/brief.json (for the Day-5 front-end) + data/brief.md (human/Telegram),
  * prints to console, and optionally pushes to Telegram if ATLAS_TELEGRAM_* are set.
  *
- * "Atlas shrugs": every brief ends with an honest resilience footer — which LLM
+ * "Atlas shifted": every brief ends with an honest resilience footer — which LLM
  * tiers are armed and whether anything degraded. The shrug is a feature you can see.
  *
  * Run:  node dist/brief.js
@@ -51,7 +51,7 @@ function resilienceFooter(): string {
   if (config.xaiKey) armed.push('Grok');
   for (const p of armed) PROVIDER_TIERS.push([p, true]);
   const n = armed.length;
-  return `⌐ Atlas shrugs — ${n}-tier LLM failover armed (${armed.join(' → ')}); a single provider going dark can't stop the brief.`;
+  return `⌐ Atlas shifted — ${n}-tier LLM failover armed (${armed.join(' → ')}); a single provider going dark can't stop the brief.`;
 }
 
 /** Pick the recommended MOVE for a vertical: a real ENTER if present, else the

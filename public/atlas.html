@@ -353,7 +353,7 @@ async function render(d){
   ].map(([l,n])=>'<div class="stat"><div class="n">'+esc(n)+'</div><div class="l">'+esc(l)+'</div></div>').join('');
 
   const res=d.brief&&d.brief.resilience;
-  $('shrug').textContent=res||'⌐ Atlas shrugs — multi-tier LLM failover armed.';
+  $('shrug').textContent=res||'⌐ Atlas shifted — multi-tier LLM failover armed.';
   renderHero(pickDefaultVertical(d.brief));
 
   const intel=d.intelligence||{};
