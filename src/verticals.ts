@@ -101,6 +101,22 @@ function discoverFromJsonl(): VerticalDef[] {
   return [...byId.entries()].map(([id, query]) => ({ id, queries: [query] }));
 }
 
+/** One-time-safe sync: persist jsonl orphans into tracked-verticals.json (called at cron start only). */
+export function syncTrackedOrphansFromJsonl(): number {
+  const store = readStore();
+  let added = 0;
+  for (const d of discoverFromJsonl()) {
+    if (store.verticals.some((v) => v.id === d.id)) continue;
+    store.verticals.push({ id: d.id, label: d.queries[0]!, added_at: new Date().toISOString() });
+    added++;
+  }
+  if (added > 0) {
+    store.verticals.sort((a, b) => a.id.localeCompare(b.id));
+    writeStore(store);
+  }
+  return added;
+}
+
 function mergeQueries(a: string[], b: string[]): string[] {
   return [...new Set([...a, ...b])];
 }
@@ -121,13 +137,6 @@ export function getCaptureTargets(only?: string): VerticalDef[] {
     if (SEED_IDS.has(d.id)) continue;
     const prev = byId.get(d.id);
     byId.set(d.id, prev ? { id: d.id, queries: mergeQueries(prev.queries, d.queries) } : d);
-    // Persist orphans so cron list is stable even if jsonl is rotated later.
-    const store = readStore();
-    if (!store.verticals.some((v) => v.id === d.id)) {
-      store.verticals.push({ id: d.id, label: d.queries[0]!, added_at: new Date().toISOString() });
-      store.verticals.sort((a, b) => a.id.localeCompare(b.id));
-      writeStore(store);
-    }
   }
 
   let targets = [...byId.values()];

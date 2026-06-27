@@ -32,6 +32,7 @@ import {
   knownVerticalIds,
   orderVerticals,
   registerTrackedVertical,
+  syncTrackedOrphansFromJsonl,
   verticalSlug,
   type VerticalDef,
 } from './verticals.js';
@@ -273,6 +274,9 @@ async function main() {
     process.exit(1);
   }
   mkdirSync(DATA_DIR, { recursive: true });
+
+  const orphanSync = syncTrackedOrphansFromJsonl();
+  if (orphanSync > 0) console.log(`ATLAS CAPTURE · synced ${orphanSync} tracked vertical(s) from captures.jsonl`);
 
   const snapshotDate = panamaDate();
   const only = process.argv[2]?.trim();
