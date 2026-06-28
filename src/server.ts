@@ -351,11 +351,12 @@ app.get('/api/atlas/ship', async (req, res) => {
   };
   const ka = setInterval(() => res.write(': keep-alive\n\n'), 15_000);
 
-  const needImage = (stage === 'all' || stage === 'image') && (!brief.asset?.image_file || force);
-  const needVideo =
+  let needImage = (stage === 'all' || stage === 'image') && (!brief.asset?.image_file || force);
+  let needVideo =
     (stage === 'all' || stage === 'video') &&
     hasVideoProviders() &&
     (!brief.video?.video_file || force);
+  let videoStatus: 'shipped' | 'partial' | 'skipped' | 'none' = 'none';
 
   try {
     send('start', `Shipping creative for "${vertical}"…`, { pct: 5, need_image: needImage, need_video: needVideo });
@@ -367,33 +368,56 @@ app.get('/api/atlas/ship', async (req, res) => {
         timeout: 180_000,
       });
       send('produce', 'Still image shipped', { pct: 55 });
+      // Re-read after produce so video step sees the fresh asset on disk.
+      const afterProduce = readConceptEntry(vertical) as typeof brief;
+      if (afterProduce?.asset?.image_file) brief.asset = afterProduce.asset;
     } else if (brief.asset?.image_file) {
       send('produce', 'Still image already on file — skipping render', { pct: 55, skipped: true });
     }
 
     if (needVideo) {
+      if (!brief.asset?.image_file) {
+        send('error', 'No still image on file — generate the image first.', { pct: 100 });
+        return;
+      }
       send('video', 'Animating 5s clip (Runway → Luma fallback)…', { pct: 60 });
       try {
         await execFileAsync('node', [join(ROOT, 'dist', 'video.js'), vertical], {
           cwd: ROOT,
           timeout: 600_000,
         });
+        videoStatus = 'shipped';
         send('video', 'Video shipped', { pct: 95 });
       } catch (e) {
         const code = (e as { code?: number }).code;
         if (code === 2) {
-          send('video', 'Video providers dry — still image stands (honest fallback).', { pct: 95, partial: true });
+          videoStatus = 'partial';
+          send('video', 'Video unavailable — Runway credits depleted or Luma not configured. Still image stands.', {
+            pct: 95,
+            partial: true,
+          });
         } else {
           throw e;
         }
       }
     } else if (brief.video?.video_file) {
+      videoStatus = 'skipped';
       send('video', 'Video already on file — skipping render', { pct: 95, skipped: true });
     } else if (!hasVideoProviders()) {
+      videoStatus = 'partial';
       send('video', 'Video providers not configured — still image only.', { pct: 95, partial: true });
     }
 
-    send('done', `Creative ready for "${vertical}" — refresh card below`, { pct: 100 });
+    const finalEntry = readConceptEntry(vertical) as { video?: { video_file?: string } } | null;
+    const hasVideoNow = !!finalEntry?.video?.video_file;
+    if (needVideo && !hasVideoNow && videoStatus !== 'partial') videoStatus = 'partial';
+
+    send('done', `Creative ready for "${vertical}" — refresh card below`, {
+      pct: 100,
+      video_status: hasVideoNow ? 'shipped' : videoStatus,
+      has_video: hasVideoNow,
+      has_image: !!((readConceptEntry(vertical) as { asset?: { image_file?: string } } | null)?.asset?.image_file),
+    });
   } catch (e) {
     send('error', (e as Error).message || 'ship failed', { pct: 100 });
   } finally {

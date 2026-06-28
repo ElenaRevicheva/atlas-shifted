@@ -6,7 +6,7 @@
  * driven by live angle intelligence" It's Today Media is hiring to build.
  *
  * Reuses the AIdeazz Atuona film-studio logic: image→video with provider failover.
- *   Runway (gen image_to_video) → Luma (Dream Machine). Both async → poll.
+ *   Runway (gen image_to_video) → Luma Agents (ray-3.2 i2v) → legacy Dream Machine.
  * Models are env-overridable (RUNWAY_VIDEO_MODEL / LUMA_VIDEO_MODEL) so newer
  * models drop in WITHOUT a code change — but nothing is claimed until it's green
  * in the logs. Video is the flakiest, most billing-dependent link, so if every
@@ -28,7 +28,8 @@ const CONCEPTS = join(DATA_DIR, 'concepts.json');
 // Public base URL where assets are served (image→video providers need a URL).
 const PUBLIC_BASE = (process.env.ATLAS_PUBLIC_BASE || 'https://webhook.aideazz.xyz/whitespace').replace(/\/$/, '');
 const RUNWAY_MODEL = process.env.RUNWAY_VIDEO_MODEL?.trim() || 'gen4_turbo';
-const LUMA_MODEL = process.env.LUMA_VIDEO_MODEL?.trim() || 'ray-2';
+const LUMA_MODEL = process.env.LUMA_VIDEO_MODEL?.trim() || 'ray-3.2';
+const LUMA_LEGACY_MODEL = process.env.LUMA_LEGACY_VIDEO_MODEL?.trim() || 'ray-2';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -68,8 +69,54 @@ async function renderRunway(imageUrl: string, promptText: string): Promise<strin
   }
 }
 
-/** Luma Dream Machine image→video (async create + poll). Returns a video URL or null. */
-async function renderLuma(imageUrl: string, promptText: string): Promise<string | null> {
+/** Luma Agents API image→video (async create + poll). Returns a video URL or null. */
+async function renderLumaAgents(imageUrl: string, promptText: string): Promise<string | null> {
+  const key = process.env.LUMA_API_KEY?.trim();
+  if (!key) return null;
+  const H = { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', accept: 'application/json' };
+  try {
+    const create = await fetch('https://agents.lumalabs.ai/v1/generations', {
+      method: 'POST',
+      headers: H,
+      body: JSON.stringify({
+        prompt: promptText.slice(0, 980),
+        type: 'video',
+        model: LUMA_MODEL,
+        aspect_ratio: '9:16',
+        duration: '5s',
+        video: { start_frame: { url: imageUrl } },
+      }),
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (!create.ok) {
+      console.warn(`[video] Luma Agents create ${create.status}: ${(await create.text()).slice(0, 160)}`);
+      return null;
+    }
+    const { id } = (await create.json()) as { id: string };
+    for (let i = 0; i < 40; i++) {
+      await sleep(6000);
+      const poll = await fetch(`https://agents.lumalabs.ai/v1/generations/${id}`, { headers: H, signal: AbortSignal.timeout(20_000) });
+      if (!poll.ok) continue;
+      const t = (await poll.json()) as { state: string; output?: { type: string; url: string }[]; failure_reason?: string; failure_code?: string };
+      if (t.state === 'completed') {
+        const video = t.output?.find((o) => o.type === 'video')?.url || t.output?.[0]?.url;
+        if (video) return video;
+      }
+      if (t.state === 'failed') {
+        console.warn(`[video] Luma Agents failed: ${t.failure_code || ''} ${t.failure_reason || ''}`);
+        return null;
+      }
+    }
+    console.warn('[video] Luma Agents timed out');
+    return null;
+  } catch (e) {
+    console.warn('[video] Luma Agents error:', (e as Error).message?.slice(0, 140));
+    return null;
+  }
+}
+
+/** Legacy Luma Dream Machine image→video (older luma-xxxx keys). Returns a video URL or null. */
+async function renderLumaLegacy(imageUrl: string, promptText: string): Promise<string | null> {
   const key = process.env.LUMA_API_KEY?.trim();
   if (!key) return null;
   const H = { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', accept: 'application/json' };
@@ -77,7 +124,7 @@ async function renderLuma(imageUrl: string, promptText: string): Promise<string 
     const create = await fetch('https://api.lumalabs.ai/dream-machine/v1/generations', {
       method: 'POST',
       headers: H,
-      body: JSON.stringify({ prompt: promptText.slice(0, 980), model: LUMA_MODEL, keyframes: { frame0: { type: 'image', url: imageUrl } } }),
+      body: JSON.stringify({ prompt: promptText.slice(0, 980), model: LUMA_LEGACY_MODEL, keyframes: { frame0: { type: 'image', url: imageUrl } } }),
       signal: AbortSignal.timeout(30_000),
     });
     if (!create.ok) {
@@ -127,8 +174,12 @@ async function main() {
   let videoUrl = await renderRunway(imageUrl, promptText);
   let model = `runway:${RUNWAY_MODEL}`;
   if (!videoUrl) {
-    videoUrl = await renderLuma(imageUrl, promptText);
+    videoUrl = await renderLumaAgents(imageUrl, promptText);
     model = `luma:${LUMA_MODEL}`;
+  }
+  if (!videoUrl) {
+    videoUrl = await renderLumaLegacy(imageUrl, promptText);
+    model = `luma-legacy:${LUMA_LEGACY_MODEL}`;
   }
   if (!videoUrl) {
     console.error('  ✗ all video providers dry/failed — the still image stands (honest fallback).');

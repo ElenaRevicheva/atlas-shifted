@@ -128,6 +128,7 @@
   .shipfeed .ok{color:var(--acc)}
   .shipfeed .bad{color:var(--hot)}
   .shipfeed div{padding:2px 0}
+  .ship-warn{margin:0 0 12px;padding:10px 12px;border-radius:10px;border:1px solid #5a4715;background:#2a210c;color:var(--warn);font-family:var(--mono);font-size:11.5px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -138,7 +139,7 @@
     </div>
     <div class="by">autonomous marketing strategist · <a href="https://aideazz.xyz/portfolio" target="_blank" rel="noopener">aideazz.xyz/portfolio</a> · <a class="navlink" href="./">WHITESPACE finder (one-shot discovery) →</a></div>
   </header>
-  <div class="tag">Stop chasing the ad everyone's already running. <b>Atlas Shifted reads the live ad market daily, spots the emotional angle opening before the crowd</b>, and ships <b>test-ready creative — copy + image + video</b> — to get there first. <b>Public data only</b>; we detect momentum, we never guess the future. Just what's heating now, it doesn't pretend to predict.</div>
+  <div class="tag">Stop chasing the ad everyone's already running. <b>Atlas Shifted Adaptive Intelligent Personal Assistant reads the live ad market daily, spots the emotional angle opening before the crowd</b>, and ships <b>test-ready creative — copy + image + video</b> — to get there first. <b>Public data only</b>; we detect momentum, we never guess the future. Just what's heating now, it doesn't pretend to predict.</div>
   <div class="shrug" id="shrug">⌐ loading resilience…</div>
 
   <div class="hero" id="hero" style="display:none">
@@ -486,31 +487,46 @@ function runShip(vertical){
     shipFeed(vertical,'error','Add ?ship_token=… to the URL for live generation','bad');
     return;
   }
+  const c=ATLAS_DATA&&ATLAS_DATA.concepts&&ATLAS_DATA.concepts[vertical];
+  const hasAsset=c&&c.asset&&c.asset.image_file;
+  const hasVideo=c&&c.video&&c.video.video_file;
+  const stage=hasAsset&&!hasVideo?'video':'all';
   shipBusyVertical=vertical;
   setShipButtons(true, vertical);
   const feedEl=document.getElementById('shipfeed-'+vertical);
   if(feedEl) feedEl.innerHTML='';
-  shipFeed(vertical,'start','DETECT→CREATE→SHIP — image then video…','ok');
-  let url='api/atlas/ship?vertical='+encodeURIComponent(vertical)+'&stage=all';
+  shipFeed(vertical,'start',stage==='video'?'Animating 5s video (Runway → Luma)…':'Rendering still, then video…','ok');
+  let url='api/atlas/ship?vertical='+encodeURIComponent(vertical)+'&stage='+stage;
   if(SHIP_TOKEN) url+='&token='+encodeURIComponent(SHIP_TOKEN);
+  let shipDone=false;
+  let videoNote='';
   const es=new EventSource(url);
   es.onmessage=(m)=>{
     let e; try{e=JSON.parse(m.data);}catch{return;}
-    shipFeed(e.stage,e.message||'', e.stage==='error'?'bad':'ok');
+    if(e.stage==='video'&&(e.partial||e.message)) videoNote=e.message||videoNote;
+    shipFeed(vertical, e.stage, e.message||'', e.stage==='error'?'bad':'ok');
     if(e.stage==='done'){
+      shipDone=true;
       es.close();
       shipBusyVertical='';
-      setShipButtons(false);
+      const partial=e.video_status==='partial'||(!e.has_video&&hasAsset);
       fetch('api/atlas').then(r=>r.json()).then(d=>{
         ATLAS_DATA=d;
         $('concepts').innerHTML=renderConceptSection(d, vertical);
         bindShipButtons();
+        setShipButtons(false);
         const card=document.getElementById('concept-'+vertical);
-        if(card) card.scrollIntoView({behavior:'smooth',block:'start'});
-        shipFeed(vertical,'done','Card refreshed — scroll up if needed','ok');
+        if(card){
+          if(partial&&!((d.concepts||{})[vertical]||{}).video){
+            const msg=videoNote||'Video step failed — Runway credits depleted or Luma not configured. Still image is live.';
+            card.insertAdjacentHTML('afterbegin','<div class="ship-warn">'+esc(msg)+'</div>');
+          }
+          card.scrollIntoView({behavior:'smooth',block:'start'});
+        }
       });
     }
     if(e.stage==='error'){
+      shipDone=true;
       es.close();
       shipBusyVertical='';
       if(ATLAS_DATA){
@@ -523,14 +539,15 @@ function runShip(vertical){
   };
   es.addEventListener('close',()=>{
     es.close();
-    if(shipBusyVertical===vertical){
+    if(!shipDone&&shipBusyVertical===vertical){
       shipBusyVertical='';
       setShipButtons(false);
     }
   });
   es.onerror=()=>{
+    if(shipDone) return;
     if(shipBusyVertical===vertical){
-      shipFeed(vertical,'error','stream closed — check server logs','bad');
+      shipFeed(vertical,'error','Stream closed — check server logs','bad');
       shipBusyVertical='';
       setShipButtons(false);
     }
