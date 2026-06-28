@@ -76,10 +76,6 @@ Atlas is the only tool in this contest that combines:
 | **Code quality** | ✅ TypeScript, disposable SQLite projection, JSONL source of truth |
 | **README story** | ✅ What / why / what's next — in README + PRODUCT_PROOF |
 
-**Realistic rating:** Top-tier if you demo live and don't oversell sparklines/history before days accrue.
-
-**Risk:** Saying "10 days of data" when you have 2. Saying "predict" anywhere. Overselling Google/TikTok daily capture.
-
 ---
 
 ## Why v2 enhancements matter for uniqueness
@@ -99,31 +95,26 @@ These are **heuristic v1** — documented, honest, not ML prophecy. That's the r
 
 ---
 
-## Positioning for the interview
+## What Atlas does that competitors genuinely don't — and its honest limits
 
-Lead with:
-> "Every tool shows you the ad that's already winning. Atlas finds the angle **nobody is running yet**, next to what's heating up, and generates the test creative — image and video — in one loop. Public data only. Here, type a vertical."
+**The category's structural blind spot.** Every spy tool — Foreplay, Atria, Motion, AdSpy / PowerAdSpy / BigSpy, even Meta's new in-Ads-Manager agent — is built to answer one question: *"What ad is winning right now?"* They use ad **longevity as a proxy** for performance and surface the long-running, proven creatives. That is genuinely useful — but it has a side effect baked into the design: **when every buyer's tool recommends the same proven winner, everyone piles into the same angle and it saturates faster.** The category is, by construction, a herd amplifier.
 
-Show: **whitespace finder** (`/`) then **radar + intelligence** (`/atlas.html`).
+**Atlas answers a different question.** Not *"what's winning?"* but *"what angle is opening — rising demand, not yet crowded — or absent entirely, next to what's heating up?"* That is orthogonal to the whole spy-tool category, whose data models are built around existing winning ads, not gaps and timing. Three pieces, in **one self-running agent**, that no single competitor ships together:
 
-De-emphasize: crypto bots, NFTs, EspaLuz (unless dogfood story).
+1. **Timed whitespace** — ENTER / WATCH / AVOID by observable saturation + entry velocity. Enter *before* the crowd, not after.
+2. **Absence detection** ("Alternate Universe") — zero-advertiser lanes. Spy UIs are built to show ads that *exist*; they can't easily surface the lane with *nobody in it*.
+3. **Closed loop to a test asset** — the detected gap becomes an evidence-grounded concept + image + video. Spy tools stop at research; creative tools don't *start* from live-market gap detection.
 
-Emphasize: affiliate ROI, cross-platform, agent runs itself, evidence links.
+**Is that truly useful, honestly?** Yes — for an affiliate buyer whose real pain is rising CPMs from everyone chasing the same angle, a tool that points *away from the herd*, toward the adjacent-open or empty lane, **before** it crowds, is directly margin-relevant. It is a **contrarian hypothesis generator with an automated creative loop**, not a "copy this winner" database.
 
----
+**The honest limits (this is what makes the above credible, not puffery):**
 
-## Restore point before v2
+- **Less data depth than the incumbents.** Atria trains on $5B+ in spend; spy databases hold millions of ads over years. Atlas is browser-scraped Meta (the reliable spine) + best-effort Google, 8 angle types, *days* of history — not years.
+- **Heuristic, not ML.** Window scores are a documented formula (entry-velocity + inverse-saturation + adjacency), not a model trained on outcomes. "Confidence 82%" means *that formula on these inputs*, not a learned win probability.
+- **No performance data.** Public libraries expose no spend / CTR / ROAS, so Atlas *infers* from observable saturation and entry — it never *measures* performance. Window states are **hypotheses to test**, never guaranteed winners.
 
-If enhancements break something:
-
-```bash
-git checkout backup/pre-v2-jun26-2026
-# or
-git checkout backup-pre-v2-2026-06-26
-```
-
-Tag: `backup-pre-v2-2026-06-26` · Branch: `backup/pre-v2-jun26-2026`
+So Atlas is not "a better Foreplay." It is a **different tool — a different question, closed-looped into creative, run as an agent** — and honest about exactly what it can and can't see. For a lean affiliate team where the margin lever is *timing* and the bottleneck is *creative speed*, that combination is genuinely not available elsewhere as one product.
 
 ---
 
-_Last updated: June 26, 2026 · Elena Revicheva / AIdeazz_
+_Last updated: June 28, 2026 · Elena Revicheva / AIdeazz_
