@@ -368,7 +368,8 @@ function renderConceptSection(d, focusVertical){
   const shipCfg=d.ship||{};
   const briefVs=(d.brief?.verticals||[]).map(v=>v.vertical);
   const boardVs=(d.board||[]).map(b=>b.vertical);
-  const order=[...new Set([focusVertical,...briefVs,...boardVs].filter(Boolean))];
+  const trackedVs=(d.tracked_verticals||[]).map(t=>t.id);
+  const order=[...new Set([focusVertical,...briefVs,...boardVs,...trackedVs].filter(Boolean))];
   const briefByV={};
   for(const v of (d.brief?.verticals||[])) briefByV[v.vertical]=v;
   const html=[];
@@ -419,7 +420,11 @@ function renderTrackedList(d){
   if(!custom.length){ el.style.display='none'; return; }
   el.style.display='block';
   el.innerHTML='<div>Your tracked verticals <span style="color:var(--dim)">(daily cron · 9 AM Panama)</span></div><div class="chips">'+
-    custom.map(v=>'<span class="chip"><b>'+esc(v.label)+'</b></span>').join('')+'</div>';
+    custom.map(v=>{
+      const onBoard=(ATLAS_DATA?.board||[]).some(b=>b.vertical===v.id);
+      const pending=onBoard?'':' <span style="color:var(--warn);font-size:10px">· radar after capture</span>';
+      return '<span class="chip"><b>'+esc(v.label)+'</b>'+pending+'</span>';
+    }).join('')+'</div>';
 }
 
 function runTrack(fromWhitespace){

@@ -29,6 +29,7 @@ import { runWhitespace } from './agent.js';
 import { breakerState } from './llm.js';
 import { buildIntelligence, angleHistory, laneEvidence } from './intelligence.js';
 import { readTrackedVerticals, SEED_IDS } from './verticals.js';
+import { loadBoardByVertical } from './radar-board.js';
 import type { RunEvent, RunMode } from './types.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -148,16 +149,11 @@ app.get('/api/atlas', (_req, res) => {
   try {
     if (existsSync(sqlitePath)) {
       const db = new DatabaseSync(sqlitePath);
-      // The most-COMPLETE recent snapshot, not the bare latest date — so a partial
-      // capture day (e.g. a single Add-to-radar vertical) can't collapse the board.
-      const latest = (db.prepare('SELECT snapshot_date d FROM angle_daily_agg GROUP BY snapshot_date ORDER BY COUNT(DISTINCT vertical) DESC, snapshot_date DESC LIMIT 1').get() as { d: string } | undefined)?.d ?? null;
-      out.snapshot_date = latest;
+      const { primarySnapshot, board } = loadBoardByVertical(db);
+      out.snapshot_date = primarySnapshot;
       out.total_rows = (db.prepare('SELECT COUNT(*) c FROM angle_snapshots').get() as { c: number }).c;
       out.distinct_days = (db.prepare('SELECT COUNT(DISTINCT snapshot_date) c FROM angle_snapshots').get() as { c: number }).c;
-      const rows = db.prepare('SELECT * FROM angle_daily_agg WHERE snapshot_date=? ORDER BY vertical, window_score DESC').all(latest) as Array<Record<string, unknown>>;
-      const byV: Record<string, Array<Record<string, unknown>>> = {};
-      for (const r of rows) (byV[r.vertical as string] ??= []).push(r);
-      out.board = Object.entries(byV).map(([vertical, angles]) => ({ vertical, angles }));
+      out.board = board.map(({ vertical, angles }) => ({ vertical, angles }));
       db.close();
     }
   } catch (e) {

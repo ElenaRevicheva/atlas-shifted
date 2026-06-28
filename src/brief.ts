@@ -20,26 +20,11 @@ import { fileURLToPath } from 'node:url';
 import { config } from './config.js';
 import { buildIntelligence } from './intelligence.js';
 import { sendAtlasDailyBrief } from './telegram.js';
+import { loadLatestAggRows, pickPrimarySnapshotDate, verticalLatestDates, type AggRow } from './radar-board.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = join(__dirname, '..', 'data');
 const SQLITE = join(DATA_DIR, 'radar.sqlite');
-
-interface AggRow {
-  snapshot_date: string;
-  vertical: string;
-  angle_id: string;
-  distinct_advertisers: number;
-  new_entrants_7d: number | null;
-  recent_launch_30d: number;
-  launch_share: number;
-  saturation: number;
-  adjacency: number;
-  window_state: string;
-  window_score: number;
-  signal_basis: string;
-  adjacency_note: string | null;
-}
 
 const PROVIDER_TIERS: Array<[string, boolean]> = [];
 
@@ -82,21 +67,21 @@ function main() {
     process.exit(1);
   }
   const db = new DatabaseSync(SQLITE);
-  // Most-COMPLETE recent snapshot (most verticals), not the bare latest date — a
-  // partial capture day must not shrink the brief to one vertical.
-  const latest = (db.prepare('SELECT snapshot_date d FROM angle_daily_agg GROUP BY snapshot_date ORDER BY COUNT(DISTINCT vertical) DESC, snapshot_date DESC LIMIT 1').get() as { d: string } | undefined)?.d;
+  const latest = pickPrimarySnapshotDate(db);
   if (!latest) {
     console.error('no aggregate rows');
     process.exit(1);
   }
-  const all = db.prepare('SELECT * FROM angle_daily_agg WHERE snapshot_date = ?').all(latest) as unknown as AggRow[];
+  const { rows: all } = loadLatestAggRows(db);
+  const latestByV = verticalLatestDates(db);
 
-  // one evidence URL per (vertical, angle)
   const evRow = db.prepare(
     'SELECT ad_ref_url FROM angle_snapshots WHERE snapshot_date=? AND vertical=? AND angle_id=? LIMIT 1',
   );
-  const evidenceFor = (vertical: string, angle: string): string | null =>
-    (evRow.get(latest, vertical, angle) as { ad_ref_url: string } | undefined)?.ad_ref_url ?? null;
+  const evidenceFor = (vertical: string, angle: string): string | null => {
+    const snap = latestByV.get(vertical) ?? latest;
+    return (evRow.get(snap, vertical, angle) as { ad_ref_url: string } | undefined)?.ad_ref_url ?? null;
+  };
 
   const verticals = [...new Set(all.map((r) => r.vertical))].sort();
   const brief: any = { generated_at: new Date().toISOString(), snapshot_date: latest, verticals: [] };
