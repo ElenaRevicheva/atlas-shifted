@@ -82,7 +82,9 @@ function main() {
     process.exit(1);
   }
   const db = new DatabaseSync(SQLITE);
-  const latest = (db.prepare('SELECT MAX(snapshot_date) d FROM angle_daily_agg').get() as { d: string } | undefined)?.d;
+  // Most-COMPLETE recent snapshot (most verticals), not the bare latest date — a
+  // partial capture day must not shrink the brief to one vertical.
+  const latest = (db.prepare('SELECT snapshot_date d FROM angle_daily_agg GROUP BY snapshot_date ORDER BY COUNT(DISTINCT vertical) DESC, snapshot_date DESC LIMIT 1').get() as { d: string } | undefined)?.d;
   if (!latest) {
     console.error('no aggregate rows');
     process.exit(1);

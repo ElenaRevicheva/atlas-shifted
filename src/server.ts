@@ -148,7 +148,9 @@ app.get('/api/atlas', (_req, res) => {
   try {
     if (existsSync(sqlitePath)) {
       const db = new DatabaseSync(sqlitePath);
-      const latest = (db.prepare('SELECT MAX(snapshot_date) d FROM angle_daily_agg').get() as { d: string } | undefined)?.d ?? null;
+      // The most-COMPLETE recent snapshot, not the bare latest date — so a partial
+      // capture day (e.g. a single Add-to-radar vertical) can't collapse the board.
+      const latest = (db.prepare('SELECT snapshot_date d FROM angle_daily_agg GROUP BY snapshot_date ORDER BY COUNT(DISTINCT vertical) DESC, snapshot_date DESC LIMIT 1').get() as { d: string } | undefined)?.d ?? null;
       out.snapshot_date = latest;
       out.total_rows = (db.prepare('SELECT COUNT(*) c FROM angle_snapshots').get() as { c: number }).c;
       out.distinct_days = (db.prepare('SELECT COUNT(DISTINCT snapshot_date) c FROM angle_snapshots').get() as { c: number }).c;
