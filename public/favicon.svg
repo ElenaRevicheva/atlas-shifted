@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
-  <!-- Atlas Shifted — Angle Window Radar mark · teal on black brand colors -->
+  <!-- Atlas Shifted — globe · green-on-black brand colors -->
   <rect width="32" height="32" rx="7" fill="#0a0b0f"/>
   <rect x="0.7" y="0.7" width="30.6" height="30.6" rx="6.3" fill="none" stroke="#1f4a44" stroke-width="1.2"/>
-  <circle cx="16" cy="16" r="9.2" fill="none" stroke="#5eead4" stroke-opacity="0.22" stroke-width="1.4"/>
-  <circle cx="16" cy="16" r="5.2" fill="none" stroke="#5eead4" stroke-opacity="0.42" stroke-width="1.4"/>
-  <line x1="16" y1="16" x2="23.2" y2="8.8" stroke="#5eead4" stroke-width="1.7" stroke-linecap="round"/>
-  <circle cx="23.2" cy="8.8" r="2.7" fill="#5eead4"/>
-  <circle cx="16" cy="16" r="1.5" fill="#5eead4"/>
+  <circle cx="16" cy="16" r="9.3" fill="none" stroke="#5eead4" stroke-width="1.8"/>
+  <ellipse cx="16" cy="16" rx="4" ry="9.3" fill="none" stroke="#5eead4" stroke-width="1.3"/>
+  <line x1="6.8" y1="16" x2="25.2" y2="16" stroke="#5eead4" stroke-width="1.3"/>
+  <path d="M8.3 11.1 Q16 13.5 23.7 11.1" fill="none" stroke="#5eead4" stroke-width="1.2" stroke-linecap="round"/>
+  <path d="M8.3 20.9 Q16 18.5 23.7 20.9" fill="none" stroke="#5eead4" stroke-width="1.2" stroke-linecap="round"/>
 </svg>
