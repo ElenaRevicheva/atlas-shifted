@@ -175,11 +175,11 @@
   <h2 class="sec">▸ Atlas Intelligence — what nobody else shows</h2>
   <div id="intel"><div class="loading">Computing alternate universes…</div></div>
 
-  <h2 class="sec">▸ Angle Window Radar — latest snapshot <span style="font-weight:400;color:var(--dim)">(click a lane for evidence)</span></h2>
-  <div id="board"><div class="loading">Reading the radar…</div></div>
-
   <h2 class="sec">▸ Generated creative — DETECT → CREATE</h2>
   <div id="concepts"><div class="loading">Loading concepts…</div></div>
+
+  <h2 class="sec">▸ Angle Window Radar — latest snapshot <span style="font-weight:400;color:var(--dim)">(click a lane for evidence)</span></h2>
+  <div id="board"><div class="loading">Reading the radar…</div></div>
 
   <h2 class="sec">▸ Market memory — prior ENTER calls</h2>
   <div id="memory"><div class="note">Logs each ENTER signal as the time-series grows.</div></div>
@@ -587,28 +587,28 @@ async function render(d){
   const histCache={};
   async function hist(v,a){ const k=v+'|'+a; if(histCache[k]) return histCache[k]; try{ const r=await fetch('api/atlas/history?vertical='+encodeURIComponent(v)+'&angle='+encodeURIComponent(a)); const j=await r.json(); histCache[k]=j.history||[]; return histCache[k]; }catch{return [];} }
 
+  // Render generated creative (the images + videos) FIRST, so it never waits on the
+  // radar board's history fetches. The videos appear immediately on load.
+  $('concepts').innerHTML=renderConceptSection(d, pickDefaultVertical(d.brief));
+  bindShipButtons();
+
   const boardEl=$('board');
   boardEl.innerHTML='';
   for(const v of (d.board||[])){
     const mv=briefByV[v.vertical];
     const moveTxt=mv?(' · MOVE → '+esc(mv.move.state)+' '+esc(mv.move.angle)+' ('+mv.move.score+'/100)'):'';
-    const lanes=[];
-    for(const a of v.angles){
-      const h=await hist(v.vertical,a.angle_id);
-      lanes.push('<div class="lane" data-v="'+esc(v.vertical)+'" data-a="'+esc(a.angle_id)+'">'+
-        '<span class="badge '+esc(a.window_state)+'">'+esc(a.window_state)+'</span>'+
-        '<span class="angle">'+esc(a.angle_id)+' <span class="b">'+a.distinct_advertisers+' adv · '+esc(a.signal_basis)+(a.adjacency_note?(' · '+esc(a.adjacency_note)):'')+'</span></span>'+
-        sparkSvg(h)+
-        '<span class="satbar"><span class="satfill" style="width:'+pct(a.saturation)+'%"></span></span>'+
-        '<span class="score">'+pct(a.window_score)+'</span></div>');
-    }
+    // fetch all angle histories for this vertical IN PARALLEL (was one-at-a-time → slow/blank board)
+    const hs=await Promise.all(v.angles.map(a=>hist(v.vertical,a.angle_id)));
+    const lanes=v.angles.map((a,i)=>'<div class="lane" data-v="'+esc(v.vertical)+'" data-a="'+esc(a.angle_id)+'">'+
+      '<span class="badge '+esc(a.window_state)+'">'+esc(a.window_state)+'</span>'+
+      '<span class="angle">'+esc(a.angle_id)+' <span class="b">'+a.distinct_advertisers+' adv · '+esc(a.signal_basis)+(a.adjacency_note?(' · '+esc(a.adjacency_note)):'')+'</span></span>'+
+      sparkSvg(hs[i])+
+      '<span class="satbar"><span class="satfill" style="width:'+pct(a.saturation)+'%"></span></span>'+
+      '<span class="score">'+pct(a.window_score)+'</span></div>');
     boardEl.insertAdjacentHTML('beforeend','<div class="vcard"><div class="vhead"><span class="vname">'+esc(v.vertical)+'</span><span class="vmove">'+moveTxt+'</span></div>'+lanes.join('')+'</div>');
   }
   if(!(d.board||[]).length) boardEl.innerHTML='<div class="loading">No radar data yet.</div>';
   boardEl.querySelectorAll('.lane').forEach(el=>el.onclick=()=>openEvidence(el.dataset.v, el.dataset.a));
-
-  $('concepts').innerHTML=renderConceptSection(d, pickDefaultVertical(d.brief));
-  bindShipButtons();
 
   const mem=(intel.memory||[]);
   $('memory').innerHTML=mem.length? mem.map(m=>'<div class="memory">'+esc(m.snapshot_date)+' · '+esc(m.vertical)+' · ENTER <b>'+esc(m.angle_id)+'</b> ('+Math.round(m.window_score*100)+'/100)</div>').join('') : '<div class="note">No ENTER signals logged yet — memory grows each morning.</div>';
