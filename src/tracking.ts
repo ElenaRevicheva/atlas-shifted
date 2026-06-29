@@ -7,6 +7,27 @@
 const LANDING = (process.env.ATLAS_LANDING_BASE || 'https://aideazz.xyz').replace(/\/$/, '');
 const INGEST = (process.env.ATLAS_PERFORMANCE_INGEST_URL || 'https://webhook.aideazz.xyz/cto/api/performance-event').trim();
 
+/** Per-vertical landing path/hash — EspaLuz dogfood lands on #espaluz, not generic hero. */
+const VERTICAL_LANDING_SUFFIX: Record<string, string> = {
+  expat_language: '#espaluz',
+};
+
+function buildLandingUrl(vertical: string, params: URLSearchParams): string {
+  const suffix = VERTICAL_LANDING_SUFFIX[vertical] || process.env[`ATLAS_LANDING_${vertical.toUpperCase()}`]?.trim() || '';
+  if (suffix.startsWith('#')) {
+    return `${LANDING}/?${params}${suffix}`;
+  }
+  if (suffix.startsWith('http')) {
+    const u = new URL(suffix);
+    for (const [k, v] of params) u.searchParams.set(k, v);
+    return u.toString();
+  }
+  if (suffix) {
+    return `${LANDING}/${suffix.replace(/^\//, '')}?${params}`;
+  }
+  return `${LANDING}/?${params}`;
+}
+
 export interface AtlasTracking {
   concept_id: string;
   utm_source: string;
@@ -37,7 +58,7 @@ export function buildAtlasTracking(vertical: string, snapshotDate: string, angle
     utm_campaign,
     utm_content,
     utm_term,
-    landing_url: `${LANDING}/?${params}`,
+    landing_url: buildLandingUrl(vertical, params),
     performance_ingest_url: INGEST,
   };
 }
