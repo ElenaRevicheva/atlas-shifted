@@ -24,15 +24,10 @@ export type AggRow = {
   [key: string]: unknown;
 };
 
-/** Header snapshot: the day with the most verticals (stable daily view). */
+/** Header snapshot: latest calendar day with radar data (what users expect after 9 AM cron). */
 export function pickPrimarySnapshotDate(db: DatabaseSync): string | null {
   const row = db
-    .prepare(
-      `SELECT snapshot_date d FROM angle_daily_agg
-       GROUP BY snapshot_date
-       ORDER BY COUNT(DISTINCT vertical) DESC, snapshot_date DESC
-       LIMIT 1`,
-    )
+    .prepare(`SELECT MAX(snapshot_date) AS d FROM angle_daily_agg`)
     .get() as { d: string } | undefined;
   return row?.d ?? null;
 }
