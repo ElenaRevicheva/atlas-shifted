@@ -13,6 +13,7 @@ export interface AtlasTracking {
   utm_medium: string;
   utm_campaign: string;
   utm_content: string;
+  utm_term: string;
   landing_url: string;
   performance_ingest_url: string;
 }
@@ -21,11 +22,13 @@ export function buildAtlasTracking(vertical: string, snapshotDate: string, angle
   const concept_id = `${vertical}_${snapshotDate}`;
   const utm_campaign = `atlas_${vertical}`;
   const utm_content = angleId;
+  const utm_term = concept_id;
   const params = new URLSearchParams({
     utm_source: 'meta',
     utm_medium: 'paid',
     utm_campaign: utm_campaign,
     utm_content: utm_content,
+    utm_term: utm_term,
   });
   return {
     concept_id,
@@ -33,6 +36,7 @@ export function buildAtlasTracking(vertical: string, snapshotDate: string, angle
     utm_medium: 'paid',
     utm_campaign,
     utm_content,
+    utm_term,
     landing_url: `${LANDING}/?${params}`,
     performance_ingest_url: INGEST,
   };
@@ -50,7 +54,7 @@ export function enrichConceptTracking(concepts: Record<string, any>): Record<str
     const angle = String(entry.move?.angle || entry.producer_brief?.angle || 'unknown').trim();
     out[vertical] = {
       ...entry,
-      tracking: entry.tracking?.concept_id ? entry.tracking : buildAtlasTracking(vertical, snap || 'unknown', angle),
+      tracking: snap ? buildAtlasTracking(vertical, snap, angle) : entry.tracking,
     };
   }
   return out;
@@ -63,6 +67,7 @@ export function formatTrackingExportBlock(t: AtlasTracking): string {
     `concept_id: ${t.concept_id}`,
     `utm_campaign: ${t.utm_campaign}`,
     `utm_content: ${t.utm_content}`,
+    `utm_term: ${t.utm_term}`,
     `utm_source: ${t.utm_source}`,
     `utm_medium: ${t.utm_medium}`,
     `Landing URL: ${t.landing_url}`,
