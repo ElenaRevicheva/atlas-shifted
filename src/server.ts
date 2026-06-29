@@ -31,6 +31,9 @@ import { buildIntelligence, angleHistory, laneEvidence } from './intelligence.js
 import { readTrackedVerticals, SEED_IDS } from './verticals.js';
 import { loadBoardByVertical } from './radar-board.js';
 import type { RunEvent, RunMode } from './types.js';
+import { enrichConceptTracking } from './tracking.js';
+import { fetchPerformanceSummary } from './performance-hub.js';
+import { hasPerformanceHub } from './config.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = join(__dirname, '..', 'public');
@@ -139,11 +142,12 @@ app.get('/healthz', (_req, res) => {
       video: hasVideoProviders(),
       tokenRequired: shipTokenRequired(),
     },
+    performanceHub: hasPerformanceHub(),
   });
 });
 
 /** Atlas dashboard data: the radar board + daily brief + generated concepts. */
-app.get('/api/atlas', (_req, res) => {
+app.get('/api/atlas', async (_req, res) => {
   const out: Record<string, unknown> = { ok: true, board: [], brief: null, concepts: {}, snapshot_date: null, total_rows: 0, distinct_days: 0 };
   const sqlitePath = join(DATA_DIR, 'radar.sqlite');
   try {
@@ -165,7 +169,7 @@ app.get('/api/atlas', (_req, res) => {
   } catch { /* ignore */ }
   try {
     const p = join(DATA_DIR, 'concepts.json');
-    if (existsSync(p)) out.concepts = JSON.parse(readFileSync(p, 'utf8'));
+    if (existsSync(p)) out.concepts = enrichConceptTracking(JSON.parse(readFileSync(p, 'utf8')) as Record<string, unknown>);
   } catch { /* ignore */ }
   try {
     const p = join(DATA_DIR, 'intelligence.json');
@@ -183,6 +187,13 @@ app.get('/api/atlas', (_req, res) => {
     video: hasVideoProviders(),
     tokenRequired: shipTokenRequired(),
   };
+  out.performance_hub = hasPerformanceHub();
+  if (hasPerformanceHub()) {
+    try {
+      const perf = await fetchPerformanceSummary();
+      if (perf?.ok) out.performance = perf;
+    } catch { /* optional */ }
+  }
   res.json(out);
 });
 

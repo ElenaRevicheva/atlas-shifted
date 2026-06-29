@@ -18,6 +18,8 @@ bash scripts/wire-telegram-env.sh
 
 bash scripts/wire-brightdata-env.sh
 
+bash scripts/wire-atlas-performance-env.sh || true
+
 bash scripts/setup-brightdata-browser.sh || true
 
 bash scripts/setup-atlas-cron.sh

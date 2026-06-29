@@ -19,6 +19,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { llmJson, activeLlmLabel } from './llm.js';
+import { buildAtlasTracking } from './tracking.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = join(__dirname, '..', 'data');
@@ -147,12 +148,15 @@ Also produce **3 mutation variants** — same open window, different emotional h
   const concept = raw.concept ?? EMPTY;
   const mutations = raw.mutations ?? [];
 
+  const tracking = buildAtlasTracking(vertical, latest, move.angle_id);
+
   const out = {
     vertical,
     snapshot_date: latest,
     generated_at: new Date().toISOString(),
     move: { angle: move.angle_id, state: move.window_state, score: Math.round(move.window_score * 100), signal_basis: move.signal_basis, adjacency_note: move.adjacency_note },
     heating_lane: heating,
+    tracking,
     grounding_evidence: evidence,
     concept,
     mutations,

@@ -129,6 +129,11 @@
   .shipfeed .bad{color:var(--hot)}
   .shipfeed div{padding:2px 0}
   .ship-warn{margin:0 0 12px;padding:10px 12px;border-radius:10px;border:1px solid #5a4715;background:#2a210c;color:var(--warn);font-family:var(--mono);font-size:11.5px;line-height:1.5}
+  .perfbox{margin:12px 0 0;padding:12px 14px;border-radius:10px;border:1px solid #1f4a44;background:#0c1a17;font-size:12.5px;line-height:1.55}
+  .perfbox .ptitle{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--acc);text-transform:uppercase;margin-bottom:8px}
+  .perfbox .prow{color:var(--mut);margin:2px 0}
+  .perfbox .prow b{color:var(--ink)}
+  .trackbox{margin-top:12px;padding:10px 12px;border-radius:10px;border:1px dashed var(--line);font-family:var(--mono);font-size:11px;color:var(--dim);line-height:1.5;word-break:break-all}
 </style>
 </head>
 <body>
@@ -225,6 +230,17 @@ function buildExportText(vertical){
   if(!v) return '';
   const m=v.move; const cc=c?.concept||{};
   const visual=c?.asset?.image_file||cc.scene_concept||'';
+  const tr=c?.tracking||{};
+  const trackLines=tr.concept_id?[
+    '','── TRACKING (wire into ad + landing URL) ──',
+    'concept_id: '+tr.concept_id,
+    'utm_campaign: '+(tr.utm_campaign||''),
+    'utm_content: '+(tr.utm_content||''),
+    'utm_source: '+(tr.utm_source||'meta'),
+    'utm_medium: '+(tr.utm_medium||'paid'),
+    'Landing URL: '+(tr.landing_url||''),
+    'Performance ingest: POST '+(tr.performance_ingest_url||'https://webhook.aideazz.xyz/cto/api/performance-event')
+  ]:[];
   const lines=[
     'ATLAS CAMPAIGN EXPORT · '+(brief.snapshot_date||SNAPSHOT),'Vertical: '+vertical,'',
     'Campaign:',cc.concept_name||(m.state+' '+m.angle),'',
@@ -233,7 +249,8 @@ function buildExportText(vertical){
     'Visual:',visual,'CTA:',cc.cta||'—','',
     'Landing angle:',m.state+' '+m.angle+' — '+m.why,'',
     'Why Atlas picked it:',m.why,
-    (c?.grounding_evidence||[]).slice(0,2).map(e=>'• '+e.advertiser+': "'+e.excerpt.slice(0,100)+'…"').join('\n')
+    (c?.grounding_evidence||[]).slice(0,2).map(e=>'• '+e.advertiser+': "'+e.excerpt.slice(0,100)+'…"').join('\n'),
+    ...trackLines
   ];
   return lines.filter(x=>x!==undefined).join('\n');
 }
@@ -329,6 +346,28 @@ function conceptShipHtml(c, shipCfg){
     '<div class="shipfeed" id="shipfeed-'+esc(c.vertical)+'"></div></div>';
 }
 
+function perfHtml(c){
+  const tid=c.tracking?.concept_id||(c.vertical+'_'+(c.snapshot_date||''));
+  const perf=ATLAS_DATA?.performance?.concepts?.[tid];
+  if(!perf||!perf.totals||!perf.totals.event_count) return '';
+  const t=perf.totals;
+  const rows=[];
+  if(t.spend) rows.push('<div class="prow"><b>Spend</b> $'+t.spend.toFixed(2)+'</div>');
+  if(t.clicks) rows.push('<div class="prow"><b>Clicks</b> '+t.clicks+'</div>');
+  if(t.conversions||t.leads) rows.push('<div class="prow"><b>Conversions</b> '+(t.conversions||t.leads)+'</div>');
+  if(t.revenue) rows.push('<div class="prow"><b>Revenue</b> $'+t.revenue.toFixed(2)+'</div>');
+  if(t.roas!=null) rows.push('<div class="prow"><b>ROAS</b> '+t.roas+'×</div>');
+  if(t.cpa!=null) rows.push('<div class="prow"><b>CPA</b> $'+t.cpa+'</div>');
+  if(!rows.length) return '';
+  return '<div class="perfbox"><div class="ptitle">▸ AIdeazz performance ('+t.event_count+' event'+(t.event_count===1?'':'s')+')</div>'+rows.join('')+'</div>';
+}
+
+function trackHtml(c){
+  const tr=c.tracking;
+  if(!tr||!tr.landing_url) return '';
+  return '<div class="trackbox">Track: <b>'+esc(tr.concept_id)+'</b> · '+esc(tr.utm_campaign)+' · <a href="'+esc(tr.landing_url)+'" target="_blank" rel="noopener">landing ↗</a></div>';
+}
+
 function conceptCardHtml(c, shipCfg){
   const cc=c.concept||{};
   const ev=(c.grounding_evidence||[]).slice(0,2).map(e=>'<a href="'+esc(e.url)+'" target="_blank" rel="noopener">['+esc(e.angle)+' · '+esc(e.advertiser)+']</a>').join(' ');
@@ -351,6 +390,8 @@ function conceptCardHtml(c, shipCfg){
     '<div class="row"><b>CTA:</b> '+esc(cc.cta||'')+'</div>'+
     (muts?('<div class="row"><b>Mutations (A/B hooks):</b></div><div class="mutgrid">'+muts+'</div>'):'')+
     (ev?('<div class="ev">grounded in real ads: '+ev+'</div>'):'')+
+    perfHtml(c)+
+    trackHtml(c)+
     conceptShipHtml(c, shipCfg)+
   '</div>';
 }

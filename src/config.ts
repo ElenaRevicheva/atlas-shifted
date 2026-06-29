@@ -77,6 +77,10 @@ export const config = {
   // Video providers (Runway → Luma failover in video.ts)
   runwayKey: process.env.RUNWAY_API_KEY?.trim() || '',
   lumaKey: process.env.LUMA_API_KEY?.trim() || '',
+
+  // AIdeazz performance hub (CTO AIPA) — read outcomes for Atlas UI
+  performanceHubUrl: (process.env.ATLAS_PERFORMANCE_HUB_URL || 'https://webhook.aideazz.xyz/cto/api/atlas-performance').trim(),
+  performanceHubSecret: (process.env.ATLAS_PERFORMANCE_SECRET || process.env.OUTREACH_SECRET || '').trim(),
 };
 
 export const hasBrightData = (): boolean => !!(config.brightDataToken && config.brightDataZone);
@@ -89,3 +93,4 @@ export const hasTelegram = (): boolean => !!(config.telegramBotToken && config.t
 export const hasImageProviders = (): boolean => !!(config.replicateToken || config.openaiKey);
 export const hasVideoProviders = (): boolean => !!(config.runwayKey || config.lumaKey);
 export const shipTokenRequired = (): boolean => !!config.shipToken;
+export const hasPerformanceHub = (): boolean => !!(config.performanceHubUrl && config.performanceHubSecret);
