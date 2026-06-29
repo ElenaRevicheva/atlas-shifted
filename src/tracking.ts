@@ -6,14 +6,20 @@
  */
 const LANDING = (process.env.ATLAS_LANDING_BASE || 'https://aideazz.xyz').replace(/\/$/, '');
 const INGEST = (process.env.ATLAS_PERFORMANCE_INGEST_URL || 'https://webhook.aideazz.xyz/cto/api/performance-event').trim();
+const CRM = (process.env.ATLAS_CRM_EVENT_URL || 'https://webhook.aideazz.xyz/cto/api/crm-event').trim();
 
-/** Per-vertical landing path/hash — EspaLuz dogfood lands on #espaluz, not generic hero. */
+/** Per-vertical landing path/hash — EspaLuz → #espaluz; client verticals → inquiry form. */
 const VERTICAL_LANDING_SUFFIX: Record<string, string> = {
   expat_language: '#espaluz',
+  ai_marketing_studios: '#inquiry-form',
 };
 
+const DEFAULT_CLIENT_LANDING_HASH = '#inquiry-form';
+
 function buildLandingUrl(vertical: string, params: URLSearchParams): string {
-  const suffix = VERTICAL_LANDING_SUFFIX[vertical] || process.env[`ATLAS_LANDING_${vertical.toUpperCase()}`]?.trim() || '';
+  const suffix = VERTICAL_LANDING_SUFFIX[vertical]
+    || process.env[`ATLAS_LANDING_${vertical.toUpperCase()}`]?.trim()
+    || (vertical !== 'expat_language' ? DEFAULT_CLIENT_LANDING_HASH : '');
   if (suffix.startsWith('#')) {
     return `${LANDING}/?${params}${suffix}`;
   }
@@ -37,6 +43,7 @@ export interface AtlasTracking {
   utm_term: string;
   landing_url: string;
   performance_ingest_url: string;
+  crm_event_url: string;
 }
 
 export function buildAtlasTracking(vertical: string, snapshotDate: string, angleId: string): AtlasTracking {
@@ -60,6 +67,7 @@ export function buildAtlasTracking(vertical: string, snapshotDate: string, angle
     utm_term,
     landing_url: buildLandingUrl(vertical, params),
     performance_ingest_url: INGEST,
+    crm_event_url: CRM,
   };
 }
 
@@ -93,7 +101,11 @@ export function formatTrackingExportBlock(t: AtlasTracking): string {
     `utm_medium: ${t.utm_medium}`,
     `Landing URL: ${t.landing_url}`,
     `Performance ingest: POST ${t.performance_ingest_url}`,
-    '  (Bearer OUTREACH_SECRET — same as CTO AIPA fleet hub)',
+    `CRM hub (HubSpot): POST ${t.crm_event_url}`,
+    '  (Bearer OUTREACH_SECRET — fleet agents + EspaLuz bots)',
+    '  ESPALUZ → source=espaluz_telegram|espaluz_whatsapp, pipeline=client, userId, atlas_concept_id',
+    '  CLIENT → pipeline=client, source=..., utm_campaign=atlas_{vertical}',
+    '  HIRING → pipeline=hiring, jobTitle, company (VJH)',
   ].join('\n');
 }
 

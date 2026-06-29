@@ -351,21 +351,37 @@ function perfHtml(c){
   const perf=ATLAS_DATA?.performance?.concepts?.[tid];
   if(!perf||!perf.totals||!perf.totals.event_count) return '';
   const t=perf.totals;
+  const hs=perf.hubspot;
   const rows=[];
   if(t.spend) rows.push('<div class="prow"><b>Spend</b> $'+t.spend.toFixed(2)+'</div>');
   if(t.clicks) rows.push('<div class="prow"><b>Clicks</b> '+t.clicks+'</div>');
-  if(t.conversions||t.leads) rows.push('<div class="prow"><b>Conversions</b> '+(t.conversions||t.leads)+'</div>');
+  if(t.conversions) rows.push('<div class="prow"><b>Conversions</b> '+t.conversions+'</div>');
+  if(t.leads) rows.push('<div class="prow"><b>Leads</b> '+t.leads+'</div>');
+  if(t.hubspot_deals) rows.push('<div class="prow"><b>HubSpot deals</b> '+t.hubspot_deals+'</div>');
+  if(hs&&(hs.espaluz||hs.client||hs.hiring)){
+    const parts=[];
+    if(hs.espaluz) parts.push('ESPALUZ '+hs.espaluz);
+    if(hs.client) parts.push('CLIENT '+hs.client);
+    if(hs.hiring) parts.push('HIRING '+hs.hiring);
+    rows.push('<div class="prow"><b>CRM streams</b> '+parts.join(' · ')+'</div>');
+  }
   if(t.revenue) rows.push('<div class="prow"><b>Revenue</b> $'+t.revenue.toFixed(2)+'</div>');
   if(t.roas!=null) rows.push('<div class="prow"><b>ROAS</b> '+t.roas+'×</div>');
   if(t.cpa!=null) rows.push('<div class="prow"><b>CPA</b> $'+t.cpa+'</div>');
   if(!rows.length) return '';
-  return '<div class="perfbox"><div class="ptitle">▸ AIdeazz performance ('+t.event_count+' event'+(t.event_count===1?'':'s')+')</div>'+rows.join('')+'</div>';
+  const loop=hs&&hs.recent&&hs.recent.length
+    ? '<div class="prow crmloop"><b>Live loop</b> Detect → Landing → Convert → HubSpot ✓ ('+hs.recent.length+' deal'+(hs.recent.length===1?'':'s')+')</div>'
+    : (t.hubspot_deals||t.conversions||t.leads)
+      ? '<div class="prow crmloop"><b>Live loop</b> Atlas tagged funnel → HubSpot ✓</div>'
+      : '';
+  return '<div class="perfbox"><div class="ptitle">▸ AIdeazz performance ('+t.event_count+' event'+(t.event_count===1?'':'s')+')</div>'+loop+rows.join('')+'</div>';
 }
 
 function trackHtml(c){
   const tr=c.tracking;
   if(!tr||!tr.landing_url) return '';
-  return '<div class="trackbox">Track: <b>'+esc(tr.concept_id)+'</b> · '+esc(tr.utm_campaign)+' · <a href="'+esc(tr.landing_url)+'" target="_blank" rel="noopener">landing ↗</a></div>';
+  const crm=tr.crm_event_url?(' · <span title="POST with Bearer OUTREACH_SECRET">CRM hub</span>'):'';
+  return '<div class="trackbox">Track: <b>'+esc(tr.concept_id)+'</b> · '+esc(tr.utm_campaign)+' · <a href="'+esc(tr.landing_url)+'" target="_blank" rel="noopener">landing ↗</a>'+crm+'</div>';
 }
 
 function conceptCardHtml(c, shipCfg){

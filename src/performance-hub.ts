@@ -11,6 +11,7 @@ export interface PerformanceTotals {
   revenue: number;
   sessions: number;
   leads: number;
+  hubspot_deals: number;
   roas: number | null;
   cpa: number | null;
   event_count: number;
