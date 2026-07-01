@@ -552,7 +552,7 @@ function runShip(vertical){
   setShipButtons(true, vertical);
   const feedEl=document.getElementById('shipfeed-'+vertical);
   if(feedEl) feedEl.innerHTML='';
-  shipFeed(vertical,'start',stage==='video'?'Animating 5s video (Runway → Luma)…':'Rendering still, then video…','ok');
+  shipFeed(vertical,'start',stage==='video'?'Animating 5s video (Runway → Luma → Gemini)…':'Rendering still, then video…','ok');
   let url='api/atlas/ship?vertical='+encodeURIComponent(vertical)+'&stage='+stage;
   if(SHIP_TOKEN) url+='&token='+encodeURIComponent(SHIP_TOKEN);
   let shipDone=false;
@@ -575,7 +575,7 @@ function runShip(vertical){
         const card=document.getElementById('concept-'+vertical);
         if(card){
           if(partial&&!((d.concepts||{})[vertical]||{}).video){
-            const msg=videoNote||'Video step failed — Runway credits depleted or Luma not configured. Still image is live.';
+            const msg=videoNote||'Video step failed — Runway/Luma/Gemini unavailable. Still image is live.';
             card.insertAdjacentHTML('afterbegin','<div class="ship-warn">'+esc(msg)+'</div>');
           }
           card.scrollIntoView({behavior:'smooth',block:'start'});

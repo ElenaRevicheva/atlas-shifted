@@ -6,7 +6,8 @@
  * driven by live angle intelligence" It's Today Media is hiring to build.
  *
  * Reuses the AIdeazz Atuona film-studio logic: image→video with provider failover.
- *   Runway (gen image_to_video) → Luma Agents (ray-3.2 i2v) → legacy Dream Machine.
+ *   Runway (gen image_to_video) → Luma Agents (ray-3.2 i2v) → legacy Dream Machine
+ *   → Gemini Omni Flash → Veo 3.1 (same GEMINI_API_KEY as Atuona).
  * Models are env-overridable (RUNWAY_VIDEO_MODEL / LUMA_VIDEO_MODEL) so newer
  * models drop in WITHOUT a code change — but nothing is claimed until it's green
  * in the logs. Video is the flakiest, most billing-dependent link, so if every
@@ -20,6 +21,8 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { tryGeminiOmniVideo, tryVeoVideo } from './gemini-video.js';
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = join(__dirname, '..', 'data');
 const ASSETS_DIR = join(DATA_DIR, 'assets');
@@ -30,6 +33,8 @@ const PUBLIC_BASE = (process.env.ATLAS_PUBLIC_BASE || 'https://webhook.aideazz.x
 const RUNWAY_MODEL = process.env.RUNWAY_VIDEO_MODEL?.trim() || 'gen4_turbo';
 const LUMA_MODEL = process.env.LUMA_VIDEO_MODEL?.trim() || 'ray-3.2';
 const LUMA_LEGACY_MODEL = process.env.LUMA_LEGACY_VIDEO_MODEL?.trim() || 'ray-2';
+const VEO_MODEL = (process.env.VEO_MODEL || 'veo-3.1-generate-preview').trim();
+const OMNI_MODEL = (process.env.GEMINI_OMNI_MODEL || 'gemini-omni-flash-preview').trim();
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -173,25 +178,48 @@ async function main() {
 
   let videoUrl = await renderRunway(imageUrl, promptText);
   let model = `runway:${RUNWAY_MODEL}`;
-  if (!videoUrl) {
+  let bytes: Buffer | null = null;
+
+  if (videoUrl) {
+    const res = await fetch(videoUrl, { signal: AbortSignal.timeout(120_000) });
+    if (!res.ok) {
+      console.error(`  fetch video failed: ${res.status}`);
+      videoUrl = null;
+    } else {
+      bytes = Buffer.from(await res.arrayBuffer());
+    }
+  }
+  if (!bytes) {
     videoUrl = await renderLumaAgents(imageUrl, promptText);
     model = `luma:${LUMA_MODEL}`;
+    if (videoUrl) {
+      const res = await fetch(videoUrl, { signal: AbortSignal.timeout(120_000) });
+      if (res.ok) bytes = Buffer.from(await res.arrayBuffer());
+      else videoUrl = null;
+    }
   }
-  if (!videoUrl) {
+  if (!bytes) {
     videoUrl = await renderLumaLegacy(imageUrl, promptText);
     model = `luma-legacy:${LUMA_LEGACY_MODEL}`;
+    if (videoUrl) {
+      const res = await fetch(videoUrl, { signal: AbortSignal.timeout(120_000) });
+      if (res.ok) bytes = Buffer.from(await res.arrayBuffer());
+      else videoUrl = null;
+    }
   }
-  if (!videoUrl) {
+  if (!bytes) {
+    bytes = await tryGeminiOmniVideo(imageUrl, promptText);
+    if (bytes) model = `gemini:${OMNI_MODEL}`;
+  }
+  if (!bytes) {
+    bytes = await tryVeoVideo(imageUrl, promptText);
+    if (bytes) model = `veo:${VEO_MODEL}`;
+  }
+  if (!bytes) {
     console.error('  ✗ all video providers dry/failed — the still image stands (honest fallback).');
     process.exit(2);
   }
 
-  const res = await fetch(videoUrl, { signal: AbortSignal.timeout(120_000) });
-  if (!res.ok) {
-    console.error(`  fetch video failed: ${res.status}`);
-    process.exit(1);
-  }
-  const bytes = Buffer.from(await res.arrayBuffer());
   mkdirSync(ASSETS_DIR, { recursive: true });
   const file = `${vertical}.mp4`;
   writeFileSync(join(ASSETS_DIR, file), bytes);

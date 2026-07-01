@@ -74,9 +74,10 @@ export const config = {
   // Optional gate for /api/atlas/ship (Generate creative). Open when unset.
   shipToken: process.env.ATLAS_SHIP_TOKEN?.trim() || '',
 
-  // Video providers (Runway → Luma failover in video.ts)
+  // Video providers (Runway → Luma → Gemini Omni → Veo failover in video.ts)
   runwayKey: process.env.RUNWAY_API_KEY?.trim() || '',
   lumaKey: process.env.LUMA_API_KEY?.trim() || '',
+  geminiKey: (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '').trim(),
 
   // AIdeazz performance hub (CTO AIPA) — read outcomes for Atlas UI
   performanceHubUrl: (process.env.ATLAS_PERFORMANCE_HUB_URL || 'https://webhook.aideazz.xyz/cto/api/atlas-performance').trim(),
@@ -91,6 +92,7 @@ export const hasAnyLlm = (): boolean =>
   !!(config.anthropicKey || config.groqKey || config.openaiKey || config.xaiKey);
 export const hasTelegram = (): boolean => !!(config.telegramBotToken && config.telegramChatId);
 export const hasImageProviders = (): boolean => !!(config.replicateToken || config.openaiKey);
-export const hasVideoProviders = (): boolean => !!(config.runwayKey || config.lumaKey);
+export const hasVideoProviders = (): boolean =>
+  !!(config.runwayKey || config.lumaKey || config.geminiKey);
 export const shipTokenRequired = (): boolean => !!config.shipToken;
 export const hasPerformanceHub = (): boolean => !!(config.performanceHubUrl && config.performanceHubSecret);

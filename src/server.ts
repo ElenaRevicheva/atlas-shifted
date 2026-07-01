@@ -391,7 +391,7 @@ app.get('/api/atlas/ship', async (req, res) => {
         send('error', 'No still image on file — generate the image first.', { pct: 100 });
         return;
       }
-      send('video', 'Animating 5s clip (Runway → Luma fallback)…', { pct: 60 });
+      send('video', 'Animating 5s clip (Runway → Luma → Gemini Omni → Veo)…', { pct: 60 });
       try {
         await execFileAsync('node', [join(ROOT, 'dist', 'video.js'), vertical], {
           cwd: ROOT,
@@ -403,7 +403,7 @@ app.get('/api/atlas/ship', async (req, res) => {
         const code = (e as { code?: number }).code;
         if (code === 2) {
           videoStatus = 'partial';
-          send('video', 'Video unavailable — Runway credits depleted or Luma not configured. Still image stands.', {
+          send('video', 'Video unavailable — Runway/Luma/Gemini dry. Still image stands.', {
             pct: 95,
             partial: true,
           });
