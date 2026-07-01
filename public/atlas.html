@@ -533,6 +533,72 @@ function setShipButtons(disabled, activeVertical){
   });
 }
 
+function finishShipSuccess(d, vertical, partial, videoNote){
+  ATLAS_DATA=d;
+  $('concepts').innerHTML=renderConceptSection(d, vertical);
+  bindShipButtons();
+  setShipButtons(false);
+  const card=document.getElementById('concept-'+vertical);
+  if(card){
+    if(partial&&!((d.concepts||{})[vertical]||{}).video){
+      const msg=videoNote||'Video step failed — Runway/Luma/Gemini unavailable. Still image is live.';
+      card.insertAdjacentHTML('afterbegin','<div class="ship-warn">'+esc(msg)+'</div>');
+    }
+    card.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+}
+
+/** Mobile SSE drops (screen sleep) while server keeps rendering — poll until asset/video lands. */
+function pollShipAfterDisconnect(vertical, ctx){
+  const { stage, hadAsset, hadVideo, videoNote }=ctx;
+  const startMs=Date.now();
+  const MAX_MS=660000;
+  const INTERVAL=8000;
+  shipFeed(vertical,'poll','Connection dropped — checking if render finished in background…','ok');
+  async function attempt(){
+    if(ctx.shipDoneRef.done) return;
+    if(Date.now()-startMs>MAX_MS){
+      if(!ctx.shipDoneRef.done){
+        shipFeed(vertical,'error','Stream closed — refresh in a minute if creative doesn’t appear','bad');
+        shipBusyVertical='';
+        setShipButtons(false);
+      }
+      return;
+    }
+    try{
+      const d=await (await fetch('api/atlas')).json();
+      const c=(d.concepts||{})[vertical]||{};
+      const hasAssetNow=!!(c.asset&&c.asset.image_file);
+      const hasVideoNow=!!(c.video&&c.video.video_file);
+      const videoReady=hasVideoNow&&!hadVideo;
+      const imageReady=hasAssetNow&&!hadAsset;
+      if(stage==='video'&&videoReady){
+        ctx.shipDoneRef.done=true;
+        shipBusyVertical='';
+        shipFeed(vertical,'done','Video ready (recovered after reconnect)','ok');
+        finishShipSuccess(d, vertical, false, videoNote);
+        return;
+      }
+      if(stage==='all'){
+        if(videoReady){
+          ctx.shipDoneRef.done=true;
+          shipBusyVertical='';
+          shipFeed(vertical,'done','Creative ready (recovered after reconnect)','ok');
+          finishShipSuccess(d, vertical, false, videoNote);
+          return;
+        }
+        if(imageReady&&!hadVideo&&!hasVideoNow){
+          shipFeed(vertical,'poll','Still image ready — waiting on video…','ok');
+        }
+      }
+      setTimeout(attempt, INTERVAL);
+    }catch{
+      setTimeout(attempt, INTERVAL);
+    }
+  }
+  attempt();
+}
+
 function runShip(vertical){
   if(shipBusyVertical||!vertical) return;
   const cfg=ATLAS_DATA&&ATLAS_DATA.ship;
@@ -555,7 +621,7 @@ function runShip(vertical){
   shipFeed(vertical,'start',stage==='video'?'Animating 5s video (Runway → Luma → Gemini)…':'Rendering still, then video…','ok');
   let url='api/atlas/ship?vertical='+encodeURIComponent(vertical)+'&stage='+stage;
   if(SHIP_TOKEN) url+='&token='+encodeURIComponent(SHIP_TOKEN);
-  let shipDone=false;
+  const shipDoneRef={ done:false };
   let videoNote='';
   const es=new EventSource(url);
   es.onmessage=(m)=>{
@@ -563,27 +629,14 @@ function runShip(vertical){
     if(e.stage==='video'&&(e.partial||e.message)) videoNote=e.message||videoNote;
     shipFeed(vertical, e.stage, e.message||'', e.stage==='error'?'bad':'ok');
     if(e.stage==='done'){
-      shipDone=true;
+      shipDoneRef.done=true;
       es.close();
       shipBusyVertical='';
       const partial=e.video_status==='partial'||(!e.has_video&&hasAsset);
-      fetch('api/atlas').then(r=>r.json()).then(d=>{
-        ATLAS_DATA=d;
-        $('concepts').innerHTML=renderConceptSection(d, vertical);
-        bindShipButtons();
-        setShipButtons(false);
-        const card=document.getElementById('concept-'+vertical);
-        if(card){
-          if(partial&&!((d.concepts||{})[vertical]||{}).video){
-            const msg=videoNote||'Video step failed — Runway/Luma/Gemini unavailable. Still image is live.';
-            card.insertAdjacentHTML('afterbegin','<div class="ship-warn">'+esc(msg)+'</div>');
-          }
-          card.scrollIntoView({behavior:'smooth',block:'start'});
-        }
-      });
+      fetch('api/atlas').then(r=>r.json()).then(d=>finishShipSuccess(d, vertical, partial, videoNote));
     }
     if(e.stage==='error'){
-      shipDone=true;
+      shipDoneRef.done=true;
       es.close();
       shipBusyVertical='';
       if(ATLAS_DATA){
@@ -596,19 +649,16 @@ function runShip(vertical){
   };
   es.addEventListener('close',()=>{
     es.close();
-    if(!shipDone&&shipBusyVertical===vertical){
-      shipBusyVertical='';
-      setShipButtons(false);
+    if(!shipDoneRef.done&&shipBusyVertical===vertical){
+      pollShipAfterDisconnect(vertical, { stage, hadAsset: hasAsset, hadVideo: hasVideo, videoNote, shipDoneRef });
     }
   });
   es.onerror=()=>{
-    if(shipDone) return;
-    if(shipBusyVertical===vertical){
-      shipFeed(vertical,'error','Stream closed — check server logs','bad');
-      shipBusyVertical='';
-      setShipButtons(false);
-    }
+    if(shipDoneRef.done) return;
     es.close();
+    if(shipBusyVertical===vertical){
+      pollShipAfterDisconnect(vertical, { stage, hadAsset: hasAsset, hadVideo: hasVideo, videoNote, shipDoneRef });
+    }
   };
 }
 
