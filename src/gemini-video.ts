@@ -124,7 +124,7 @@ export async function tryGeminiOmniVideo(imageUrl: string, promptText: string): 
           { type: 'image', mime_type: mimeType, data: base64 },
         ],
         generation_config: { video_config: { task: 'image_to_video' } },
-        response_format: { aspect_ratio: '9:16', duration: '5s' },
+        response_format: { type: 'video', aspect_ratio: '9:16', duration: '5s' },
         background: true,
       }),
       signal: AbortSignal.timeout(120_000),
