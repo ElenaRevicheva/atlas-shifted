@@ -47,11 +47,20 @@ async function downloadGoogleVideo(uri: string, key: string): Promise<Buffer> {
   return Buffer.from(await res.arrayBuffer());
 }
 
+type VideoBlock = { type?: string; uri?: string; data?: string };
+
 function extractVideoFromInteraction(body: Record<string, unknown>): { uri?: string; data?: string } {
-  const out = body.output_video as { uri?: string; data?: string } | undefined;
+  const out = body.output_video as VideoBlock | undefined;
   if (out?.uri || out?.data) return out;
 
-  const steps = body.steps as { type?: string; content?: { type?: string; uri?: string; data?: string }[] }[] | undefined;
+  const outputs = body.outputs as VideoBlock[] | undefined;
+  if (Array.isArray(outputs)) {
+    for (const c of outputs) {
+      if (c.type === 'video' && (c.uri || c.data)) return { uri: c.uri, data: c.data };
+    }
+  }
+
+  const steps = body.steps as { type?: string; content?: VideoBlock[] }[] | undefined;
   if (Array.isArray(steps)) {
     for (const step of steps) {
       if (step.type !== 'model_output' || !Array.isArray(step.content)) continue;
@@ -64,8 +73,8 @@ function extractVideoFromInteraction(body: Record<string, unknown>): { uri?: str
 }
 
 async function pollOmniInteraction(id: string, key: string): Promise<Record<string, unknown>> {
-  for (let i = 0; i < 60; i++) {
-    await sleep(5000);
+  for (let i = 0; i < 72; i++) {
+    await sleep(10_000);
     const poll = await fetch(`${GEMINI_API}/interactions/${encodeURIComponent(id)}?key=${key}`, {
       signal: AbortSignal.timeout(30_000),
     });
@@ -73,9 +82,11 @@ async function pollOmniInteraction(id: string, key: string): Promise<Record<stri
     const body = (await poll.json()) as Record<string, unknown>;
     const status = String(body.status || '');
     if (status === 'failed' || status === 'cancelled') {
-      throw new Error(`omni interaction ${status}`);
+      const err = body.error ? JSON.stringify(body.error).slice(0, 200) : status;
+      throw new Error(`omni interaction ${status}: ${err}`);
     }
     if (status === 'completed') return body;
+    if (i % 3 === 0) console.log(`[video] Omni polling… status=${status || 'pending'}`);
   }
   throw new Error('omni interaction timed out');
 }
@@ -94,11 +105,12 @@ async function pollGeminiFileActive(fileId: string, key: string): Promise<void> 
   throw new Error('omni file timed out');
 }
 
-/** Gemini Omni Flash image→video via Interactions API. Returns MP4 bytes or null. */
+/** Gemini Omni Flash image→video via Interactions API (Google notebook format). Returns MP4 bytes or null. */
 export async function tryGeminiOmniVideo(imageUrl: string, promptText: string): Promise<Buffer | null> {
   const key = geminiVideoKey();
   if (!key) return null;
   try {
+    console.log(`[video] Gemini Omni Flash (${OMNI_MODEL}) image→video…`);
     const { base64, mimeType } = await fetchImageBytes(imageUrl);
     const motion = `5-second cinematic ad clip, subtle camera movement. ${promptText}`.slice(0, 900);
     const create = await fetch(`${GEMINI_API}/interactions?key=${key}`, {
@@ -106,40 +118,55 @@ export async function tryGeminiOmniVideo(imageUrl: string, promptText: string): 
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: OMNI_MODEL,
+        // Google sample: text prompt first, then starting image.
         input: [
-          { type: 'image', data: base64, mime_type: mimeType },
           { type: 'text', text: motion },
+          { type: 'image', mime_type: mimeType, data: base64 },
         ],
         generation_config: { video_config: { task: 'image_to_video' } },
-        response_format: { type: 'video', aspect_ratio: '9:16', delivery: 'uri' },
+        response_format: { aspect_ratio: '9:16', duration: '5s' },
+        background: true,
       }),
       signal: AbortSignal.timeout(120_000),
     });
     const text = await create.text();
     if (!create.ok) {
-      console.warn(`[video] Omni create ${create.status}: ${text.slice(0, 200)}`);
+      console.warn(`[video] Omni create ${create.status}: ${text.slice(0, 240)}`);
       return null;
     }
     let body = JSON.parse(text) as Record<string, unknown>;
-    const status = String(body.status || 'completed');
-    if (status !== 'completed' && body.id) {
+    const status = String(body.status || '');
+    if (status !== 'completed') {
+      if (!body.id) {
+        console.warn('[video] Omni create returned no interaction id');
+        return null;
+      }
       body = await pollOmniInteraction(String(body.id), key);
     }
 
     const { uri, data } = extractVideoFromInteraction(body);
-    if (data) return Buffer.from(data, 'base64');
+    if (data) {
+      console.log('[video] Omni shipped inline video payload');
+      return Buffer.from(data, 'base64');
+    }
     if (!uri) {
-      console.warn('[video] Omni completed but no video uri/data');
+      console.warn('[video] Omni completed but no video uri/data in steps');
       return null;
     }
 
     const fileId = uri.match(/files\/([^/?]+)/)?.[1];
     if (fileId) await pollGeminiFileActive(fileId, key);
+    console.log('[video] Omni shipped video uri');
     return await downloadGoogleVideo(uri, key);
   } catch (e) {
-    console.warn('[video] Omni error:', (e as Error).message?.slice(0, 160));
+    console.warn('[video] Omni error:', (e as Error).message?.slice(0, 200));
     return null;
   }
+}
+
+export function googleVideoOmniOnly(): boolean {
+  const v = (process.env.GOOGLE_VIDEO_OMNI_ONLY || process.env.ATLAS_GOOGLE_VIDEO || '').trim().toLowerCase();
+  return v === '1' || v === 'true' || v === 'omni' || v === 'omni-only';
 }
 
 /** Google Veo 3.1 image→video (same API path as Atuona `/visualize veo`). Returns MP4 bytes or null. */

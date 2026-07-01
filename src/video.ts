@@ -21,7 +21,7 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { tryGeminiOmniVideo, tryVeoVideo } from './gemini-video.js';
+import { tryGeminiOmniVideo, tryVeoVideo, googleVideoOmniOnly } from './gemini-video.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = join(__dirname, '..', 'data');
@@ -211,9 +211,11 @@ async function main() {
     bytes = await tryGeminiOmniVideo(imageUrl, promptText);
     if (bytes) model = `gemini:${OMNI_MODEL}`;
   }
-  if (!bytes) {
+  if (!bytes && !googleVideoOmniOnly()) {
     bytes = await tryVeoVideo(imageUrl, promptText);
     if (bytes) model = `veo:${VEO_MODEL}`;
+  } else if (!bytes && googleVideoOmniOnly()) {
+    console.warn('[video] GOOGLE_VIDEO_OMNI_ONLY set — skipping Veo fallback');
   }
   if (!bytes) {
     console.error('  ✗ all video providers dry/failed — the still image stands (honest fallback).');
