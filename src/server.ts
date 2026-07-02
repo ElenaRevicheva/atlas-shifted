@@ -34,6 +34,7 @@ import type { RunEvent, RunMode } from './types.js';
 import { enrichConceptTracking } from './tracking.js';
 import { fetchPerformanceSummary } from './performance-hub.js';
 import { hasPerformanceHub } from './config.js';
+import { readPipelineStatus } from './pipeline-status.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = join(__dirname, '..', 'public');
@@ -194,6 +195,7 @@ app.get('/api/atlas', async (_req, res) => {
       if (perf?.ok) out.performance = perf;
     } catch { /* optional */ }
   }
+  out.pipeline = readPipelineStatus(DATA_DIR, (out.snapshot_date as string | null) ?? null);
   res.json(out);
 });
 

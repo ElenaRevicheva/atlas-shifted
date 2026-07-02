@@ -29,6 +29,10 @@
   .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;min-width:120px}
   .stat .n{font-family:var(--mono);font-size:22px;color:var(--acc)}
   .stat .l{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+  .stat.refreshing .n{color:var(--warn);font-size:18px}
+  .stat.refreshing .l{color:var(--warn)}
+  .refresh-banner{font-family:var(--mono);font-size:12px;color:var(--warn);background:#2a210c;border:1px solid #5a4715;border-radius:12px;padding:12px 14px;margin:-8px 0 18px;line-height:1.5;display:none}
+  .refresh-banner.show{display:block}
   h2.sec{font-family:var(--mono);font-size:12px;letter-spacing:.16em;color:var(--dim);text-transform:uppercase;margin:30px 0 14px;border-bottom:1px solid var(--line);padding-bottom:8px}
   .vcard{background:linear-gradient(180deg,var(--panel),#0e1017);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:14px}
   .vhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px}
@@ -146,6 +150,7 @@
   </header>
   <div class="tag">Stop chasing the ad everyone's already running. <b>Atlas Shifted Adaptive Intelligent Personal Assistant reads the live ad market daily, spots the emotional angle opening before the crowd</b>, and ships <b>test-ready creative — copy + image + video</b> — to get there first. <b>Public data only</b>; we detect momentum, we never guess the future. Just what's heating now, it doesn't pretend to predict.</div>
   <div class="shrug" id="shrug">⌐ loading resilience…</div>
+  <div class="refresh-banner" id="refreshBanner"></div>
 
   <div class="hero" id="hero" style="display:none">
     <div class="lab">▸ Today's move</div>
@@ -438,6 +443,21 @@ function renderConceptSection(d, focusVertical){
   return html.length? html.join('') : '<div class="loading">No concepts generated yet — add a vertical to radar.</div>';
 }
 
+let refreshPollTimer=null;
+function scheduleRefreshPoll(d){
+  if(refreshPollTimer){ clearInterval(refreshPollTimer); refreshPollTimer=null; }
+  if(d&&d.pipeline&&d.pipeline.in_progress){
+    refreshPollTimer=setInterval(()=>{
+      fetch('api/atlas').then(r=>r.json()).then(nd=>{
+        render(nd);
+        if(!nd.pipeline||!nd.pipeline.in_progress){
+          clearInterval(refreshPollTimer);
+          refreshPollTimer=null;
+        }
+      }).catch(()=>{});
+    },20000);
+  }
+}
 fetch('api/atlas').then(r=>r.json()).then(render).catch(e=>{
   $('board').innerHTML='<div class="loading">Could not load radar: '+esc(e.message)+'</div>';
 });
@@ -683,12 +703,29 @@ if(qParam&&trackParam==='1'){
 async function render(d){
   ATLAS_DATA=d;
   SNAPSHOT=d.snapshot_date||'';
+  const pipe=d.pipeline||{};
+  const refreshing=!!pipe.in_progress;
+  const snapLabel=refreshing
+    ? ((pipe.expected_snapshot_date||'today')+' ↻')
+    : (d.snapshot_date||'—');
   $('stats').innerHTML=[
     ['days tracked', d.distinct_days||0],
     ['ads in radar', d.total_rows||0],
     ['verticals', (d.board||[]).length],
-    ['snapshot', d.snapshot_date||'—'],
-  ].map(([l,n])=>'<div class="stat"><div class="n">'+esc(n)+'</div><div class="l">'+esc(l)+'</div></div>').join('');
+    ['snapshot', snapLabel],
+  ].map(([l,n],i)=>{
+    const cls=(i===3&&refreshing)?' stat refreshing':'';
+    return '<div class="stat'+cls+'"><div class="n">'+esc(String(n))+'</div><div class="l">'+esc(l+(refreshing&&i===3?' · refreshing':'') )+'</div></div>';
+  }).join('');
+  const banner=$('refreshBanner');
+  if(pipe.stale_reason){
+    banner.textContent=pipe.stale_reason;
+    banner.classList.add('show');
+  } else {
+    banner.textContent='';
+    banner.classList.remove('show');
+  }
+  scheduleRefreshPoll(d);
 
   const res=d.brief&&d.brief.resilience;
   $('shrug').textContent=res||'⌐ Atlas shifted — multi-tier LLM failover armed.';
