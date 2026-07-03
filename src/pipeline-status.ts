@@ -18,6 +18,23 @@ export function panamaDate(d = new Date()): string {
   }).format(d);
 }
 
+/** Minutes since midnight in America/Panama (for pre-cron / grace windows). */
+export function panamaMinutesSinceMidnight(d = new Date()): number {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Panama',
+    hour: 'numeric',
+    minute: 'numeric',
+    hour12: false,
+  }).formatToParts(d);
+  const hour = Number(parts.find((p) => p.type === 'hour')?.value ?? 0);
+  const minute = Number(parts.find((p) => p.type === 'minute')?.value ?? 0);
+  return hour * 60 + minute;
+}
+
+/** Daily capture cron fires 9:00 AM Panama; hide ops banners until then (+ grace). */
+const CRON_START_MINUTES = 9 * 60;
+const CRON_GRACE_MINUTES = 45; // 9:00–9:45 — normal pipeline window, no alarm banner
+
 export type PipelineStage = 'idle' | 'capture' | 'classify' | 'brief' | 'concept' | 'backup';
 
 export interface PipelineStatus {
@@ -78,11 +95,18 @@ export function readPipelineStatus(dataDir: string, sqliteSnapshot: string | nul
   }
 
   if (sqliteSnapshot && sqliteSnapshot < expected) {
+    const mins = panamaMinutesSinceMidnight();
+    const inMorningWindow = mins < CRON_START_MINUTES + CRON_GRACE_MINUTES;
+
     if (in_progress) {
-      stale_reason = `Morning refresh in progress (${pipelineStageLabel(stage)}) - snapshot updates after classify finishes (~20 min from 9 AM Panama).`;
+      stale_reason = `Refreshing today's ad market (${pipelineStageLabel(stage)}) — new angles in about 20 minutes.`;
+    } else if (inMorningWindow) {
+      // Before 9 AM or normal post-9 AM grace: show yesterday's board quietly (no ops banner).
+      stale_reason = null;
     } else {
+      // After grace, still stale — client-safe copy only (no server/Oracle instructions).
       stale_reason =
-        "Today's radar snapshot is missing — the 9 AM cron may have failed. On Oracle: tail data/capture.log && bash scripts/atlas-capture-cron.sh";
+        "Today's market scan is still completing. You're viewing the most recent snapshot.";
     }
   }
 
