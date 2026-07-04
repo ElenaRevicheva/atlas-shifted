@@ -12,6 +12,9 @@ export interface PerformanceTotals {
   sessions: number;
   leads: number;
   hubspot_deals: number;
+  ga4_sessions?: number;
+  ga4_key_events?: number;
+  wa_clicks?: number;
   roas: number | null;
   cpa: number | null;
   event_count: number;

@@ -360,6 +360,9 @@ function perfHtml(c){
   const rows=[];
   if(t.spend) rows.push('<div class="prow"><b>Spend</b> $'+t.spend.toFixed(2)+'</div>');
   if(t.clicks) rows.push('<div class="prow"><b>Clicks</b> '+t.clicks+'</div>');
+  if(t.ga4_sessions) rows.push('<div class="prow"><b>GA4 sessions</b> '+t.ga4_sessions+'</div>');
+  if(t.ga4_key_events) rows.push('<div class="prow"><b>GA4 key events</b> '+t.ga4_key_events+'</div>');
+  if(t.wa_clicks) rows.push('<div class="prow"><b>WhatsApp clicks</b> '+t.wa_clicks+'</div>');
   if(t.conversions) rows.push('<div class="prow"><b>Conversions</b> '+t.conversions+'</div>');
   if(t.leads) rows.push('<div class="prow"><b>Leads</b> '+t.leads+'</div>');
   if(t.hubspot_deals) rows.push('<div class="prow"><b>HubSpot deals</b> '+t.hubspot_deals+'</div>');
