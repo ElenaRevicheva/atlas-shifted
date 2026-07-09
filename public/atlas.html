@@ -75,6 +75,9 @@
   .note{color:var(--dim);font-size:12.5px;font-family:var(--mono);margin-top:6px}
   .loading{color:var(--mut);font-family:var(--mono);font-size:13px;padding:30px 0}
   .navlink{font-size:12px;font-family:var(--mono);color:var(--acc2);text-decoration:none}
+  .langsw{display:inline-flex;gap:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-left:10px;vertical-align:middle}
+  .langsw button{background:#0c0e15;color:var(--dim);border:0;padding:4px 10px;font-size:11px;font-family:var(--mono);cursor:pointer;font-weight:700}
+  .langsw button.on{background:#0c1a17;color:var(--acc)}
   .memory{font-size:12px;font-family:var(--mono);color:var(--dim);padding:6px 0;border-bottom:1px solid var(--line)}
   .drawer{position:fixed;top:0;right:-420px;width:min(400px,92vw);height:100vh;background:var(--panel);border-left:1px solid var(--line);box-shadow:-8px 0 40px rgba(0,0,0,.5);transition:right .25s ease;z-index:100;overflow:auto;padding:20px}
   .drawer.open{right:0}
@@ -146,23 +149,23 @@
     <div>
       <div class="brand">ATLAS SHIFTED<b> AIPA</b></div>
     </div>
-    <div class="by">autonomous marketing strategist · <a href="https://aideazz.xyz/portfolio" target="_blank" rel="noopener">aideazz.xyz/portfolio</a> · <a class="navlink" href="./">WHITESPACE finder (one-shot discovery) →</a></div>
+    <div class="by"><span id="byRole">autonomous marketing strategist</span> · <a href="https://aideazz.xyz/portfolio" target="_blank" rel="noopener">aideazz.xyz/portfolio</a> · <a class="navlink" href="./" id="byWs">WHITESPACE finder (one-shot discovery) →</a><span class="langsw"><button id="langEN">EN</button><button id="langES">ES</button></span></div>
   </header>
-  <div class="tag">Stop chasing the ad everyone's already running. <b>Atlas Shifted Adaptive Intelligent Personal Assistant reads the live ad market daily, spots the emotional angle opening before the crowd</b>, and ships <b>test-ready creative — copy + image + video</b> — to get there first. <b>Public data only</b>; we detect momentum, we never guess the future. Just what's heating now, it doesn't pretend to predict.</div>
+  <div class="tag" id="tagline">Stop chasing the ad everyone's already running. <b>Atlas Shifted Adaptive Intelligent Personal Assistant reads the live ad market daily, spots the emotional angle opening before the crowd</b>, and ships <b>test-ready creative — copy + image + video</b> — to get there first. <b>Public data only</b>; we detect momentum, we never guess the future. Just what's heating now, it doesn't pretend to predict.</div>
   <div class="shrug" id="shrug">⌐ loading resilience…</div>
   <div class="refresh-banner" id="refreshBanner"></div>
 
   <div class="hero" id="hero" style="display:none">
-    <div class="lab">▸ Today's move</div>
+    <div class="lab" id="heroLab">▸ Today's move</div>
     <div style="margin-bottom:12px">
-      <div class="k">Vertical</div>
+      <div class="k" id="heroVertK">Vertical</div>
       <select id="heroVertical"></select>
     </div>
     <div class="grid">
-      <div><div class="k">Recommendation</div><div class="v big" id="heroRec">—</div></div>
-      <div><div class="k">Confidence</div><div class="v" id="heroConf">—</div></div>
-      <div style="grid-column:1/-1"><div class="k">Reason</div><div class="v" id="heroWhy">—</div></div>
-      <div style="grid-column:1/-1"><div class="k">Action</div><div class="v">Launch campaign test</div></div>
+      <div><div class="k" id="heroRecK">Recommendation</div><div class="v big" id="heroRec">—</div></div>
+      <div><div class="k" id="heroConfK">Confidence</div><div class="v" id="heroConf">—</div></div>
+      <div style="grid-column:1/-1"><div class="k" id="heroWhyK">Reason</div><div class="v" id="heroWhy">—</div></div>
+      <div style="grid-column:1/-1"><div class="k" id="heroActK">Action</div><div class="v" id="heroActV">Launch campaign test</div></div>
     </div>
     <div class="herobtns">
       <button type="button" id="heroView">View campaign</button>
@@ -172,7 +175,7 @@
   </div>
 
   <div class="scan" id="scan">
-    <div class="hint">Optional: add a market to daily tracking. Atlas captures ads each morning (9 AM Panama), scores angles on the board, and builds campaign copy for that vertical. For a one-time scan without memory, use <a href="./">WHITESPACE</a>.</div>
+    <div class="hint" id="scanHint">Optional: add a market to daily tracking. Atlas captures ads each morning (9 AM Panama), scores angles on the board, and builds campaign copy for that vertical. For a one-time scan without memory, use <a href="./">WHITESPACE</a>.</div>
     <div class="scanrow">
       <input id="scanQ" placeholder="e.g. personal ai companions, medicare advantage, fractional CTO" autocomplete="off" />
       <button id="scanTrack">Add to radar</button>
@@ -183,17 +186,17 @@
 
   <div class="stats" id="stats"></div>
 
-  <h2 class="sec">▸ Atlas Intelligence — what nobody else shows</h2>
+  <h2 class="sec" id="secIntel">▸ Atlas Intelligence — what nobody else shows</h2>
   <div id="intel"><div class="loading">Computing alternate universes…</div></div>
 
-  <h2 class="sec">▸ Angle Window Radar — latest snapshot <span style="font-weight:400;color:var(--dim)">(click a lane for evidence)</span></h2>
+  <h2 class="sec" id="secRadar">▸ Angle Window Radar — latest snapshot <span style="font-weight:400;color:var(--dim)">(click a lane for evidence)</span></h2>
   <div id="board"><div class="loading">Reading the radar…</div></div>
 
-  <h2 class="sec">▸ Generated creative — DETECT → CREATE</h2>
+  <h2 class="sec" id="secCreative">▸ Generated creative — DETECT → CREATE</h2>
   <div id="concepts"><div class="loading">Loading concepts…</div></div>
 
-  <h2 class="sec">▸ Market memory — prior ENTER calls</h2>
-  <div id="memory"><div class="note">Logs each ENTER signal as the time-series grows.</div></div>
+  <h2 class="sec" id="secMemory">▸ Market memory — prior ENTER calls</h2>
+  <div id="memory"><div class="note" id="memNote">Logs each ENTER signal as the time-series grows.</div></div>
 </div>
 
 <div class="overlay" id="overlay"></div>
@@ -208,6 +211,127 @@
 const $=(id)=>document.getElementById(id);
 const esc=(s)=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 const pct=(x)=>Math.round((x||0)*100);
+
+/* ── i18n (EN/ES) — same pattern as aideazz.xyz/portfolio: toggle + browser auto-detect.
+   Product vocabulary ENTER/WATCH/AVOID stays untranslated (brand terms). LLM-generated
+   ad copy renders in the language it was generated in (US ad market → English). ── */
+const I18N={
+en:{
+  title:'Atlas Shifted AIPA — Angle Window Radar',
+  byRole:'autonomous marketing strategist', byWs:'WHITESPACE finder (one-shot discovery) →',
+  tagline:'Stop chasing the ad everyone\'s already running. <b>Atlas Shifted Adaptive Intelligent Personal Assistant reads the live ad market daily, spots the emotional angle opening before the crowd</b>, and ships <b>test-ready creative — copy + image + video</b> — to get there first. <b>Public data only</b>; we detect momentum, we never guess the future. Just what\'s heating now, it doesn\'t pretend to predict.',
+  heroLab:'▸ Today\'s move', heroVertK:'Vertical', heroRecK:'Recommendation', heroConfK:'Confidence', heroWhyK:'Reason', heroActK:'Action', heroActV:'Launch campaign test',
+  heroView:'View campaign', heroExport:'Export test',
+  scanHint:'Optional: add a market to daily tracking. Atlas captures ads each morning (9 AM Panama), scores angles on the board, and builds campaign copy for that vertical. For a one-time scan without memory, use <a href="./">WHITESPACE</a>.',
+  scanPh:'e.g. personal ai companions, medicare advantage, fractional CTO',
+  trackBtn:'Add to radar', added:'Added ✓', working:'Working…', addingRadar:'Adding to radar…',
+  secIntel:'▸ Atlas Intelligence — what nobody else shows',
+  secRadar:'▸ Angle Window Radar — latest snapshot <span style="font-weight:400;color:var(--dim)">(click a lane for evidence)</span>',
+  secCreative:'▸ Generated creative — DETECT → CREATE',
+  secMemory:'▸ Market memory — prior ENTER calls',
+  memNote:'Logs each ENTER signal as the time-series grows.',
+  memNone:'No ENTER signals logged yet — memory grows each morning.',
+  stDays:'days tracked', stAds:'ads in radar', stVerts:'verticals', stSnap:'snapshot', stRefreshing:' · refreshing',
+  loadIntel:'Computing alternate universes…', loadRadar:'Reading the radar…', loadConcepts:'Loading concepts…', loadEvidence:'Loading evidence…', loading:'Loading…',
+  intelPending:'Intelligence layer activates after first brief run.',
+  noRadar:'No radar data yet.', noLane:'No ads in this lane yet.',
+  sparkNote:'⏳ Sparklines fill in as daily snapshots accrue — one new day every morning (Panama time).',
+  evidenceT:'Evidence', viewInLib:'view in ad library ↗', match:'% match',
+  pendingH:'Campaign not generated yet',
+  pendingP:'Radar data exists for this vertical, but creative copy has not been built yet. Use <b>Add to radar</b> below or wait for the next morning capture — then View campaign will show copy grounded in today\'s ads (not another vertical).',
+  heroNoteGen:'Campaign copy for this vertical is still generating — check back after add-to-radar or tomorrow\'s capture.',
+  heroNoteNone:'No campaign for this vertical yet. Add it below or wait for the next daily capture.',
+  trackedTitle:'Your tracked verticals', trackedCron:'(daily cron · 9 AM Panama)', trackedPending:'· radar after capture',
+  confHigh:'high', confMed:'medium', confLow:'low',
+  openWindow:'open window', adjHeating:'adjacent to heating',
+  hook:'Hook', headline:'Headline', body:'Body', scene:'Scene', cta:'CTA', mutations:'Mutations (A/B hooks)', grounded:'grounded in real ads',
+  assetPending:'Visual asset pending — copy is live; click Generate creative below to ship image + video.',
+  genVideo:'Generate video (~3 min)', genStill:'Generate still only', genCreative:'Generate creative (~3 min)', generating:'Generating…',
+  perfTitle:'▸ AIdeazz performance', events:'event(s)',
+  spend:'Spend', clicks:'Clicks', sessions:'GA4 sessions', keyEvents:'GA4 key events', waClicks:'WhatsApp clicks', conversions:'Conversions', leads:'Leads', hsDeals:'HubSpot deals', crmStreams:'CRM streams', revenue:'Revenue',
+  liveLoop:'Live loop', loopFull:'Detect → Landing → Convert → HubSpot ✓', loopTagged:'Atlas tagged funnel → HubSpot ✓', deals:'deal(s)',
+  track:'Track', landing:'landing ↗',
+  stCapture:'Capturing ads…', stClassify:'Scoring angles…', stBrief:'Writing brief…', stConcept:'Writing campaign…',
+  waitCost:'Wait cost',
+},
+es:{
+  title:'Atlas Shifted AIPA — Radar de Ventanas de Ángulo',
+  byRole:'estratega de marketing autónomo', byWs:'buscador WHITESPACE (descubrimiento único) →',
+  tagline:'Deja de perseguir el anuncio que todos ya están publicando. <b>Atlas Shifted lee el mercado publicitario en vivo cada día, detecta el ángulo emocional que se abre antes que la multitud</b>, y entrega <b>creativos listos para probar — copy + imagen + video</b> — para llegar primero. <b>Solo datos públicos</b>; detectamos impulso, nunca adivinamos el futuro. Solo lo que se está calentando ahora, sin pretender predecir.',
+  heroLab:'▸ La jugada de hoy', heroVertK:'Vertical', heroRecK:'Recomendación', heroConfK:'Confianza', heroWhyK:'Razón', heroActK:'Acción', heroActV:'Lanzar prueba de campaña',
+  heroView:'Ver campaña', heroExport:'Exportar prueba',
+  scanHint:'Opcional: añade un mercado al seguimiento diario. Atlas captura anuncios cada mañana (9 AM Panamá), puntúa los ángulos en el tablero y genera copy de campaña para ese vertical. Para un escaneo único sin memoria, usa <a href="./">WHITESPACE</a>.',
+  scanPh:'ej. compañeros de IA personales, seguros médicos, CTO fraccional',
+  trackBtn:'Añadir al radar', added:'Añadido ✓', working:'Trabajando…', addingRadar:'Añadiendo al radar…',
+  secIntel:'▸ Inteligencia Atlas — lo que nadie más muestra',
+  secRadar:'▸ Radar de Ventanas de Ángulo — último snapshot <span style="font-weight:400;color:var(--dim)">(haz clic en un carril para ver evidencia)</span>',
+  secCreative:'▸ Creativo generado — DETECTAR → CREAR',
+  secMemory:'▸ Memoria del mercado — señales ENTER previas',
+  memNote:'Registra cada señal ENTER a medida que crece la serie temporal.',
+  memNone:'Aún no hay señales ENTER registradas — la memoria crece cada mañana.',
+  stDays:'días seguidos', stAds:'anuncios en radar', stVerts:'verticales', stSnap:'snapshot', stRefreshing:' · actualizando',
+  loadIntel:'Calculando universos alternos…', loadRadar:'Leyendo el radar…', loadConcepts:'Cargando conceptos…', loadEvidence:'Cargando evidencia…', loading:'Cargando…',
+  intelPending:'La capa de inteligencia se activa tras el primer brief.',
+  noRadar:'Aún no hay datos de radar.', noLane:'Aún no hay anuncios en este carril.',
+  sparkNote:'⏳ Las líneas de tendencia se llenan con cada snapshot diario — un día nuevo cada mañana (hora de Panamá).',
+  evidenceT:'Evidencia', viewInLib:'ver en la biblioteca de anuncios ↗', match:'% coincidencia',
+  pendingH:'Campaña aún no generada',
+  pendingP:'Existen datos de radar para este vertical, pero el copy creativo aún no se ha generado. Usa <b>Añadir al radar</b> abajo o espera la próxima captura matinal — entonces Ver campaña mostrará copy basado en los anuncios de hoy (no de otro vertical).',
+  heroNoteGen:'El copy de campaña para este vertical aún se está generando — vuelve tras añadir al radar o la captura de mañana.',
+  heroNoteNone:'Aún no hay campaña para este vertical. Añádelo abajo o espera la próxima captura diaria.',
+  trackedTitle:'Tus verticales en seguimiento', trackedCron:'(cron diario · 9 AM Panamá)', trackedPending:'· en radar tras captura',
+  confHigh:'alta', confMed:'media', confLow:'baja',
+  openWindow:'ventana abierta', adjHeating:'adyacente al carril caliente',
+  hook:'Gancho', headline:'Titular', body:'Texto', scene:'Escena', cta:'CTA', mutations:'Mutaciones (ganchos A/B)', grounded:'basado en anuncios reales',
+  assetPending:'Asset visual pendiente — el copy está listo; haz clic en Generar creativo abajo para producir imagen + video.',
+  genVideo:'Generar video (~3 min)', genStill:'Generar solo imagen', genCreative:'Generar creativo (~3 min)', generating:'Generando…',
+  perfTitle:'▸ Rendimiento AIdeazz', events:'evento(s)',
+  spend:'Gasto', clicks:'Clics', sessions:'Sesiones GA4', keyEvents:'Eventos clave GA4', waClicks:'Clics WhatsApp', conversions:'Conversiones', leads:'Leads', hsDeals:'Negocios HubSpot', crmStreams:'Flujos CRM', revenue:'Ingresos',
+  liveLoop:'Circuito en vivo', loopFull:'Detectar → Landing → Convertir → HubSpot ✓', loopTagged:'Embudo etiquetado Atlas → HubSpot ✓', deals:'negocio(s)',
+  track:'Rastreo', landing:'landing ↗',
+  stCapture:'Capturando anuncios…', stClassify:'Puntuando ángulos…', stBrief:'Escribiendo brief…', stConcept:'Escribiendo campaña…',
+  waitCost:'Costo de esperar',
+}};
+let LANG=localStorage.getItem('atlas_lang')||((navigator.language||'').toLowerCase().startsWith('es')?'es':'en');
+const t=(k)=>(I18N[LANG]&&I18N[LANG][k]!==undefined?I18N[LANG][k]:I18N.en[k]||k);
+/** Server-generated "why" strings are English templates — translate the known patterns. */
+function trWhy(s){
+  if(LANG!=='es'||!s) return s||'';
+  return String(s)
+    .replace(/saturation (\d+)%/g,'saturación $1%')
+    .replace(/(\d+) advertisers?/g,'$1 anunciantes')
+    .replace(/(\d+) new in 7d/g,'$1 nuevos en 7 días')
+    .replace(/(\d+) launched ≤30d/g,'$1 lanzados ≤30 días')
+    .replace(/(\d+)% of lane/g,'$1% del carril')
+    .replace(/adjacent to heating/g,'adyacente al carril caliente')
+    .replace(/co-occurrence/g,'co-ocurrencia');
+}
+function applyStaticLang(){
+  document.documentElement.lang=LANG;
+  document.title=t('title');
+  $('byRole').textContent=t('byRole');
+  $('byWs').textContent=t('byWs');
+  $('tagline').innerHTML=t('tagline');
+  $('heroLab').textContent=t('heroLab');
+  $('heroVertK').textContent=t('heroVertK');
+  $('heroRecK').textContent=t('heroRecK');
+  $('heroConfK').textContent=t('heroConfK');
+  $('heroWhyK').textContent=t('heroWhyK');
+  $('heroActK').textContent=t('heroActK');
+  $('heroActV').textContent=t('heroActV');
+  $('heroView').textContent=t('heroView');
+  $('heroExport').textContent=t('heroExport');
+  $('scanHint').innerHTML=t('scanHint');
+  $('scanQ').placeholder=t('scanPh');
+  if(!scanBusy) $('scanTrack').textContent=t('trackBtn');
+  $('secIntel').innerHTML=t('secIntel');
+  $('secRadar').innerHTML=t('secRadar');
+  $('secCreative').innerHTML=t('secCreative');
+  $('secMemory').innerHTML=t('secMemory');
+  const mn=$('memNote'); if(mn) mn.textContent=t('memNote');
+  $('langEN').classList.toggle('on',LANG==='en');
+  $('langES').classList.toggle('on',LANG==='es');
+}
 let SNAPSHOT='';
 let ATLAS_DATA=null;
 let shipBusyVertical='';
@@ -219,7 +343,7 @@ function assetSrc(path,generatedAt){
   return path+bust;
 }
 
-function confLabel(score){ return score>=70?'high':score>=40?'medium':'low'; }
+function confLabel(score){ return score>=70?t('confHigh'):score>=40?t('confMed'):t('confLow'); }
 
 function pickDefaultVertical(brief){
   const vs=brief?.verticals||[];
@@ -297,8 +421,8 @@ function renderHero(vertical){
     const c=ATLAS_DATA?.concepts?.[v];
     const el=document.getElementById('concept-'+v);
     if(c&&el){ el.scrollIntoView({behavior:'smooth',block:'start'}); return; }
-    if(el){ el.scrollIntoView({behavior:'smooth',block:'start'}); showHeroNote('Campaign copy for this vertical is still generating — check back after add-to-radar or tomorrow\'s capture.'); return; }
-    showHeroNote('No campaign for this vertical yet. Add it below or wait for the next daily capture.');
+    if(el){ el.scrollIntoView({behavior:'smooth',block:'start'}); showHeroNote(t('heroNoteGen')); return; }
+    showHeroNote(t('heroNoteNone'));
     $('scanQ').value=v.replace(/_/g,' ');
     $('scan').scrollIntoView({behavior:'smooth',block:'start'});
   };
@@ -308,7 +432,7 @@ function renderHero(vertical){
   const m=row.move;
   $('heroRec').innerHTML='<span class="badge '+esc(m.state)+'" style="display:inline-block;margin-right:6px">'+esc(m.state)+'</span>'+esc(m.angle.replace(/_/g,' '));
   $('heroConf').textContent=confLabel(m.score)+' ('+m.score+'/100)';
-  $('heroWhy').textContent=m.why||'—';
+  $('heroWhy').textContent=trWhy(m.why)||'—';
   $('hero').style.display='block';
 }
 
@@ -331,11 +455,11 @@ async function openEvidence(vertical, angle){
   $('overlay').classList.add('open');
   $('drawerTitle').textContent=angle.replace(/_/g,' ');
   $('drawerSub').textContent=vertical+' · snapshot '+SNAPSHOT;
-  $('drawerBody').innerHTML='<div class="loading">Loading evidence…</div>';
+  $('drawerBody').innerHTML='<div class="loading">'+t('loadEvidence')+'</div>';
   try{
     const r=await fetch('api/atlas/evidence?vertical='+encodeURIComponent(vertical)+'&angle='+encodeURIComponent(angle)+'&date='+encodeURIComponent(SNAPSHOT));
     const d=await r.json();
-    $('drawerBody').innerHTML=(d.evidence||[]).map(e=>'<div class="evitem"><b>'+esc(e.advertiser)+'</b> ('+e.confidence+'% match)<br>'+esc(e.excerpt)+'<br><a href="'+esc(e.url)+'" target="_blank" rel="noopener">view in ad library ↗</a></div>').join('')||'<div class="note">No ads in this lane yet.</div>';
+    $('drawerBody').innerHTML=(d.evidence||[]).map(e=>'<div class="evitem"><b>'+esc(e.advertiser)+'</b> ('+e.confidence+t('match')+')<br>'+esc(e.excerpt)+'<br><a href="'+esc(e.url)+'" target="_blank" rel="noopener">'+t('viewInLib')+'</a></div>').join('')||'<div class="note">'+t('noLane')+'</div>';
   }catch(e){ $('drawerBody').innerHTML='<div class="note">Failed: '+esc(e.message)+'</div>'; }
 }
 
@@ -344,8 +468,8 @@ function conceptShipHtml(c, shipCfg){
   const hasVideo=c.video&&c.video.video_file;
   if(hasVideo||!shipCfg||!shipCfg.image) return '';
   const label=hasAsset
-    ? (shipCfg.video?'Generate video (~3 min)':'Generate still only')
-    : 'Generate creative (~3 min)';
+    ? (shipCfg.video?t('genVideo'):t('genStill'))
+    : t('genCreative');
   return '<div class="shiprow">'+
     '<button type="button" class="shipbtn" data-v="'+esc(c.vertical)+'">'+label+'</button>'+
     '<div class="shipfeed" id="shipfeed-'+esc(c.vertical)+'"></div></div>';
@@ -355,34 +479,34 @@ function perfHtml(c){
   const tid=c.tracking?.concept_id||(c.vertical+'_'+(c.snapshot_date||''));
   const perf=ATLAS_DATA?.performance?.concepts?.[tid];
   if(!perf||!perf.totals||!perf.totals.event_count) return '';
-  const t=perf.totals;
+  const tot=perf.totals;
   const hs=perf.hubspot;
   const rows=[];
-  if(t.spend) rows.push('<div class="prow"><b>Spend</b> $'+t.spend.toFixed(2)+'</div>');
-  if(t.clicks) rows.push('<div class="prow"><b>Clicks</b> '+t.clicks+'</div>');
-  if(t.ga4_sessions) rows.push('<div class="prow"><b>GA4 sessions</b> '+t.ga4_sessions+'</div>');
-  if(t.ga4_key_events) rows.push('<div class="prow"><b>GA4 key events</b> '+t.ga4_key_events+'</div>');
-  if(t.wa_clicks) rows.push('<div class="prow"><b>WhatsApp clicks</b> '+t.wa_clicks+'</div>');
-  if(t.conversions) rows.push('<div class="prow"><b>Conversions</b> '+t.conversions+'</div>');
-  if(t.leads) rows.push('<div class="prow"><b>Leads</b> '+t.leads+'</div>');
-  if(t.hubspot_deals) rows.push('<div class="prow"><b>HubSpot deals</b> '+t.hubspot_deals+'</div>');
+  if(tot.spend) rows.push('<div class="prow"><b>'+t('spend')+'</b> $'+tot.spend.toFixed(2)+'</div>');
+  if(tot.clicks) rows.push('<div class="prow"><b>'+t('clicks')+'</b> '+tot.clicks+'</div>');
+  if(tot.ga4_sessions) rows.push('<div class="prow"><b>'+t('sessions')+'</b> '+tot.ga4_sessions+'</div>');
+  if(tot.ga4_key_events) rows.push('<div class="prow"><b>'+t('keyEvents')+'</b> '+tot.ga4_key_events+'</div>');
+  if(tot.wa_clicks) rows.push('<div class="prow"><b>'+t('waClicks')+'</b> '+tot.wa_clicks+'</div>');
+  if(tot.conversions) rows.push('<div class="prow"><b>'+t('conversions')+'</b> '+tot.conversions+'</div>');
+  if(tot.leads) rows.push('<div class="prow"><b>'+t('leads')+'</b> '+tot.leads+'</div>');
+  if(tot.hubspot_deals) rows.push('<div class="prow"><b>'+t('hsDeals')+'</b> '+tot.hubspot_deals+'</div>');
   if(hs&&(hs.espaluz||hs.client||hs.hiring)){
     const parts=[];
     if(hs.espaluz) parts.push('ESPALUZ '+hs.espaluz);
     if(hs.client) parts.push('CLIENT '+hs.client);
     if(hs.hiring) parts.push('HIRING '+hs.hiring);
-    rows.push('<div class="prow"><b>CRM streams</b> '+parts.join(' · ')+'</div>');
+    rows.push('<div class="prow"><b>'+t('crmStreams')+'</b> '+parts.join(' · ')+'</div>');
   }
-  if(t.revenue) rows.push('<div class="prow"><b>Revenue</b> $'+t.revenue.toFixed(2)+'</div>');
-  if(t.roas!=null) rows.push('<div class="prow"><b>ROAS</b> '+t.roas+'×</div>');
-  if(t.cpa!=null) rows.push('<div class="prow"><b>CPA</b> $'+t.cpa+'</div>');
+  if(tot.revenue) rows.push('<div class="prow"><b>'+t('revenue')+'</b> $'+tot.revenue.toFixed(2)+'</div>');
+  if(tot.roas!=null) rows.push('<div class="prow"><b>ROAS</b> '+tot.roas+'×</div>');
+  if(tot.cpa!=null) rows.push('<div class="prow"><b>CPA</b> $'+tot.cpa+'</div>');
   if(!rows.length) return '';
   const loop=hs&&hs.recent&&hs.recent.length
-    ? '<div class="prow crmloop"><b>Live loop</b> Detect → Landing → Convert → HubSpot ✓ ('+hs.recent.length+' deal'+(hs.recent.length===1?'':'s')+')</div>'
-    : (t.hubspot_deals||t.conversions||t.leads)
-      ? '<div class="prow crmloop"><b>Live loop</b> Atlas tagged funnel → HubSpot ✓</div>'
+    ? '<div class="prow crmloop"><b>'+t('liveLoop')+'</b> '+t('loopFull')+' ('+hs.recent.length+' '+t('deals')+')</div>'
+    : (tot.hubspot_deals||tot.conversions||tot.leads)
+      ? '<div class="prow crmloop"><b>'+t('liveLoop')+'</b> '+t('loopTagged')+'</div>'
       : '';
-  return '<div class="perfbox"><div class="ptitle">▸ AIdeazz performance ('+t.event_count+' event'+(t.event_count===1?'':'s')+')</div>'+loop+rows.join('')+'</div>';
+  return '<div class="perfbox"><div class="ptitle">'+t('perfTitle')+' ('+tot.event_count+' '+t('events')+')</div>'+loop+rows.join('')+'</div>';
 }
 
 function trackHtml(c){
@@ -402,18 +526,18 @@ function conceptCardHtml(c, shipCfg){
     ?('<video class="casset" src="'+esc(assetSrc(c.video.video_file,vidAt))+'" controls muted loop playsinline poster="'+esc(assetSrc((c.asset&&c.asset.image_file)||'',imgAt))+'"></video><div class="ev">generated video · '+esc(c.video.model||'')+'</div>')
     :(c.asset&&c.asset.image_file
       ?('<img class="casset" src="'+esc(assetSrc(c.asset.image_file,imgAt))+'" alt="generated creative" loading="lazy"><div class="ev">generated still · '+esc(c.asset.model||'')+'</div>')
-      :'<div class="note">Visual asset pending — copy is live; click Generate creative below to ship image + video.</div>'));
+      :'<div class="note">'+t('assetPending')+'</div>'));
   return '<div class="concept" id="concept-'+esc(c.vertical)+'">'+
-    '<div class="k">'+esc(c.vertical)+' · open window: '+esc(c.move.angle)+' ('+c.move.score+'/100)'+(c.heating_lane?(' · adjacent to heating '+esc(c.heating_lane)):'')+'</div>'+
+    '<div class="k">'+esc(c.vertical)+' · '+t('openWindow')+': '+esc(c.move.angle)+' ('+c.move.score+'/100)'+(c.heating_lane?(' · '+t('adjHeating')+' '+esc(c.heating_lane)):'')+'</div>'+
     '<h3>'+esc(cc.concept_name||'—')+'</h3><div class="em">owns: '+esc(cc.emotion||'')+'</div>'+
     media+
-    '<div class="row"><b>Hook:</b> '+esc(cc.hook||'')+'</div>'+
-    '<div class="row"><b>Headline:</b> '+esc(cc.headline||'')+'</div>'+
-    '<div class="row"><b>Body:</b> '+esc(cc.primary_text||'')+'</div>'+
-    '<div class="row"><b>Scene:</b> '+esc(cc.scene_concept||'')+'</div>'+
-    '<div class="row"><b>CTA:</b> '+esc(cc.cta||'')+'</div>'+
-    (muts?('<div class="row"><b>Mutations (A/B hooks):</b></div><div class="mutgrid">'+muts+'</div>'):'')+
-    (ev?('<div class="ev">grounded in real ads: '+ev+'</div>'):'')+
+    '<div class="row"><b>'+t('hook')+':</b> '+esc(cc.hook||'')+'</div>'+
+    '<div class="row"><b>'+t('headline')+':</b> '+esc(cc.headline||'')+'</div>'+
+    '<div class="row"><b>'+t('body')+':</b> '+esc(cc.primary_text||'')+'</div>'+
+    '<div class="row"><b>'+t('scene')+':</b> '+esc(cc.scene_concept||'')+'</div>'+
+    '<div class="row"><b>'+t('cta')+':</b> '+esc(cc.cta||'')+'</div>'+
+    (muts?('<div class="row"><b>'+t('mutations')+':</b></div><div class="mutgrid">'+muts+'</div>'):'')+
+    (ev?('<div class="ev">'+t('grounded')+': '+ev+'</div>'):'')+
     perfHtml(c)+
     trackHtml(c)+
     conceptShipHtml(c, shipCfg)+
@@ -424,8 +548,8 @@ function conceptPendingHtml(vertical, move){
   const mv=move?(' · MOVE '+esc(move.state)+' '+esc(move.angle.replace(/_/g,' '))):'';
   return '<div class="concept concept-pending" id="concept-'+esc(vertical)+'">'+
     '<div class="k">'+esc(vertical)+mv+'</div>'+
-    '<h3>Campaign not generated yet</h3>'+
-    '<p class="pending-msg">Radar data exists for this vertical, but creative copy has not been built yet. Use <b>Add to radar</b> below or wait for the next morning capture — then View campaign will show copy grounded in today\'s ads (not another vertical).</p>'+
+    '<h3>'+t('pendingH')+'</h3>'+
+    '<p class="pending-msg">'+t('pendingP')+'</p>'+
   '</div>';
 }
 
@@ -466,12 +590,11 @@ fetch('api/atlas').then(r=>r.json()).then(render).catch(e=>{
 });
 
 let scanBusy=false;
-const TRACK_BTN='Add to radar';
 function setTrackRunning(running,label){
   const btn=$('scanTrack');
   scanBusy=running;
   btn.disabled=running;
-  btn.textContent=label||(running?'Working…':TRACK_BTN);
+  btn.textContent=label||(running?t('working'):t('trackBtn'));
   btn.classList.toggle('running',!!running);
 }
 function scanFeed(stage,msg,cls){
@@ -484,15 +607,15 @@ function scanFeed(stage,msg,cls){
 }
 function scanFinish(ok){
   setTrackRunning(false);
-  if(ok){ $('scanTrack').textContent='Added ✓'; setTimeout(()=>{ $('scanTrack').textContent=TRACK_BTN; },4000); }
+  if(ok){ $('scanTrack').textContent=t('added'); setTimeout(()=>{ $('scanTrack').textContent=t('trackBtn'); },4000); }
 }
 
 function stageLabel(stage){
-  if(stage==='capture'||stage==='register') return 'Capturing ads…';
-  if(stage==='classify') return 'Scoring angles…';
-  if(stage==='brief') return 'Writing brief…';
-  if(stage==='concept') return 'Writing campaign…';
-  return 'Adding to radar…';
+  if(stage==='capture'||stage==='register') return t('stCapture');
+  if(stage==='classify') return t('stClassify');
+  if(stage==='brief') return t('stBrief');
+  if(stage==='concept') return t('stConcept');
+  return t('addingRadar');
 }
 
 function renderTrackedList(d){
@@ -500,10 +623,10 @@ function renderTrackedList(d){
   const el=$('trackedList');
   if(!custom.length){ el.style.display='none'; return; }
   el.style.display='block';
-  el.innerHTML='<div>Your tracked verticals <span style="color:var(--dim)">(daily cron · 9 AM Panama)</span></div><div class="chips">'+
+  el.innerHTML='<div>'+t('trackedTitle')+' <span style="color:var(--dim)">'+t('trackedCron')+'</span></div><div class="chips">'+
     custom.map(v=>{
       const onBoard=(ATLAS_DATA?.board||[]).some(b=>b.vertical===v.id);
-      const pending=onBoard?'':' <span style="color:var(--warn);font-size:10px">· radar after capture</span>';
+      const pending=onBoard?'':' <span style="color:var(--warn);font-size:10px">'+t('trackedPending')+'</span>';
       return '<span class="chip"><b>'+esc(v.label)+'</b>'+pending+'</span>';
     }).join('')+'</div>';
 }
@@ -512,7 +635,7 @@ function runTrack(fromWhitespace){
   if(scanBusy) return;
   const v=$('scanQ').value.trim();
   if(!v) return;
-  setTrackRunning(true,'Adding to radar…');
+  setTrackRunning(true,t('addingRadar'));
   $('scanFeed').innerHTML='';
   if(fromWhitespace) scanFeed('link','From WHITESPACE — finishing add to radar automatically','ok');
   scanFeed('start','adding to radar…');
@@ -712,13 +835,13 @@ async function render(d){
     ? ((pipe.expected_snapshot_date||'today')+' ↻')
     : (d.snapshot_date||'—');
   $('stats').innerHTML=[
-    ['days tracked', d.distinct_days||0],
-    ['ads in radar', d.total_rows||0],
-    ['verticals', (d.board||[]).length],
-    ['snapshot', snapLabel],
+    [t('stDays'), d.distinct_days||0],
+    [t('stAds'), d.total_rows||0],
+    [t('stVerts'), (d.board||[]).length],
+    [t('stSnap'), snapLabel],
   ].map(([l,n],i)=>{
     const cls=(i===3&&refreshing)?' stat refreshing':'';
-    return '<div class="stat'+cls+'"><div class="n">'+esc(String(n))+'</div><div class="l">'+esc(l+(refreshing&&i===3?' · refreshing':'') )+'</div></div>';
+    return '<div class="stat'+cls+'"><div class="n">'+esc(String(n))+'</div><div class="l">'+esc(l+(refreshing&&i===3?t('stRefreshing'):'') )+'</div></div>';
   }).join('');
   const banner=$('refreshBanner');
   if(pipe.stale_reason){
@@ -747,8 +870,8 @@ async function render(d){
       (hl?('<span class="pill fresh">~'+hl.est_days_remaining+'d half-life · '+hl.opportunity_remaining_pct+'% room</span>'):'');
     const absent=(iv.absent_universe||[]).slice(0,2).map(a=>'<div class="absent"><b>ABSENT · '+esc(a.angle_id)+'</b> — '+esc(a.opportunity)+(a.adjacent_heat?' (demand nearby: '+esc(a.adjacent_heat)+')':'')+'</div>').join('');
     return '<div class="vcard"><div class="vname">'+esc(v.vertical)+'</div><div class="intelrow">'+pills+'</div>'+
-      (wc?('<div class="note">Wait cost: '+esc(wc.reason)+'</div>'):'')+absent+'</div>';
-  }).join('')||'<div class="note">Intelligence layer activates after first brief run.</div>';
+      (wc?('<div class="note">'+t('waitCost')+': '+esc(wc.reason)+'</div>'):'')+absent+'</div>';
+  }).join('')||'<div class="note">'+t('intelPending')+'</div>';
 
   const briefByV={};
   if(d.brief&&d.brief.verticals) for(const v of d.brief.verticals) briefByV[v.vertical]=v;
@@ -766,26 +889,37 @@ async function render(d){
       const h=await hist(v.vertical,a.angle_id);
       lanes.push('<div class="lane" data-v="'+esc(v.vertical)+'" data-a="'+esc(a.angle_id)+'">'+
         '<span class="badge '+esc(a.window_state)+'">'+esc(a.window_state)+'</span>'+
-        '<span class="angle">'+esc(a.angle_id)+' <span class="b">'+a.distinct_advertisers+' adv · '+esc(a.signal_basis)+(a.adjacency_note?(' · '+esc(a.adjacency_note)):'')+'</span></span>'+
+        '<span class="angle">'+esc(a.angle_id)+' <span class="b">'+a.distinct_advertisers+' adv · '+esc(a.signal_basis)+(a.adjacency_note?(' · '+esc(trWhy(a.adjacency_note))):'')+'</span></span>'+
         sparkSvg(h)+
         '<span class="satbar"><span class="satfill" style="width:'+pct(a.saturation)+'%"></span></span>'+
         '<span class="score">'+pct(a.window_score)+'</span></div>');
     }
     boardEl.insertAdjacentHTML('beforeend','<div class="vcard"><div class="vhead"><span class="vname">'+esc(v.vertical)+'</span><span class="vmove">'+moveTxt+'</span></div>'+lanes.join('')+'</div>');
   }
-  if(!(d.board||[]).length) boardEl.innerHTML='<div class="loading">No radar data yet.</div>';
+  if(!(d.board||[]).length) boardEl.innerHTML='<div class="loading">'+t('noRadar')+'</div>';
   boardEl.querySelectorAll('.lane').forEach(el=>el.onclick=()=>openEvidence(el.dataset.v, el.dataset.a));
 
   $('concepts').innerHTML=renderConceptSection(d, pickDefaultVertical(d.brief));
   bindShipButtons();
 
   const mem=(intel.memory||[]);
-  $('memory').innerHTML=mem.length? mem.map(m=>'<div class="memory">'+esc(m.snapshot_date)+' · '+esc(m.vertical)+' · ENTER <b>'+esc(m.angle_id)+'</b> ('+Math.round(m.window_score*100)+'/100)</div>').join('') : '<div class="note">No ENTER signals logged yet — memory grows each morning.</div>';
+  $('memory').innerHTML=mem.length? mem.map(m=>'<div class="memory">'+esc(m.snapshot_date)+' · '+esc(m.vertical)+' · ENTER <b>'+esc(m.angle_id)+'</b> ('+Math.round(m.window_score*100)+'/100)</div>').join('') : '<div class="note">'+t('memNone')+'</div>';
 
   if((d.distinct_days||0)<2){
-    boardEl.insertAdjacentHTML('beforeend','<div class="note">⏳ Sparklines fill in as daily snapshots accrue — one new day every morning (Panama time).</div>');
+    boardEl.insertAdjacentHTML('beforeend','<div class="note">'+t('sparkNote')+'</div>');
   }
 }
+
+/* ── language toggle wiring (after all declarations; re-renders live data on switch) ── */
+function setLang(l){
+  LANG=l;
+  localStorage.setItem('atlas_lang',l);
+  applyStaticLang();
+  if(ATLAS_DATA) render(ATLAS_DATA);
+}
+$('langEN').onclick=()=>setLang('en');
+$('langES').onclick=()=>setLang('es');
+applyStaticLang();
 </script>
 </body>
 </html>

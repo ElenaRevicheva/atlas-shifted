@@ -22,6 +22,9 @@
   .brand b{color:var(--acc)}
   .by{font-size:12px;color:var(--dim);font-family:var(--mono)}
   .by a{color:var(--acc2);text-decoration:none}
+  .langsw{display:inline-flex;gap:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-left:10px;vertical-align:middle}
+  .langsw button{background:#0c0e15;color:var(--dim);border:0;padding:4px 10px;font-size:11px;font-family:var(--mono);cursor:pointer;font-weight:700}
+  .langsw button.on{background:#0c1a17;color:var(--acc)}
   .tag{color:var(--mut);font-size:15px;margin:8px 0 26px;max-width:680px;line-height:1.5}
   .tag b{color:var(--ink);font-weight:600}
   .card{background:linear-gradient(180deg,var(--panel),#0e1017);border:1px solid var(--line);border-radius:16px;padding:20px}
@@ -96,19 +99,19 @@
     <div>
       <div class="brand">WHITE<b>SPACE</b></div>
     </div>
-    <div class="by">an AIdeazz agent · <a href="https://aideazz.xyz/sop-ai-ops.html" target="_blank" rel="noopener">AI Ops SOP ↗</a> · <a href="atlas.html">← Atlas radar</a></div>
+    <div class="by"><span id="byLine">an AIdeazz agent</span> · <a href="https://aideazz.xyz/sop-ai-ops.html" target="_blank" rel="noopener">AI Ops SOP ↗</a> · <a href="atlas.html" id="byAtlas">← Atlas radar</a><span class="langsw"><button id="langEN">EN</button><button id="langES">ES</button></span></div>
   </header>
-  <div class="tag">Every spy tool tells you to <b>copy the ad that's already winning</b> — so everyone piles into the same lane. WHITESPACE does the opposite: it maps which angles are <b>saturated</b> and surfaces the adjacent angle <b>almost nobody is running yet</b> — a ranked hypothesis to test, with a sourced evidence trail.</div>
-  <div class="tag" style="font-size:12.5px;color:var(--dim);margin-top:-14px">Honest by design: public ad libraries expose <b style="color:var(--mut)">no</b> CTR/spend/ROAS. WHITESPACE measures what's <b style="color:var(--mut)">observable</b> — angle saturation — and ranks the gap as a hypothesis, never a guaranteed winner.</div>
+  <div class="tag" id="tagMain"></div>
+  <div class="tag" id="tagHonest" style="font-size:12.5px;color:var(--dim);margin-top:-14px"></div>
 
   <div class="card">
     <div class="modes" id="modes">
-      <button class="mode on" data-mode="media_buyer">Ad angles <span>· media buyer</span></button>
-      <button class="mode" data-mode="content">Content angles <span>· AIdeazz engine</span></button>
+      <button class="mode on" data-mode="media_buyer" id="modeMb"></button>
+      <button class="mode" data-mode="content" id="modeCt"></button>
     </div>
     <div class="inrow">
-      <input id="q" placeholder="Enter a vertical or offer — e.g. medicare advantage, solar, auto insurance" autocomplete="off" />
-      <button id="go">Find the whitespace</button>
+      <input id="q" placeholder="" autocomplete="off" />
+      <button id="go"></button>
     </div>
     <div class="chips" id="chips"></div>
 
@@ -123,7 +126,7 @@
 
     <div class="sec">
       <div class="rec">
-        <div class="lab">▸ Recommended whitespace angle</div>
+        <div class="lab" id="recLab"></div>
         <h2 id="recAngle"></h2>
         <p id="recRationale"></p>
         <span class="conf" id="recConf"></span>
@@ -133,58 +136,58 @@
 
     <!-- media_buyer sections -->
     <div class="sec mb">
-      <div class="h">Launch-ready ad copy</div>
+      <div class="h" id="hAdcopy"></div>
       <div class="grid" id="adcopy"></div>
     </div>
     <div class="sec mb">
-      <div class="h">Landing-page concept</div>
+      <div class="h" id="hLp"></div>
       <div class="tile" id="lp"></div>
     </div>
 
     <!-- content sections -->
     <div class="sec ct">
-      <div class="h">Blog brief — drops into your Dev.to / aideazz.xyz pipeline</div>
+      <div class="h" id="hBlog"></div>
       <div class="tile" id="blog"></div>
     </div>
     <div class="sec ct">
-      <div class="h">Social atoms — drop into Buffer</div>
+      <div class="h" id="hSocial"></div>
       <div class="grid" id="social"></div>
     </div>
     <div class="sec ct">
-      <div class="h">HubSpot campaign angle</div>
+      <div class="h" id="hHub"></div>
       <div class="tile" id="hub"></div>
     </div>
 
     <div class="sec">
-      <div class="h">Crowded lanes — what to avoid</div>
+      <div class="h" id="hLanes"></div>
       <div id="lanes"></div>
     </div>
 
     <div class="sec" id="altSec">
-      <div class="h">Other whitespace bets</div>
+      <div class="h" id="hAlts"></div>
       <div id="alts"></div>
     </div>
 
     <div class="sec">
-      <div class="h">Evidence trail — live ads behind the call</div>
+      <div class="h" id="hEv"></div>
       <div id="evidence"></div>
     </div>
 
     <div class="trackcta" id="trackCtaBottom">
-      <p>If this market is worth watching, you can add <b id="trackLabel"></b> to Atlas radar for daily scoring and campaign export.</p>
-      <a id="trackLinkBottom" class="trackbtn" href="atlas.html">Add to Atlas radar</a>
-      <div class="sub">Optional · daily refresh at 9 AM Panama · one-shot discovery stays on this page</div>
+      <p><span id="trackP1"></span> <b id="trackLabel"></b> <span id="trackP2"></span></p>
+      <a id="trackLinkBottom" class="trackbtn" href="atlas.html"></a>
+      <div class="sub" id="trackSub"></div>
     </div>
 
     <div class="meta" id="meta"></div>
   </div>
 
   <div class="how">
-    <div class="howstep"><span class="hn">1</span>Pick a vertical or offer — Atlas points its radar at that market.</div>
-    <div class="howstep"><span class="hn">2</span>It mines the live ad libraries via Bright Data and deconstructs every running ad into its angle.</div>
-    <div class="howstep"><span class="hn">3</span>You get the open angle almost nobody is running — ranked, with a clickable evidence trail.</div>
+    <div class="howstep"><span class="hn">1</span><span id="how1"></span></div>
+    <div class="howstep"><span class="hn">2</span><span id="how2"></span></div>
+    <div class="howstep"><span class="hn">3</span><span id="how3"></span></div>
   </div>
-  <div class="footnote">Public ad-transparency data only · <b style="color:var(--mut)">One-shot discovery</b> — not daily tracking. To watch a market over time, use <b style="color:var(--acc)">Add to Atlas radar</b> at the bottom of your results · part of the <a href="atlas.html">Atlas Shifted</a> engine · <a href="https://aideazz.xyz/portfolio" target="_blank" rel="noopener">aideazz.xyz/portfolio ↗</a></div>
+  <div class="footnote" id="footnote"></div>
 
 </div>
 
@@ -196,20 +199,114 @@ const EXAMPLES = {
 const $ = (id)=>document.getElementById(id);
 const esc = (s)=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 
+/* ── i18n (EN/ES) — same pattern as aideazz.xyz/portfolio: toggle + browser auto-detect ── */
+const I18N = {
+  en: {
+    title:'WHITESPACE — find the ad nobody is running yet',
+    byLine:'an AIdeazz agent', byAtlas:'← Atlas radar',
+    tagMain:'Every spy tool tells you to <b>copy the ad that\'s already winning</b> — so everyone piles into the same lane. WHITESPACE does the opposite: it maps which angles are <b>saturated</b> and surfaces the adjacent angle <b>almost nobody is running yet</b> — a ranked hypothesis to test, with a sourced evidence trail.',
+    tagHonest:'Honest by design: public ad libraries expose <b style="color:var(--mut)">no</b> CTR/spend/ROAS. WHITESPACE measures what\'s <b style="color:var(--mut)">observable</b> — angle saturation — and ranks the gap as a hypothesis, never a guaranteed winner.',
+    modeMb:'Ad angles <span>· media buyer</span>', modeCt:'Content angles <span>· AIdeazz engine</span>',
+    phMedia:'Enter a vertical or offer — e.g. medicare advantage, solar, auto insurance',
+    phContent:'Enter a topic you want to own — e.g. ai marketing agency, fractional CTO services',
+    go:'Find the whitespace',
+    recLab:'▸ Recommended whitespace angle',
+    hAdcopy:'Launch-ready ad copy', hLp:'Landing-page concept',
+    hBlog:'Blog brief — drops into your Dev.to / aideazz.xyz pipeline',
+    hSocial:'Social atoms — drop into Buffer', hHub:'HubSpot campaign angle',
+    hLanes:'Crowded lanes — what to avoid', hAlts:'Other whitespace bets',
+    hEv:'Evidence trail — live ads behind the call',
+    trackP1:'If this market is worth watching, you can add', trackP2:'to Atlas radar for daily scoring and campaign export.',
+    trackBtn:'Add to Atlas radar',
+    trackSub:'Optional · daily refresh at 9 AM Panama · one-shot discovery stays on this page',
+    how1:'Pick a vertical or offer — Atlas points its radar at that market.',
+    how2:'It mines the live ad libraries via Bright Data and deconstructs every running ad into its angle.',
+    how3:'You get the open angle almost nobody is running — ranked, with a clickable evidence trail.',
+    footnote:'Public ad-transparency data only · <b style="color:var(--mut)">One-shot discovery</b> — not daily tracking. To watch a market over time, use <b style="color:var(--acc)">Add to Atlas radar</b> at the bottom of your results · part of the <a href="atlas.html">Atlas Shifted</a> engine · <a href="https://aideazz.xyz/portfolio" target="_blank" rel="noopener">aideazz.xyz/portfolio ↗</a>',
+    confidence:'confidence', owns:'owns', borrows:'borrows proven psychology from →',
+    hero:'HERO', keyword:'KEYWORD', xhook:'X thread hook',
+    noEvidence:'No live evidence in this run.', scanned:'scanned', creatives:'creatives',
+    connecting:'connecting…', streamClosed:'stream closed',
+    noteCopyLang:'',
+  },
+  es: {
+    title:'WHITESPACE — encuentra el anuncio que nadie está publicando todavía',
+    byLine:'un agente de AIdeazz', byAtlas:'← Radar Atlas',
+    tagMain:'Todas las herramientas de espionaje te dicen que <b>copies el anuncio que ya está ganando</b> — y todos terminan en el mismo carril. WHITESPACE hace lo contrario: mapea qué ángulos están <b>saturados</b> y revela el ángulo adyacente que <b>casi nadie está usando todavía</b> — una hipótesis clasificada para probar, con evidencia verificable.',
+    tagHonest:'Honesto por diseño: las bibliotecas públicas de anuncios <b style="color:var(--mut)">no</b> exponen CTR/gasto/ROAS. WHITESPACE mide lo <b style="color:var(--mut)">observable</b> — la saturación de ángulos — y clasifica la brecha como hipótesis, nunca como ganador garantizado.',
+    modeMb:'Ángulos de anuncios <span>· media buyer</span>', modeCt:'Ángulos de contenido <span>· motor AIdeazz</span>',
+    phMedia:'Escribe un vertical u oferta — ej. seguros de auto, paneles solares, medicare',
+    phContent:'Escribe un tema que quieras dominar — ej. agencia de marketing con IA, CTO fraccional',
+    go:'Encontrar el whitespace',
+    recLab:'▸ Ángulo whitespace recomendado',
+    hAdcopy:'Copy de anuncio listo para lanzar', hLp:'Concepto de landing page',
+    hBlog:'Brief de blog — para tu pipeline Dev.to / aideazz.xyz',
+    hSocial:'Átomos sociales — listos para Buffer', hHub:'Ángulo de campaña HubSpot',
+    hLanes:'Carriles saturados — qué evitar', hAlts:'Otras apuestas whitespace',
+    hEv:'Evidencia — anuncios reales detrás del análisis',
+    trackP1:'Si este mercado vale la pena vigilarlo, puedes añadir', trackP2:'al radar Atlas para scoring diario y exportación de campañas.',
+    trackBtn:'Añadir al radar Atlas',
+    trackSub:'Opcional · actualización diaria a las 9 AM Panamá · el descubrimiento único se queda en esta página',
+    how1:'Elige un vertical u oferta — Atlas apunta su radar a ese mercado.',
+    how2:'Extrae las bibliotecas de anuncios en vivo vía Bright Data y descompone cada anuncio activo en su ángulo.',
+    how3:'Obtienes el ángulo abierto que casi nadie usa — clasificado, con evidencia clicable.',
+    footnote:'Solo datos públicos de transparencia publicitaria · <b style="color:var(--mut)">Descubrimiento único</b> — no es seguimiento diario. Para vigilar un mercado en el tiempo, usa <b style="color:var(--acc)">Añadir al radar Atlas</b> al final de tus resultados · parte del motor <a href="atlas.html">Atlas Shifted</a> · <a href="https://aideazz.xyz/portfolio" target="_blank" rel="noopener">aideazz.xyz/portfolio ↗</a>',
+    confidence:'confianza', owns:'domina', borrows:'toma psicología probada de →',
+    hero:'HERO', keyword:'PALABRA CLAVE', xhook:'Gancho de hilo X',
+    noEvidence:'Sin evidencia en vivo en esta corrida.', scanned:'escaneados', creatives:'creativos',
+    connecting:'conectando…', streamClosed:'conexión cerrada',
+    noteCopyLang:'Nota: el copy creativo se genera en inglés (mercado de anuncios de EE.UU.).',
+  }
+};
+let LANG = localStorage.getItem('ws_lang') || ((navigator.language||'').toLowerCase().startsWith('es') ? 'es' : 'en');
+const t = (k)=> (I18N[LANG] && I18N[LANG][k]!==undefined ? I18N[LANG][k] : I18N.en[k]||k);
+
+function applyLang(){
+  document.documentElement.lang = LANG;
+  document.title = t('title');
+  $('byLine').textContent = t('byLine');
+  $('byAtlas').textContent = t('byAtlas');
+  $('tagMain').innerHTML = t('tagMain');
+  $('tagHonest').innerHTML = t('tagHonest');
+  $('modeMb').innerHTML = t('modeMb');
+  $('modeCt').innerHTML = t('modeCt');
+  $('go').textContent = t('go');
+  $('recLab').textContent = t('recLab');
+  $('hAdcopy').textContent = t('hAdcopy');
+  $('hLp').textContent = t('hLp');
+  $('hBlog').textContent = t('hBlog');
+  $('hSocial').textContent = t('hSocial');
+  $('hHub').textContent = t('hHub');
+  $('hLanes').textContent = t('hLanes');
+  $('hAlts').textContent = t('hAlts');
+  $('hEv').textContent = t('hEv');
+  $('trackP1').textContent = t('trackP1');
+  $('trackP2').textContent = t('trackP2');
+  $('trackLinkBottom').textContent = t('trackBtn');
+  $('trackSub').textContent = t('trackSub');
+  $('how1').textContent = t('how1');
+  $('how2').textContent = t('how2');
+  $('how3').textContent = t('how3');
+  $('footnote').innerHTML = t('footnote');
+  $('langEN').classList.toggle('on', LANG==='en');
+  $('langES').classList.toggle('on', LANG==='es');
+  paintChips();
+}
+$('langEN').onclick=()=>{ LANG='en'; localStorage.setItem('ws_lang','en'); applyLang(); };
+$('langES').onclick=()=>{ LANG='es'; localStorage.setItem('ws_lang','es'); applyLang(); };
+
 let mode = 'media_buyer';
 function paintChips(){
   const chips=$('chips'); chips.innerHTML='';
   EXAMPLES[mode].forEach(e=>{const c=document.createElement('span');c.className='chip';c.textContent=e;c.onclick=()=>{$('q').value=e;run();};chips.appendChild(c);});
-  $('q').placeholder = mode==='content'
-    ? 'Enter a topic you want to own — e.g. ai marketing agency, fractional CTO services'
-    : 'Enter a vertical or offer — e.g. medicare advantage, solar, auto insurance';
+  $('q').placeholder = mode==='content' ? t('phContent') : t('phMedia');
 }
 document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{
   mode=b.dataset.mode;
   document.querySelectorAll('.mode').forEach(x=>x.classList.toggle('on',x===b));
   paintChips();
 });
-paintChips();
+applyLang();
 
 let running=false;
 let lastQuery='';
@@ -222,7 +319,7 @@ function run(){
   $('status').style.display='block';
   $('results').style.display='none';
   $('feed').innerHTML=''; $('fill').style.width='0%';
-  feed('start','connecting…');
+  feed('start',t('connecting'));
 
   const es=new EventSource('api/run?vertical='+encodeURIComponent(v)+'&mode='+encodeURIComponent(mode));
   es.onmessage=(m)=>{
@@ -233,7 +330,7 @@ function run(){
     if(e.stage==='error'){ feed('error',e.message); es.close(); finish(); }
   };
   es.addEventListener('close',()=>{es.close();finish();});
-  es.onerror=()=>{ if(running){feed('error','stream closed');} es.close(); finish(); };
+  es.onerror=()=>{ if(running){feed('error',t('streamClosed'));} es.close(); finish(); };
 }
 function finish(){ running=false; $('go').disabled=false; }
 function feed(stage,msg){
@@ -248,29 +345,31 @@ function render(p){
   const r=p.recommendation||{};
   $('recAngle').textContent=r.angle||'—';
   $('recRationale').textContent=r.rationale||'';
-  $('recConf').innerHTML='confidence <b style="color:var(--acc)">'+(r.confidence||0)+'</b>/100 · owns <b>'+esc(r.emotion||'—')+'</b> · '+esc(r.hookType||'');
-  $('recAdj').innerHTML=(r.adjacentTo&&r.adjacentTo.length)?('borrows proven psychology from → <b>'+r.adjacentTo.map(esc).join('</b>, <b>')+'</b>'):'';
+  $('recConf').innerHTML=t('confidence')+' <b style="color:var(--acc)">'+(r.confidence||0)+'</b>/100 · '+t('owns')+' <b>'+esc(r.emotion||'—')+'</b> · '+esc(r.hookType||'');
+  $('recAdj').innerHTML=(r.adjacentTo&&r.adjacentTo.length)?(t('borrows')+' <b>'+r.adjacentTo.map(esc).join('</b>, <b>')+'</b>'):'';
 
   const isContent = p.kind==='content';
   document.querySelectorAll('.results .mb').forEach(el=>el.style.display=isContent?'none':'block');
   document.querySelectorAll('.results .ct').forEach(el=>el.style.display=isContent?'block':'none');
 
+  const copyNote = (LANG==='es' && t('noteCopyLang')) ? '<div class="ct" style="color:var(--dim);margin-top:8px">'+t('noteCopyLang')+'</div>' : '';
+
   if(!isContent){
-    $('adcopy').innerHTML=(p.adCopy||[]).map(c=>(
+    $('adcopy').innerHTML=((p.adCopy||[]).map(c=>(
       '<div class="tile"><h3>'+esc(c.headline)+'</h3><div class="ct">'+esc(c.primaryText)+'</div><span class="cta">'+esc(c.cta)+'</span></div>'
-    )).join('')||'<div class="ct" style="color:var(--dim)">—</div>';
+    )).join('')||'<div class="ct" style="color:var(--dim)">—</div>')+copyNote;
     const lp=p.landingPage||{};
-    $('lp').innerHTML='<h3>'+esc(lp.hook||'—')+'</h3><div class="ct">'+esc(lp.subhead||'')+'<br><br><span style="color:var(--dim)">HERO:</span> '+esc(lp.heroConcept||'')+'</div>';
+    $('lp').innerHTML='<h3>'+esc(lp.hook||'—')+'</h3><div class="ct">'+esc(lp.subhead||'')+'<br><br><span style="color:var(--dim)">'+t('hero')+':</span> '+esc(lp.heroConcept||'')+'</div>';
   } else {
     const b=p.blog||{};
-    $('blog').innerHTML='<h3>'+esc(b.title||'—')+'</h3><div class="ct"><span style="color:var(--dim)">KEYWORD:</span> '+esc(b.targetKeyword||'')+'<br><br>'+
+    $('blog').innerHTML='<h3>'+esc(b.title||'—')+'</h3><div class="ct"><span style="color:var(--dim)">'+t('keyword')+':</span> '+esc(b.targetKeyword||'')+'<br><br>'+
       (b.outline||[]).map(o=>'• '+esc(o)).join('<br>')+'<br><br><span style="color:var(--dim)">AEO:</span> '+esc(b.aeoHint||'')+'</div>';
     const s=p.social||{};
     $('social').innerHTML=
       '<div class="tile"><h3>LinkedIn</h3><div class="ct">'+esc(s.linkedin||'').replace(/\n/g,'<br>')+'</div></div>'+
       '<div class="tile"><h3>Instagram</h3><div class="ct">'+esc(s.instagram||'')+'</div></div>'+
-      '<div class="tile"><h3>X thread hook</h3><div class="ct">'+esc(s.xThreadHook||'')+'</div></div>';
-    $('hub').innerHTML='<div class="ct">'+esc(p.hubspotCampaignAngle||'—')+'</div>';
+      '<div class="tile"><h3>'+t('xhook')+'</h3><div class="ct">'+esc(s.xThreadHook||'')+'</div></div>';
+    $('hub').innerHTML='<div class="ct">'+esc(p.hubspotCampaignAngle||'—')+'</div>'+copyNote;
   }
 
   $('lanes').innerHTML=(p.crowdedLanes||[]).map(l=>(
@@ -288,10 +387,10 @@ function render(p){
   $('evidence').innerHTML=(p.evidence||[]).map(e=>(
     '<div class="ev"><b>'+esc(e.advertiser||'unknown')+'</b> — '+esc(e.insight)+'<br>'+
     (e.sourceUrl?('<a href="'+esc(e.sourceUrl)+'" target="_blank" rel="noopener">'+esc(e.sourceUrl).slice(0,72)+'</a>'):'')+'</div>'
-  )).join('')||'<div class="ct" style="color:var(--dim)">No live evidence in this run.</div>';
+  )).join('')||'<div class="ct" style="color:var(--dim)">'+t('noEvidence')+'</div>';
 
   const m=p.meta||{};
-  $('meta').textContent='scanned '+(m.creativesScanned||0)+' creatives · '+((m.sources&&m.sources.join('+'))||'knowledge-mode')+' · '+esc(m.llmProvider||'')+' · '+(m.durationMs||0)+'ms'+(m.degraded?' · DEGRADED':'');
+  $('meta').textContent=t('scanned')+' '+(m.creativesScanned||0)+' '+t('creatives')+' · '+((m.sources&&m.sources.join('+'))||'knowledge-mode')+' · '+esc(m.llmProvider||'')+' · '+(m.durationMs||0)+'ms'+(m.degraded?' · DEGRADED':'');
   const deg=$('deg');
   if(m.degraded&&m.notes&&m.notes.length){ deg.style.display='block'; deg.textContent='⚠ '+m.notes.join('  '); }
   else deg.style.display='none';
