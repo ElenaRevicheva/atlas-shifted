@@ -20,6 +20,7 @@ import { fileURLToPath } from 'node:url';
 import { config } from './config.js';
 import { buildIntelligence } from './intelligence.js';
 import { sendAtlasDailyBrief } from './telegram.js';
+import { pushRadarWindowsToCrm } from './radar-to-crm.js';
 import { loadLatestAggRows, pickPrimarySnapshotDate, verticalLatestDates, type AggRow } from './radar-board.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -132,6 +133,8 @@ function main() {
   console.log(`\nATLAS BRIEF DONE · ${brief.verticals.length} verticals · wrote data/brief.json + data/brief.md`);
 
   void sendAtlasDailyBrief(brief);
+  // Gap-1 bridge: ENTER windows → [ATLAS-RADAR] deals in HubSpot (fail-open, deduped server-side)
+  void pushRadarWindowsToCrm(brief);
 }
 
 main();
