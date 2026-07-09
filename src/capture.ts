@@ -338,6 +338,28 @@ async function main() {
   console.log(
     `ATLAS CAPTURE DONE · found=${totalFound} written=${totalWritten} dupes=${totalDupes} · jsonl=${totalRows} rows (${sizeKb}KB) · ${JSONL}`,
   );
+
+  // Outage guard (July 9 2026, earned from the Jul 6-9 Bright Data account-invalid
+  // incident): found=0 across ALL verticals on a full run is an outage signature
+  // (dead Bright Data balance/zone), not a quiet market — the cron exits 0 either
+  // way, so without this alert the radar goes stale silently. Fail-open.
+  if (!only && totalFound === 0) {
+    try {
+      const { sendTelegramMessage } = await import('./telegram.js');
+      const sent = await sendTelegramMessage(
+        [
+          '⚠️ ATLAS CAPTURE OUTAGE — 0 ads found across ALL verticals',
+          `snapshot ${snapshotDate} · radar will go stale if this repeats`,
+          'Likely cause: Bright Data balance/account (Scraping Browser 403s).',
+          'Diagnose: curl api.brightdata.com/zone?zone=atlas_scraping_browser -H "Authorization: Bearer $BRIGHTDATA_API_TOKEN"',
+          '422 "Customer has invalid status" = top up at brightdata.com/cp',
+        ].join('\n'),
+      );
+      console.log(sent ? '  Telegram: outage alert sent ✓' : '  Telegram: outage alert NOT sent (no creds or API fail)');
+    } catch (e) {
+      console.warn('  Telegram outage alert failed:', (e as Error).message?.slice(0, 120));
+    }
+  }
 }
 
 const isMain = import.meta.url === pathToFileURL(process.argv[1] ?? '').href;
