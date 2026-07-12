@@ -321,22 +321,39 @@ export async function embedBatch(texts: string[]): Promise<number[][]> {
   const CHUNK = 200;
   for (let start = 0; start < texts.length; start += CHUNK) {
     const slice = texts.slice(start, start + CHUNK).map((t) => t.slice(0, 6000) || ' ');
-    try {
-      const res = await fetch('https://api.openai.com/v1/embeddings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.openaiKey}` },
-        body: JSON.stringify({ model: 'text-embedding-3-small', input: slice }),
-        signal: AbortSignal.timeout(90_000),
-      });
-      if (!res.ok) {
-        console.warn(`[llm] embeddings ${res.status}: ${(await res.text()).slice(0, 120)}`);
+    let attempt = 0;
+    for (;;) {
+      attempt++;
+      try {
+        const res = await fetch('https://api.openai.com/v1/embeddings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.openaiKey}` },
+          body: JSON.stringify({ model: 'text-embedding-3-small', input: slice }),
+          signal: AbortSignal.timeout(90_000),
+        });
+        if (!res.ok) {
+          const body = (await res.text()).slice(0, 120);
+          // Transient (5xx / 429) → retry with backoff; permanent (4xx auth/billing) → give up now.
+          if ((res.status >= 500 || res.status === 429) && attempt < 3) {
+            console.warn(`[llm] embeddings ${res.status} (attempt ${attempt}/3), retrying: ${body}`);
+            await new Promise((r) => setTimeout(r, attempt * 2000));
+            continue;
+          }
+          console.warn(`[llm] embeddings ${res.status}: ${body}`);
+          return [];
+        }
+        const d = (await res.json()) as { data?: Array<{ embedding: number[]; index: number }> };
+        for (const item of d.data ?? []) out[start + item.index] = item.embedding;
+        break;
+      } catch (e) {
+        if (attempt < 3) {
+          console.warn(`[llm] embeddings failed (attempt ${attempt}/3), retrying:`, (e as Error).message?.slice(0, 140));
+          await new Promise((r) => setTimeout(r, attempt * 2000));
+          continue;
+        }
+        console.warn('[llm] embeddings failed:', (e as Error).message?.slice(0, 140));
         return [];
       }
-      const d = (await res.json()) as { data?: Array<{ embedding: number[]; index: number }> };
-      for (const item of d.data ?? []) out[start + item.index] = item.embedding;
-    } catch (e) {
-      console.warn('[llm] embeddings failed:', (e as Error).message?.slice(0, 140));
-      return [];
     }
   }
   return out;
