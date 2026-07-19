@@ -99,7 +99,10 @@ export async function bdBrowserApiFetch(url: string, timeoutMs = config.metaFetc
  * Callers should retry (see capture.ts).
  */
 export async function bdMetaAdLibraryFetch(url: string, timeoutMs = config.metaFetchTimeoutMs): Promise<string | null> {
-  if (hasBrightDataBrowser()) {
+  // Scraping Browser is the priciest BD product. Cheap-mode (default) skips it and
+  // uses Web Unlocker render, which is ~10x cheaper. Set WHITESPACE_META_USE_BROWSER=1
+  // to re-enable the browser path for best ad yield when the account is funded.
+  if (config.metaUseBrowser && hasBrightDataBrowser()) {
     const browserHtml = await bdBrowserApiFetch(url, timeoutMs);
     if (browserHtml) {
       console.log(`[bd-meta] Browser API OK (${browserHtml.length} bytes)`);

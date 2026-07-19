@@ -350,9 +350,9 @@ async function main() {
         [
           '⚠️ ATLAS CAPTURE OUTAGE — 0 ads found across ALL verticals',
           `snapshot ${snapshotDate} · radar will go stale if this repeats`,
-          'Likely cause: Bright Data balance/account (Scraping Browser 403s).',
-          'Diagnose: curl api.brightdata.com/zone?zone=atlas_scraping_browser -H "Authorization: Bearer $BRIGHTDATA_API_TOKEN"',
-          '422 "Customer has invalid status" = top up at brightdata.com/cp',
+          'Likely cause: Bright Data balance/account suspended (Web Unlocker 401/403).',
+          'Diagnose: curl "api.brightdata.com/zone?zone=$BRIGHTDATA_ZONE" -H "Authorization: Bearer $BRIGHTDATA_API_TOKEN"',
+          '401/403/422 "invalid status" = add funds + reactivate at brightdata.com/cp (small top-up now lasts months in cheap-mode).',
         ].join('\n'),
       );
       console.log(sent ? '  Telegram: outage alert sent ✓' : '  Telegram: outage alert NOT sent (no creds or API fail)');

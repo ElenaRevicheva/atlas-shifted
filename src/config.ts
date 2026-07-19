@@ -46,6 +46,17 @@ export const config = {
   metaFetchRetries: num(process.env.WHITESPACE_META_FETCH_RETRIES, 3),
   metaFetchPauseMs: num(process.env.WHITESPACE_META_FETCH_PAUSE_MS, 4_000),
   metaVerticalPauseMs: num(process.env.WHITESPACE_META_VERTICAL_PAUSE_MS, 5_000),
+  // Cheap-mode: Scraping Browser (priciest BD product) stays in the codebase but is
+  // OFF by default — Meta capture uses the ~10x cheaper Web Unlocker render. Flip
+  // WHITESPACE_META_USE_BROWSER=1 to restore full Scraping-Browser quality when funded.
+  metaUseBrowser: (process.env.WHITESPACE_META_USE_BROWSER || '').trim() === '1',
+  // Optional capture allowlist (comma-separated vertical ids). When set, only these
+  // verticals are captured — the cheapest way to focus spend on the lanes that matter.
+  // Unset it to return to all seed + tracked verticals.
+  captureAllow: (process.env.WHITESPACE_CAPTURE_ONLY || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean),
 
   // Atuona Producer — image render via Replicate/Flux (the fleet's proven path)
   replicateToken: process.env.REPLICATE_API_TOKEN?.trim() || '',

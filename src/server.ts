@@ -196,6 +196,16 @@ app.get('/api/atlas', async (_req, res) => {
     } catch { /* optional */ }
   }
   out.pipeline = readPipelineStatus(DATA_DIR, (out.snapshot_date as string | null) ?? null);
+  // Freshness signal — so the UI shows an honest "paused" banner instead of a silently
+  // stale date when capture can't reach Meta (e.g. Bright Data unfunded). Weekly cadence
+  // means a snapshot up to ~7 days old is normal; >9 days ⇒ capture is genuinely stuck.
+  if (out.snapshot_date) {
+    const panamaNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Panama' }));
+    const snap = new Date(`${out.snapshot_date as string}T00:00:00`);
+    const ageDays = Math.floor((panamaNow.getTime() - snap.getTime()) / 86_400_000);
+    out.snapshot_age_days = ageDays;
+    out.stale = ageDays > 9;
+  }
   res.json(out);
 });
 

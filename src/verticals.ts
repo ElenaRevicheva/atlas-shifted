@@ -5,6 +5,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { config } from './config.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = join(__dirname, '..', 'data');
@@ -140,6 +141,12 @@ export function getCaptureTargets(only?: string): VerticalDef[] {
   }
 
   let targets = [...byId.values()];
+  // Cheap-mode allowlist: focus spend on the lanes that matter. Applies to the daily
+  // capture (not one-shot `only` lookups, which stay explicit). Unset WHITESPACE_CAPTURE_ONLY
+  // to capture all seed + tracked verticals again.
+  if (!only && config.captureAllow.length) {
+    targets = targets.filter((v) => config.captureAllow.includes(v.id));
+  }
   if (only) targets = targets.filter((v) => v.id === only);
   return orderVerticals(targets);
 }

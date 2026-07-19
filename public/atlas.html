@@ -847,6 +847,9 @@ async function render(d){
   if(pipe.stale_reason){
     banner.textContent=pipe.stale_reason;
     banner.classList.add('show');
+  } else if(d.stale){
+    banner.textContent='⏸ Radar paused — last live snapshot '+(d.snapshot_date||'—')+' ('+(d.snapshot_age_days!=null?d.snapshot_age_days:'?')+' days ago). Live ad capture resumes once Bright Data is funded; the history and concepts below are from that last snapshot.';
+    banner.classList.add('show');
   } else {
     banner.textContent='';
     banner.classList.remove('show');
