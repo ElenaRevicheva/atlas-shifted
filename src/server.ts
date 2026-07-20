@@ -209,6 +209,74 @@ app.get('/api/atlas', async (_req, res) => {
   res.json(out);
 });
 
+// GET /api/atlas/angle?vertical=<id>  OR  ?industry=<free text>
+// The shared "angle intelligence" endpoint (July 20 2026) — the wedge that lets the
+// Visibility API outreach and Lead Concierge both read Atlas's current market angle for
+// a service/industry. Read-only: reads brief.json (move/state/evidence) + concepts.json
+// (creative hook/headline/cta). Never touches the capture or existing routes.
+app.get('/api/atlas/angle', (_req, res) => {
+  const req = _req;
+  try {
+    const briefPath = join(DATA_DIR, 'brief.json');
+    const conceptsPath = join(DATA_DIR, 'concepts.json');
+    const brief = existsSync(briefPath) ? JSON.parse(readFileSync(briefPath, 'utf8')) : null;
+    const concepts = (existsSync(conceptsPath)
+      ? JSON.parse(readFileSync(conceptsPath, 'utf8'))
+      : {}) as Record<string, { concept?: Record<string, unknown> }>;
+    const verticals: Array<Record<string, any>> = Array.isArray(brief?.verticals) ? brief.verticals : [];
+    if (!verticals.length) { res.json({ ok: false, reason: 'no_brief' }); return; }
+
+    const norm = (s: unknown) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    const exactId = String(req.query.vertical || '').trim();
+    const want = norm(req.query.vertical || req.query.industry || '');
+
+    let match = verticals.find((v) => v.vertical === exactId);
+    if (!match && want) {
+      const wantTokens = new Set(want.split(' ').filter(Boolean));
+      let best: Record<string, any> | undefined;
+      let bestScore = 0;
+      for (const v of verticals) {
+        const vt = new Set(norm(v.vertical).split(' '));
+        let overlap = 0;
+        for (const t of wantTokens) if (vt.has(t)) overlap++;
+        if (overlap > bestScore) { bestScore = overlap; best = v; }
+      }
+      match = best;
+    }
+    if (!match) match = verticals.find((v) => v.move?.state === 'ENTER') || verticals[0];
+
+    const move = (match.move || {}) as Record<string, any>;
+    const c = (concepts[match.vertical]?.concept || {}) as Record<string, any>;
+    const label = String(match.vertical).replace(/_/g, ' ');
+    const state = move.state || 'WATCH';
+    const spark = c.hook || move.why || '';
+    const one_line = state === 'ENTER'
+      ? `In ${label}, the open angle is "${move.angle}" (ENTER) — ${spark}`
+      : `In ${label}, watch "${move.angle}" (${state}) — ${spark}`;
+
+    res.json({
+      ok: true,
+      snapshot_date: brief.snapshot_date || match.snapshot_date || null,
+      vertical: match.vertical,
+      state,
+      angle: move.angle || null,
+      score: move.score ?? null,
+      why: move.why || null,
+      evidence_url: move.evidence || null,
+      concept: {
+        name: c.concept_name || null,
+        hook: c.hook || null,
+        headline: c.headline || null,
+        cta: c.cta || null,
+      },
+      one_line,
+      matched_by: match.vertical === exactId ? 'exact' : want ? 'industry' : 'fallback',
+    });
+  } catch (e) {
+    res.json({ ok: false, reason: (e as Error).message });
+  }
+});
+
 app.get('/api/atlas/history', (req, res) => {
   const vertical = String(req.query.vertical || '').trim();
   const angle = String(req.query.angle || '').trim();
