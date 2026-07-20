@@ -230,20 +230,33 @@ app.get('/api/atlas/angle', (_req, res) => {
     const exactId = String(req.query.vertical || '').trim();
     const want = norm(req.query.vertical || req.query.industry || '');
 
+    // Prefer Elena's active service lanes (WHITESPACE_CAPTURE_ONLY) — the brief also
+    // holds stale historical verticals, and a fallback should pitch HER services.
+    const allow = new Set(config.captureAllow || []);
+    const mine = allow.size ? verticals.filter((v) => allow.has(v.vertical)) : verticals;
+    const pool = mine.length ? mine : verticals;
+
+    let matchedBy: 'exact' | 'industry' | 'fallback' = 'fallback';
     let match = verticals.find((v) => v.vertical === exactId);
+    if (match) matchedBy = 'exact';
     if (!match && want) {
       const wantTokens = new Set(want.split(' ').filter(Boolean));
       let best: Record<string, any> | undefined;
       let bestScore = 0;
-      for (const v of verticals) {
+      for (const v of pool) {
         const vt = new Set(norm(v.vertical).split(' '));
         let overlap = 0;
         for (const t of wantTokens) if (vt.has(t)) overlap++;
         if (overlap > bestScore) { bestScore = overlap; best = v; }
       }
-      match = best;
+      if (best && bestScore > 0) { match = best; matchedBy = 'industry'; }
     }
-    if (!match) match = verticals.find((v) => v.move?.state === 'ENTER') || verticals[0];
+    if (!match) {
+      match = pool.find((v) => v.move?.state === 'ENTER')
+        || pool.find((v) => v.move?.state === 'WATCH')
+        || pool[0] || verticals[0];
+      matchedBy = 'fallback';
+    }
 
     const move = (match.move || {}) as Record<string, any>;
     const c = (concepts[match.vertical]?.concept || {}) as Record<string, any>;
@@ -270,7 +283,7 @@ app.get('/api/atlas/angle', (_req, res) => {
         cta: c.cta || null,
       },
       one_line,
-      matched_by: match.vertical === exactId ? 'exact' : want ? 'industry' : 'fallback',
+      matched_by: matchedBy,
     });
   } catch (e) {
     res.json({ ok: false, reason: (e as Error).message });
