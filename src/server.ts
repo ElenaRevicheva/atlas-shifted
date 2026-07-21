@@ -284,9 +284,44 @@ app.get('/api/atlas/angle', (_req, res) => {
       },
       one_line,
       matched_by: matchedBy,
+      // #4: real CRM outcomes for this lane (staged/sent/replied/won) — what converts.
+      outcomes: (() => {
+        try {
+          const p = join(DATA_DIR, 'outcomes.json');
+          if (!existsSync(p)) return null;
+          const o = JSON.parse(readFileSync(p, 'utf8')) as { outcomes?: Record<string, unknown> };
+          return (o.outcomes && (o.outcomes as any)[match.vertical]) || null;
+        } catch { return null; }
+      })(),
     });
   } catch (e) {
     res.json({ ok: false, reason: (e as Error).message });
+  }
+});
+
+// #4 feedback loop (July 20 2026): cto-aipa pushes real CRM outcomes per service lane
+// (staged/sent/replied/won from [CLIENT-MANUAL] + [ATLAS-RADAR] deals) so Atlas learns
+// which lanes CONVERT, not just which are open. Stored in data/outcomes.json; the angle
+// endpoint serves them back. Token-gated, additive, never touches capture/brief.
+app.post('/api/atlas/outcomes', express.json({ limit: '256kb' }), (req, res) => {
+  const token = (process.env.ATLAS_OUTCOMES_TOKEN || '').trim();
+  if (!token || req.headers.authorization !== `Bearer ${token}`) {
+    res.status(401).json({ ok: false, error: 'unauthorized' });
+    return;
+  }
+  const body = req.body as { outcomes?: Record<string, unknown>; source?: string };
+  if (!body?.outcomes || typeof body.outcomes !== 'object') {
+    res.status(400).json({ ok: false, error: 'outcomes object required' });
+    return;
+  }
+  try {
+    writeFileSync(
+      join(DATA_DIR, 'outcomes.json'),
+      JSON.stringify({ updated_at: new Date().toISOString(), source: body.source || 'cto-aipa', outcomes: body.outcomes }, null, 2),
+    );
+    res.json({ ok: true, lanes: Object.keys(body.outcomes).length });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: (e as Error).message });
   }
 });
 
