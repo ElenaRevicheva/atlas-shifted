@@ -576,10 +576,22 @@ app.listen(config.port, () => {
   if (!hasBrightData()) console.log('  ℹ  Bright Data off — runs in LLM market-knowledge mode until BRIGHTDATA_* are set');
 });
 
+/**
+ * The startup banner's provider list. Kept in PROFILE_QUALITY order and covering
+ * ALL five, because this line is the first thing anyone reads about the chain.
+ *
+ * It said "Claude+Groq+OpenAI" on 2026-08-17 while the chain had five providers
+ * and Groq's model was 404ing — a banner claiming three, one of them dead. If a
+ * key is absent the provider is genuinely not in the chain, so omitting it is
+ * correct; silently omitting two that ARE configured is not.
+ */
 function activeProviders(): string {
-  const p: string[] = [];
-  if (config.anthropicKey) p.push('Claude');
-  if (config.groqKey) p.push('Groq');
-  if (config.openaiKey) p.push('OpenAI');
-  return p.join('+');
+  const present: Array<[string, string]> = [
+    [config.anthropicKey, 'Claude'],
+    [config.openaiKey, 'OpenAI'],
+    [config.geminiKey, 'Gemini'],
+    [config.xaiKey, 'Grok'],
+    [config.groqKey, 'Groq'],
+  ];
+  return present.filter(([key]) => !!key).map(([, name]) => name).join('+');
 }
