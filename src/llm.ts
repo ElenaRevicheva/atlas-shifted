@@ -16,8 +16,12 @@ import { config } from './config.js';
 
 export interface LlmAnswer {
   text: string;
-  provider: 'claude' | 'groq' | 'openai' | 'grok' | 'none';
+  provider: 'claude' | 'openai' | 'gemini' | 'grok' | 'groq' | 'none';
 }
+
+/** The chain, strongest first. Exported so the eval and /healthz report the
+ *  SAME order the code actually walks, instead of a comment that drifts. */
+export const PROFILE_QUALITY = ['claude', 'openai', 'gemini', 'grok', 'groq'] as const;
 
 const sysWrap = (system: string | undefined, prompt: string): string =>
   system ? `${system}\n\n${prompt}` : prompt;
@@ -91,7 +95,18 @@ async function groqText(prompt: string, system: string | undefined, maxTokens: n
     return (completion.choices[0]?.message?.content || '').trim();
   } catch (e) {
     noteProviderError('groq', e);
-    console.warn('[llm] Groq text failed:', (e as Error).message?.slice(0, 140));
+    // Name a retirement for what it is. This exact failure ran silently from
+    // Aug 16 to Aug 17: the id was dead, the message was a generic "failed",
+    // and nothing said "the model no longer exists — change the env var".
+    const err = e as { status?: number; message?: string };
+    if (err?.status === 404 || /model.*(not found|decommission|deprecat)/i.test(err?.message || '')) {
+      console.error(
+        `[llm] Groq model "${config.groqModel}" NOT FOUND (404) — retired? ` +
+        'Set WHITESPACE_GROQ_MODEL to a live id; the chain is running one provider short.',
+      );
+    } else {
+      console.warn('[llm] Groq text failed:', (e as Error).message?.slice(0, 140));
+    }
     return '';
   }
 }
@@ -125,8 +140,52 @@ async function openaiText(prompt: string, system: string | undefined, maxTokens:
   }
 }
 
-/** Grok (xAI) text completion — OpenAI-compatible REST. The 4th, final tier:
- *  catches a run even if BOTH Groq and OpenAI are down. Exported so a probe can
+/**
+ * Gemini text completion — the 5th provider, added 2026-08-17.
+ *
+ * thinkingBudget:0 stops a REASONING model spending the whole budget thinking
+ * and returning a reply truncated mid-sentence. PLAIN models reject the
+ * parameter with 400, so try it and retry without, rather than maintaining a
+ * list of which Gemini models are plain (that list goes stale every release).
+ */
+async function geminiText(prompt: string, system: string | undefined, maxTokens: number): Promise<string> {
+  if (!config.geminiKey) return '';
+  const call = async (withThinking: boolean): Promise<Response> =>
+    fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${config.geminiModel}:generateContent?key=${config.geminiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          ...(system ? { systemInstruction: { parts: [{ text: system }] } } : {}),
+          generationConfig: {
+            maxOutputTokens: Math.min(maxTokens, 8000),
+            temperature: 0.3,
+            ...(withThinking ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
+          },
+        }),
+        signal: AbortSignal.timeout(90_000),
+      },
+    );
+  try {
+    let res = await call(true);
+    if (res.status === 400) res = await call(false);
+    if (!res.ok) {
+      console.warn(`[llm] Gemini ${res.status}: ${(await res.text()).slice(0, 120)}`);
+      return '';
+    }
+    const d = (await res.json()) as {
+      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+    };
+    return (d.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
+  } catch (e) {
+    console.warn('[llm] Gemini failed:', (e as Error).message?.slice(0, 140));
+    return '';
+  }
+}
+
+/** Grok (xAI) text completion — OpenAI-compatible REST. Exported so a probe can
  *  prove it green (roadmap rule: Grok claimed only once it's green in the logs). */
 export async function grokText(prompt: string, system: string | undefined, maxTokens: number): Promise<string> {
   if (!config.xaiKey) return '';
@@ -157,9 +216,24 @@ export async function grokText(prompt: string, system: string | undefined, maxTo
   }
 }
 
-/** Resilient text completion: Claude → Groq → OpenAI → Grok (4-tier, any single
- *  outage survivable). OpenAI stays the primary backstop; Grok is the final net so
- *  a Groq+OpenAI double failure still completes. */
+/**
+ * Resilient text completion: Claude → OpenAI → Gemini → Grok → Groq.
+ * Five tiers — Atlas keeps shipping the brief through a FOUR-provider outage.
+ *
+ * Reordered 2026-08-17, and the reorder is the point. The old chain was
+ * Claude → Groq → OpenAI → Grok, which put Groq at tier 2. When Groq retired
+ * llama-3.3-70b on Aug 16, tier 2 became a hard 404 on every call: each Claude
+ * failure paid a wasted round-trip to a model that no longer existed before
+ * reaching OpenAI. Groq now sits LAST, because post-deprecation its free tier
+ * has no plain model left and its reasoning models return '' on small budgets —
+ * that makes it the weakest link, and the weakest link belongs at the end, not
+ * second.
+ *
+ * Order is capability-first, matching the two EspaLuz bots. Atlas's output is
+ * read by humans — the /atlas dashboard, the daily brief, the concepts that
+ * become real ad assets — so this is a quality surface, not a bulk one.
+ * Confirmed by eval-llm-chain.mjs before shipping; re-run it before reordering.
+ */
 export async function llmText(
   prompt: string,
   opts: { system?: string; maxTokens?: number } = {},
@@ -167,12 +241,14 @@ export async function llmText(
   const maxTokens = opts.maxTokens ?? 4096;
   const c = await claudeText(prompt, opts.system, maxTokens);
   if (c) return { text: c, provider: 'claude' };
-  const g = await groqText(prompt, opts.system, maxTokens);
-  if (g) return { text: g, provider: 'groq' };
   const o = await openaiText(prompt, opts.system, maxTokens);
   if (o) return { text: o, provider: 'openai' };
+  const gm = await geminiText(prompt, opts.system, maxTokens);
+  if (gm) return { text: gm, provider: 'gemini' };
   const x = await grokText(prompt, opts.system, maxTokens);
   if (x) return { text: x, provider: 'grok' };
+  const g = await groqText(prompt, opts.system, maxTokens);
+  if (g) return { text: g, provider: 'groq' };
   return { text: '', provider: 'none' };
 }
 
@@ -359,11 +435,28 @@ export async function embedBatch(texts: string[]): Promise<number[][]> {
   return out;
 }
 
+/**
+ * Which provider a call would land on right now. Must mirror llmText's order —
+ * it drifted before: the label still walked Claude → Groq → OpenAI while the
+ * chain had been reordered, so the dashboard named a provider that was no
+ * longer next. Walk PROFILE_QUALITY so the two cannot disagree again.
+ */
 export function activeLlmLabel(): string {
-  if (config.anthropicKey && !claudeDead) return `Claude (${config.claudeModel})`;
-  if (config.groqKey && Date.now() >= groqCooldownUntil) return `Groq (${config.groqModel})`;
-  if (config.openaiKey) return `OpenAI (${config.openaiModel})`;
-  if (config.anthropicKey) return `Claude (${config.claudeModel})`;
-  if (config.groqKey) return `Groq (${config.groqModel})`;
+  const live: Record<string, () => string | null> = {
+    claude: () => (config.anthropicKey && !claudeDead ? `Claude (${config.claudeModel})` : null),
+    openai: () => (config.openaiKey ? `OpenAI (${config.openaiModel})` : null),
+    gemini: () => (config.geminiKey ? `Gemini (${config.geminiModel})` : null),
+    grok: () => (config.xaiKey ? `Grok (${config.grokModel})` : null),
+    groq: () =>
+      config.groqKey && Date.now() >= groqCooldownUntil ? `Groq (${config.groqModel})` : null,
+  };
+  for (const p of PROFILE_QUALITY) {
+    const label = live[p]?.();
+    if (label) return label;
+  }
+  // Everything is either keyless or breakered — say which, rather than claiming
+  // nothing is configured when a key exists but its breaker is open.
+  if (config.anthropicKey) return `Claude (${config.claudeModel}) [breaker open]`;
+  if (config.groqKey) return `Groq (${config.groqModel}) [cooling down]`;
   return 'no-LLM-configured';
 }

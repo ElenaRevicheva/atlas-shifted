@@ -20,10 +20,19 @@ export const config = {
 
   claudeModel: process.env.WHITESPACE_CLAUDE_MODEL?.trim() || 'claude-sonnet-4-6',
   claudeVisionModel: process.env.WHITESPACE_CLAUDE_VISION_MODEL?.trim() || 'claude-sonnet-4-6',
-  groqModel: process.env.WHITESPACE_GROQ_MODEL?.trim() || 'llama-3.3-70b-versatile',
+  // Was 'llama-3.3-70b-versatile' until 2026-08-17. Groq RETIRED that model on
+  // Aug 16 and WHITESPACE_GROQ_MODEL was never actually set on Oracle, so the
+  // default was live — tier 2 of the chain 404'd on every call. Probed: the old
+  // id returns 404, this one 200. The env override existing is not the same as
+  // the env override being SET; check the box, not the code.
+  groqModel: process.env.WHITESPACE_GROQ_MODEL?.trim() || 'openai/gpt-oss-120b',
   openaiModel: process.env.WHITESPACE_OPENAI_MODEL?.trim() || 'gpt-4o-mini',
   xaiKey: process.env.XAI_API_KEY?.trim() || '',
-  grokModel: process.env.WHITESPACE_GROK_MODEL?.trim() || 'grok-3',
+  // grok-3 still answers 200, but the fleet standard is the explicitly
+  // non-reasoning build: reasoning models burn a small max_tokens budget
+  // thinking and return ''. Both probed 200; this one matches the other agents.
+  grokModel: process.env.WHITESPACE_GROK_MODEL?.trim() || 'grok-4.20-0309-non-reasoning',
+  geminiModel: process.env.WHITESPACE_GEMINI_MODEL?.trim() || 'gemini-2.5-flash',
 
   // Bright Data — live public ad-market recon
   brightDataToken: process.env.BRIGHTDATA_API_TOKEN?.trim() || '',
