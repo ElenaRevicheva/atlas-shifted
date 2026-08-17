@@ -18,6 +18,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { config } from './config.js';
+import { PROFILE_QUALITY } from './llm.js';
 import { buildIntelligence } from './intelligence.js';
 import { sendAtlasDailyBrief } from './telegram.js';
 import { pushRadarWindowsToCrm } from './radar-to-crm.js';
@@ -27,17 +28,31 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = join(__dirname, '..', 'data');
 const SQLITE = join(DATA_DIR, 'radar.sqlite');
 
-const PROVIDER_TIERS: Array<[string, boolean]> = [];
+/**
+ * Which providers are actually armed, in the order llmText() walks them.
+ *
+ * Derived from PROFILE_QUALITY rather than a second hand-maintained list. The
+ * old version hard-coded four checks in the pre-2026-08-17 order, so the footer
+ * on every brief and the /atlas dashboard read "4-tier … (Claude → Groq →
+ * OpenAI → Grok)" while the real chain was five providers in a different order
+ * — and the Groq it named was 404ing on a retired model. The whole point of the
+ * shrug footer is to state the resilience honestly; a stale one does the
+ * opposite of its job.
+ */
+function armedProviders(): string[] {
+  const label: Record<string, [string, string]> = {
+    claude: [config.anthropicKey, 'Claude'],
+    openai: [config.openaiKey, 'OpenAI'],
+    gemini: [config.geminiKey, 'Gemini'],
+    grok: [config.xaiKey, 'Grok'],
+    groq: [config.groqKey, 'Groq'],
+  };
+  return PROFILE_QUALITY.map((p) => label[p]).filter(([key]) => !!key).map(([, name]) => name);
+}
 
 function resilienceFooter(): string {
-  const armed: string[] = [];
-  if (config.anthropicKey) armed.push('Claude');
-  if (config.groqKey) armed.push('Groq');
-  if (config.openaiKey) armed.push('OpenAI');
-  if (config.xaiKey) armed.push('Grok');
-  for (const p of armed) PROVIDER_TIERS.push([p, true]);
-  const n = armed.length;
-  return `⌐ Atlas shifted — ${n}-tier LLM failover armed (${armed.join(' → ')}); a single provider going dark can't stop the brief.`;
+  const armed = armedProviders();
+  return `⌐ Atlas shifted — ${armed.length}-tier LLM failover armed (${armed.join(' → ')}); a single provider going dark can't stop the brief.`;
 }
 
 /** Pick the recommended MOVE for a vertical: a real ENTER if present, else the
@@ -119,7 +134,10 @@ function main() {
 
   const footer = resilienceFooter();
   brief.resilience = footer;
-  brief.provider_tiers = PROVIDER_TIERS.map(([p]) => p);
+  // Computed fresh. The old module-level PROVIDER_TIERS array was PUSHED to
+  // inside resilienceFooter(), so a second call in the same process appended a
+  // duplicate set — the list grew every run instead of describing the chain.
+  brief.provider_tiers = armedProviders();
 
   const intel = buildIntelligence(SQLITE, latest);
   brief.intelligence = intel;
