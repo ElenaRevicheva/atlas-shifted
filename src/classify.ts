@@ -20,7 +20,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
-import { embedBatch } from './llm.js';
+import { embedBatch, type EmbedBackend } from './llm.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = join(__dirname, '..', 'data');
@@ -28,7 +28,7 @@ const JSONL = join(DATA_DIR, 'captures.jsonl');
 const SQLITE = join(DATA_DIR, 'radar.sqlite');
 
 export const ANGLE_VERSION = 'v1';
-const CENTROIDS_CACHE = join(DATA_DIR, `centroids.${ANGLE_VERSION}.json`);
+const CENTROIDS_OPENAI = join(DATA_DIR, `centroids.${ANGLE_VERSION}.json`);
 
 /** Frozen 8-angle ontology. The prototype text becomes the centroid (embedded once). */
 const ONTOLOGY: Array<{ id: string; prototype: string }> = [
@@ -67,6 +67,39 @@ function cosine(a: number[], b: number[]): number {
   return na && nb ? dot / (Math.sqrt(na) * Math.sqrt(nb)) : 0;
 }
 
+function tokenize(s: string): Set<string> {
+  return new Set(
+    s
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .split(' ')
+      .filter((w) => w.length > 2),
+  );
+}
+
+/** Binary bag-of-words cosine against an ontology prototype. Last-resort classifier. */
+export function lexicalSim(a: string, b: string): number {
+  const A = tokenize(a);
+  const B = tokenize(b);
+  let inter = 0;
+  for (const w of A) if (B.has(w)) inter++;
+  const denom = Math.sqrt(A.size * B.size);
+  return denom ? inter / denom : 0;
+}
+
+export function assignLexical(text: string): { id: string; confidence: number } {
+  let best = ONTOLOGY[0]!.id;
+  let bestSim = -1;
+  for (const o of ONTOLOGY) {
+    const sim = lexicalSim(text, o.prototype);
+    if (sim > bestSim) {
+      bestSim = sim;
+      best = o.id;
+    }
+  }
+  return { id: best, confidence: Math.round(bestSim * 1000) / 1000 };
+}
+
 function loadCaptures(): CaptureRecord[] {
   if (!existsSync(JSONL)) return [];
   const rows: CaptureRecord[] = [];
@@ -81,22 +114,27 @@ function loadCaptures(): CaptureRecord[] {
   return rows;
 }
 
-/** Centroids are frozen per angle_version: compute once, cache, reuse. */
-async function getCentroids(): Promise<Record<string, number[]>> {
-  if (existsSync(CENTROIDS_CACHE)) {
+/** Centroids are frozen per angle_version + backend: compute once, cache, reuse. */
+async function getCentroids(backend: Exclude<EmbedBackend, 'none'>): Promise<Record<string, number[]>> {
+  const cache =
+    backend === 'openai' ? CENTROIDS_OPENAI : join(DATA_DIR, `centroids.${ANGLE_VERSION}.${backend}.json`);
+  if (existsSync(cache)) {
     try {
-      return JSON.parse(readFileSync(CENTROIDS_CACHE, 'utf8')) as Record<string, number[]>;
+      return JSON.parse(readFileSync(cache, 'utf8')) as Record<string, number[]>;
     } catch {
       /* fall through to recompute */
     }
   }
-  const vecs = await embedBatch(ONTOLOGY.map((o) => o.prototype));
-  if (vecs.length !== ONTOLOGY.length || vecs.some((v) => !v)) {
-    throw new Error('failed to embed ontology centroids (OpenAI embeddings unavailable)');
+  const packed = await embedBatch(
+    ONTOLOGY.map((o) => o.prototype),
+    backend,
+  );
+  if (packed.backend !== backend || packed.vectors.length !== ONTOLOGY.length || packed.vectors.some((v) => !v)) {
+    throw new Error(`failed to embed ontology centroids (${backend} embeddings unavailable)`);
   }
   const centroids: Record<string, number[]> = {};
-  ONTOLOGY.forEach((o, i) => (centroids[o.id] = vecs[i]!));
-  writeFileSync(CENTROIDS_CACHE, JSON.stringify(centroids));
+  ONTOLOGY.forEach((o, i) => (centroids[o.id] = packed.vectors[i]!));
+  writeFileSync(cache, JSON.stringify(centroids));
   return centroids;
 }
 
@@ -142,39 +180,60 @@ async function main() {
     process.exit(1);
   }
 
-  const centroids = await getCentroids();
-  const angleIds = Object.keys(centroids);
+  const packed = await embedBatch(rows.map((r) => r.ad_text));
+  let angleVersion = ANGLE_VERSION;
+  let snapshots: Snapshot[];
 
-  // Embed every ad once, assign nearest centroid.
-  const embeds = await embedBatch(rows.map((r) => r.ad_text));
-  if (embeds.length !== rows.length || embeds.some((v) => !v)) {
-    throw new Error('failed to embed captured ads (OpenAI embeddings unavailable)');
-  }
-
-  const snapshots: Snapshot[] = rows.map((r, i) => {
-    let best = angleIds[0]!;
-    let bestSim = -1;
-    for (const id of angleIds) {
-      const sim = cosine(embeds[i]!, centroids[id]!);
-      if (sim > bestSim) {
-        bestSim = sim;
-        best = id;
+  if (packed.backend === 'none' || packed.vectors.length !== rows.length || packed.vectors.some((v) => !v)) {
+    // OpenAI quota-dead (2026-09-14) and Gemini also failed: still rebuild
+    // radar.sqlite so the Monday board is not last week's snapshot.
+    console.warn('[classify] embeddings unavailable — lexical prototype-overlap fallback');
+    angleVersion = 'v1-lexical';
+    snapshots = rows.map((r) => {
+      const a = assignLexical(r.ad_text);
+      return {
+        snapshot_date: r.snapshot_date,
+        vertical: r.vertical,
+        platform: r.platform,
+        angle_id: a.id,
+        advertiser_ref: r.advertiser_ref,
+        ad_ref_url: r.source_url,
+        first_seen_date: r.started_running,
+        raw_text_hash: createHash('sha1').update(r.ad_text).digest('hex').slice(0, 16),
+        confidence: a.confidence,
+        advertiser_name: r.advertiser_name,
+        ad_text: r.ad_text,
+      };
+    });
+  } else {
+    if (packed.backend === 'gemini') angleVersion = 'v1-gemini';
+    const centroids = await getCentroids(packed.backend);
+    const angleIds = Object.keys(centroids);
+    snapshots = rows.map((r, i) => {
+      let best = angleIds[0]!;
+      let bestSim = -1;
+      for (const id of angleIds) {
+        const sim = cosine(packed.vectors[i]!, centroids[id]!);
+        if (sim > bestSim) {
+          bestSim = sim;
+          best = id;
+        }
       }
-    }
-    return {
-      snapshot_date: r.snapshot_date,
-      vertical: r.vertical,
-      platform: r.platform,
-      angle_id: best,
-      advertiser_ref: r.advertiser_ref,
-      ad_ref_url: r.source_url,
-      first_seen_date: r.started_running,
-      raw_text_hash: createHash('sha1').update(r.ad_text).digest('hex').slice(0, 16),
-      confidence: Math.round(bestSim * 1000) / 1000,
-      advertiser_name: r.advertiser_name,
-      ad_text: r.ad_text,
-    };
-  });
+      return {
+        snapshot_date: r.snapshot_date,
+        vertical: r.vertical,
+        platform: r.platform,
+        angle_id: best,
+        advertiser_ref: r.advertiser_ref,
+        ad_ref_url: r.source_url,
+        first_seen_date: r.started_running,
+        raw_text_hash: createHash('sha1').update(r.ad_text).digest('hex').slice(0, 16),
+        confidence: Math.round(bestSim * 1000) / 1000,
+        advertiser_name: r.advertiser_name,
+        ad_text: r.ad_text,
+      };
+    });
+  }
 
   // ── Rebuild SQLite from scratch (disposable projection) ──────────────────
   const db = new DatabaseSync(SQLITE);
@@ -208,7 +267,7 @@ async function main() {
     `INSERT INTO angle_snapshots VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
   );
   for (const s of snapshots) {
-    insSnap.run(s.snapshot_date, s.vertical, s.platform, s.angle_id, ANGLE_VERSION, s.advertiser_ref, s.ad_ref_url, s.first_seen_date, s.raw_text_hash, s.confidence, s.advertiser_name, s.ad_text);
+    insSnap.run(s.snapshot_date, s.vertical, s.platform, s.angle_id, angleVersion, s.advertiser_ref, s.ad_ref_url, s.first_seen_date, s.raw_text_hash, s.confidence, s.advertiser_name, s.ad_text);
   }
 
   // ── Aggregate per (date, vertical) ──────────────────────────────────────
@@ -332,7 +391,7 @@ async function main() {
       const windowScore = Math.round((0.4 * vel + 0.4 * inverseSat + 0.2 * adjacency) * 1000) / 1000;
 
       insAgg.run(
-        snapshot_date, vertical, platforms, angle, ANGLE_VERSION,
+        snapshot_date, vertical, platforms, angle, angleVersion,
         distinct, observed7d.get(angle) ?? null, observedVel.get(angle) ?? null,
         recentLaunch.get(angle) ?? 0, Math.round((launchShare.get(angle) ?? 0) * 1000) / 1000,
         Math.round(saturation * 1000) / 1000, Math.round(adjacency * 1000) / 1000,
@@ -349,7 +408,7 @@ async function main() {
   const dates = [...new Set(snapshots.map((s) => s.snapshot_date))].sort();
   db.close();
 
-  console.log(`ATLAS CLASSIFY DONE · ${snapshots.length} ads → ${aggRows} angle/day cells · version=${ANGLE_VERSION}`);
+  console.log(`ATLAS CLASSIFY DONE · ${snapshots.length} ads → ${aggRows} angle/day cells · version=${angleVersion}`);
   console.log(`  dates: ${dates.join(', ')}`);
   console.log(`  angle distribution: ${dist}`);
   console.log(`  sqlite: ${SQLITE}`);

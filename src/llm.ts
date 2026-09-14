@@ -384,17 +384,28 @@ export async function llmVision(
   return llmText(sysWrap(opts.system, prompt), { maxTokens });
 }
 
+export type EmbedBackend = 'openai' | 'gemini' | 'none';
+
 /**
- * OpenAI text embeddings (text-embedding-3-small). DETERMINISTIC — same text
- * always maps to the same vector, which is exactly why the classifier uses
- * embeddings instead of free-form LLM clustering: it makes angle assignment
- * (and therefore velocity) stable run-over-run. Returns [] on failure.
- * Batches internally to stay well under input limits.
+ * Quota / billing exhaustion is a hard-down, not a rate limit. OpenAI returns
+ * HTTP 429 for both; the body is what distinguishes them. Retrying "no credits
+ * remaining" three times (Jul 12 handler) is what left Atlas on last Monday's
+ * radar.sqlite on 2026-09-14.
  */
-export async function embedBatch(texts: string[]): Promise<number[][]> {
-  if (!config.openaiKey || texts.length === 0) return [];
+export function isEmbedQuotaError(body: string): boolean {
+  return /no credits remaining|insufficient_quota|exceeded your current quota|billing_not_active|prepayment depleted|credit balance is too low/i.test(
+    body,
+  );
+}
+
+function completeVectors(out: number[][], n: number): boolean {
+  return out.length === n && out.every((v) => Array.isArray(v) && v.length > 0);
+}
+
+async function openaiEmbedBatch(texts: string[]): Promise<number[][] | 'quota' | 'fail'> {
+  if (!config.openaiKey || texts.length === 0) return 'fail';
   const out: number[][] = new Array(texts.length);
-  const CHUNK = 200;
+  const CHUNK = 100;
   for (let start = 0; start < texts.length; start += CHUNK) {
     const slice = texts.slice(start, start + CHUNK).map((t) => t.slice(0, 6000) || ' ');
     let attempt = 0;
@@ -408,31 +419,129 @@ export async function embedBatch(texts: string[]): Promise<number[][]> {
           signal: AbortSignal.timeout(90_000),
         });
         if (!res.ok) {
-          const body = (await res.text()).slice(0, 120);
-          // Transient (5xx / 429) → retry with backoff; permanent (4xx auth/billing) → give up now.
-          if ((res.status >= 500 || res.status === 429) && attempt < 3) {
-            console.warn(`[llm] embeddings ${res.status} (attempt ${attempt}/3), retrying: ${body}`);
-            await new Promise((r) => setTimeout(r, attempt * 2000));
+          const body = (await res.text()).slice(0, 180);
+          if (isEmbedQuotaError(body)) {
+            console.warn(`[llm] OpenAI embeddings quota exhausted (${res.status}): ${body}`);
+            return 'quota';
+          }
+          if ((res.status >= 500 || res.status === 429) && attempt < 5) {
+            const wait = Math.min(30_000, 1000 * 2 ** attempt);
+            console.warn(`[llm] embeddings ${res.status} (attempt ${attempt}/5), retrying in ${wait}ms: ${body}`);
+            await new Promise((r) => setTimeout(r, wait));
             continue;
           }
           console.warn(`[llm] embeddings ${res.status}: ${body}`);
-          return [];
+          return 'fail';
         }
         const d = (await res.json()) as { data?: Array<{ embedding: number[]; index: number }> };
         for (const item of d.data ?? []) out[start + item.index] = item.embedding;
         break;
       } catch (e) {
-        if (attempt < 3) {
-          console.warn(`[llm] embeddings failed (attempt ${attempt}/3), retrying:`, (e as Error).message?.slice(0, 140));
-          await new Promise((r) => setTimeout(r, attempt * 2000));
+        if (attempt < 5) {
+          console.warn(`[llm] embeddings failed (attempt ${attempt}/5), retrying:`, (e as Error).message?.slice(0, 140));
+          await new Promise((r) => setTimeout(r, Math.min(30_000, 1000 * 2 ** attempt)));
           continue;
         }
         console.warn('[llm] embeddings failed:', (e as Error).message?.slice(0, 140));
-        return [];
+        return 'fail';
       }
     }
   }
-  return out;
+  return completeVectors(out, texts.length) ? out : 'fail';
+}
+
+/** Gemini text-embedding-004 (768-d). Used only when OpenAI embeddings are down. */
+async function geminiEmbedBatch(texts: string[]): Promise<number[][] | 'fail'> {
+  if (!config.geminiKey || texts.length === 0) return 'fail';
+  const out: number[][] = new Array(texts.length);
+  const CHUNK = 80;
+  const model = 'text-embedding-004';
+  for (let start = 0; start < texts.length; start += CHUNK) {
+    const slice = texts.slice(start, start + CHUNK).map((t) => t.slice(0, 6000) || ' ');
+    let attempt = 0;
+    for (;;) {
+      attempt++;
+      try {
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:batchEmbedContents?key=${config.geminiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              requests: slice.map((text) => ({
+                model: `models/${model}`,
+                content: { parts: [{ text }] },
+              })),
+            }),
+            signal: AbortSignal.timeout(90_000),
+          },
+        );
+        if (!res.ok) {
+          const body = (await res.text()).slice(0, 180);
+          if (isEmbedQuotaError(body)) {
+            console.warn(`[llm] Gemini embeddings quota exhausted (${res.status}): ${body}`);
+            return 'fail';
+          }
+          if ((res.status >= 500 || res.status === 429) && attempt < 5) {
+            const wait = Math.min(30_000, 1000 * 2 ** attempt);
+            console.warn(`[llm] gemini embeddings ${res.status} (attempt ${attempt}/5), retrying in ${wait}ms: ${body}`);
+            await new Promise((r) => setTimeout(r, wait));
+            continue;
+          }
+          console.warn(`[llm] gemini embeddings ${res.status}: ${body}`);
+          return 'fail';
+        }
+        const d = (await res.json()) as { embeddings?: Array<{ values?: number[] }> };
+        (d.embeddings ?? []).forEach((e, i) => {
+          if (e.values?.length) out[start + i] = e.values;
+        });
+        break;
+      } catch (e) {
+        if (attempt < 5) {
+          console.warn(`[llm] gemini embeddings failed (attempt ${attempt}/5), retrying:`, (e as Error).message?.slice(0, 140));
+          await new Promise((r) => setTimeout(r, Math.min(30_000, 1000 * 2 ** attempt)));
+          continue;
+        }
+        console.warn('[llm] gemini embeddings failed:', (e as Error).message?.slice(0, 140));
+        return 'fail';
+      }
+    }
+  }
+  return completeVectors(out, texts.length) ? out : 'fail';
+}
+
+/**
+ * Embeddings for the angle classifier. DETERMINISTIC per backend — same text
+ * always maps to the same vector, which is why we classify with embeddings
+ * instead of free-form LLM clustering.
+ *
+ * OpenAI text-embedding-3-small first (historical v1 centroids). Gemini
+ * text-embedding-004 if OpenAI is quota-dead. Empty backend 'none' if both
+ * fail — classify.ts then uses a lexical fallback so radar.sqlite still rebuilds.
+ */
+export async function embedBatch(
+  texts: string[],
+  prefer?: 'openai' | 'gemini',
+): Promise<{ vectors: number[][]; backend: EmbedBackend }> {
+  if (texts.length === 0) return { vectors: [], backend: 'none' };
+  const order: Array<'openai' | 'gemini'> = prefer ? [prefer] : ['openai', 'gemini'];
+  for (const b of order) {
+    if (b === 'openai') {
+      const r = await openaiEmbedBatch(texts);
+      if (Array.isArray(r)) {
+        console.log(`[llm] embeddings via openai · ${texts.length} texts`);
+        return { vectors: r, backend: 'openai' };
+      }
+      if (r === 'quota') console.warn('[llm] OpenAI embeddings quota exhausted — failing over to Gemini');
+    } else {
+      const r = await geminiEmbedBatch(texts);
+      if (Array.isArray(r)) {
+        console.log(`[llm] embeddings via gemini · ${texts.length} texts`);
+        return { vectors: r, backend: 'gemini' };
+      }
+    }
+  }
+  return { vectors: [], backend: 'none' };
 }
 
 /**
