@@ -450,12 +450,12 @@ async function openaiEmbedBatch(texts: string[]): Promise<number[][] | 'quota' |
   return completeVectors(out, texts.length) ? out : 'fail';
 }
 
-/** Gemini text-embedding-004 (768-d). Used only when OpenAI embeddings are down. */
-async function geminiEmbedBatch(texts: string[]): Promise<number[][] | 'fail'> {
-  if (!config.geminiKey || texts.length === 0) return 'fail';
+/** Gemini embeddings. text-embedding-004 404'd on 2026-09-14; gemini-embedding-001 is the live id. */
+const GEMINI_EMBED_MODELS = ['gemini-embedding-001', 'gemini-embedding-2', 'text-embedding-004'] as const;
+
+async function geminiEmbedBatchWithModel(texts: string[], model: string): Promise<number[][] | 'fail' | 'missing'> {
   const out: number[][] = new Array(texts.length);
   const CHUNK = 80;
-  const model = 'text-embedding-004';
   for (let start = 0; start < texts.length; start += CHUNK) {
     const slice = texts.slice(start, start + CHUNK).map((t) => t.slice(0, 6000) || ' ');
     let attempt = 0;
@@ -478,6 +478,10 @@ async function geminiEmbedBatch(texts: string[]): Promise<number[][] | 'fail'> {
         );
         if (!res.ok) {
           const body = (await res.text()).slice(0, 180);
+          if (res.status === 404 || /not found|not supported for embedContent/i.test(body)) {
+            console.warn(`[llm] gemini embeddings model "${model}" missing (${res.status}): ${body}`);
+            return 'missing';
+          }
           if (isEmbedQuotaError(body)) {
             console.warn(`[llm] Gemini embeddings quota exhausted (${res.status}): ${body}`);
             return 'fail';
@@ -510,14 +514,29 @@ async function geminiEmbedBatch(texts: string[]): Promise<number[][] | 'fail'> {
   return completeVectors(out, texts.length) ? out : 'fail';
 }
 
+async function geminiEmbedBatch(texts: string[]): Promise<number[][] | 'fail'> {
+  if (!config.geminiKey || texts.length === 0) return 'fail';
+  for (const model of GEMINI_EMBED_MODELS) {
+    const r = await geminiEmbedBatchWithModel(texts, model);
+    if (Array.isArray(r)) {
+      console.log(`[llm] gemini embeddings model ${model}`);
+      return r;
+    }
+    if (r === 'fail') return 'fail';
+    // 'missing' → try next model id
+  }
+  return 'fail';
+}
+
 /**
  * Embeddings for the angle classifier. DETERMINISTIC per backend — same text
  * always maps to the same vector, which is why we classify with embeddings
  * instead of free-form LLM clustering.
  *
  * OpenAI text-embedding-3-small first (historical v1 centroids). Gemini
- * text-embedding-004 if OpenAI is quota-dead. Empty backend 'none' if both
- * fail — classify.ts then uses a lexical fallback so radar.sqlite still rebuilds.
+ * `gemini-embedding-001` if OpenAI is quota-dead (`text-embedding-004` 404'd
+ * 2026-09-14). Empty backend 'none' if both fail — classify.ts then uses a
+ * lexical fallback so radar.sqlite still rebuilds.
  */
 export async function embedBatch(
   texts: string[],
