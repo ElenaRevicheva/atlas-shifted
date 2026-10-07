@@ -33,12 +33,22 @@ else
   fi
 fi
 
-TOKEN=$(grep -m1 '^GITHUB_TOKEN=' /home/ubuntu/cto-aipa/.env | cut -d= -f2- | tr -d '\r')
+# The token is no longer read here. Git authenticates through the credential
+# store at ~/.git-credentials (credential.helper=store), which is the single
+# place the GitHub token lives on this box. Rotating it means editing one line.
 if [[ -d "$WS/data/.git" ]]; then
   cd "$WS/data"
+  # Advertisers sometimes print an email or WhatsApp number inside their own ad copy,
+  # and that text lands verbatim in captures.jsonl. This repo is offered under licence,
+  # so scrub third-party contact details before the snapshot is committed. Idempotent,
+  # and it runs after classify.js has already read the file, so classification is
+  # unaffected. Added 2026-09-06 after DataVendor pii_qc_llm flagged 3 advertiser
+  # contacts carried in ad text.
+  perl -i -pe 's/[A-Za-z0-9._%+-]+\@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/[contact-redacted]/g; s/\+[0-9][0-9 ()._-]{7,16}[0-9]/[contact-redacted]/g' captures.jsonl \
+    || echo "redaction step FAILED" >> "$LOG"
   git add captures.jsonl capture.log 2>/dev/null || true
   git commit -m "snapshot $(TZ=America/Panama date +%F)" >> "$LOG" 2>&1 || echo "nothing to commit" >> "$LOG"
-  git push "https://${TOKEN}@github.com/ElenaRevicheva/atlas-captures.git" HEAD:main >> "$LOG" 2>&1 \
+  git push origin HEAD:main >> "$LOG" 2>&1 \
     && echo "backup pushed" >> "$LOG" || echo "backup push FAILED" >> "$LOG"
 fi
 echo "=== $(date -u +%FT%TZ) : done ===" >> "$LOG"
