@@ -291,7 +291,7 @@ en:{
   finalH:'Know where <em>the open window</em> is before you spend.',
   finalP:'Start with the $100 diagnostic: written results on your business and channels, and a 45-minute call.',
   finalBtn:'Book the $100 diagnostic →',
-  fTools:'Tools', fPortfolio:'Portfolio ↗', fFilm:'Background film: never-used takes from AIdeazz AI Lab promo shoots.',
+  fTools:'Tools', fPortfolio:'Portfolio ↗', fFilm:'Background film: AIdeazz AI Lab promo-shoot footage, incl. Pexels/Pixabay clips.',
   stale:(d,a)=>'⏸ Radar paused — last live snapshot '+d+' ('+a+' days ago). The history and campaigns below are from that snapshot.',
   stillReady:'Still image ready — waiting on video…', reconnect:'Connection dropped — checking whether the render finished…',
 },
@@ -347,7 +347,7 @@ es:{
   finalH:'Sabe dónde está <em>la ventana abierta</em> antes de invertir.',
   finalP:'Empieza con el diagnóstico de $100: resultados escritos sobre tu negocio y tus canales, y una llamada de 45 minutos.',
   finalBtn:'Reservar el diagnóstico de $100 →',
-  fTools:'Herramientas', fPortfolio:'Portafolio ↗', fFilm:'Película de fondo: tomas nunca usadas de las producciones promocionales de AIdeazz AI Lab.',
+  fTools:'Herramientas', fPortfolio:'Portafolio ↗', fFilm:'Película de fondo: material de las producciones promocionales de AIdeazz AI Lab, incl. clips de Pexels/Pixabay.',
   stale:(d,a)=>'⏸ Radar en pausa — último snapshot en vivo '+d+' (hace '+a+' días). La historia y las campañas de abajo son de ese snapshot.',
   stillReady:'Imagen lista — esperando el video…', reconnect:'Se cortó la conexión — comprobando si el render terminó…',
 }};
@@ -760,7 +760,7 @@ $('langEN').onclick=()=>setLang('en');
 $('langES').onclick=()=>setLang('es');
 applyStaticLang();
 fetch(atlasUrl()).then(r=>r.json()).then(render).catch(e=>{ $('board').innerHTML='<div class="loading">'+t('failed')+': '+esc(e.message)+'</div>'; });
-Skin.backdrop(['ws-night']);
+Skin.backdrop(['ws-night','ws-city-night-grid','ws-city-night-towers']);
 </script>
 </body>
 </html>
