@@ -11,6 +11,12 @@ const num = (v: string | undefined, d: number): number => {
   const n = Number(v);
   return Number.isFinite(n) && n > 0 ? n : d;
 };
+/** Like num(), but 0 is a real value: WHITESPACE_RUN_GLOBAL_PER_DAY=0 switches free scans off. */
+const limit = (v: string | undefined, d: number): number => {
+  if (v === undefined || v.trim() === '') return d;
+  const n = Number(v);
+  return Number.isFinite(n) && n >= 0 ? Math.floor(n) : d;
+};
 
 export const config = {
   // LLM providers (resilient chain: Claude → Groq → OpenAI)
@@ -91,8 +97,27 @@ export const config = {
   maxToolCalls: num(process.env.WHITESPACE_MAX_TOOL_CALLS, 10),
   runTimeoutMs: num(process.env.WHITESPACE_RUN_TIMEOUT_MS, 180_000),
 
-  // Optional gate for /api/atlas/ship (Generate creative). Open when unset.
-  shipToken: process.env.ATLAS_SHIP_TOKEN?.trim() || '',
+  // Owner gate (19 Oct 2026). ONE token for everything that spends money or writes data:
+  // ship (renders), track (paid capture), the full /api/atlas payload. It FAILS CLOSED —
+  // unset means nobody passes. Until 19 Oct an unset ATLAS_SHIP_TOKEN meant EVERYBODY passed,
+  // so any visitor could re-render (and overwrite) the 7 shipped creatives.
+  ownerToken: (process.env.ATLAS_OWNER_TOKEN || process.env.ATLAS_SHIP_TOKEN || '').trim(),
+  shipToken: (process.env.ATLAS_OWNER_TOKEN || process.env.ATLAS_SHIP_TOKEN || '').trim(),
+
+  // Free public scans (/api/run) — a free taste, never an open wallet. Per visitor per
+  // Panama day, a global daily cap, one paid scan at a time, and a cache so the same
+  // market + country is never bought twice in a week.
+  runFreePerIpDay: limit(process.env.WHITESPACE_RUN_FREE_PER_IP_DAY, 2),
+  runGlobalPerDay: limit(process.env.WHITESPACE_RUN_GLOBAL_PER_DAY, 15),
+  runMaxConcurrent: limit(process.env.WHITESPACE_RUN_MAX_CONCURRENT, 1),
+  runCacheDays: limit(process.env.WHITESPACE_RUN_CACHE_DAYS, 7),
+
+  // Lead capture → the fleet CRM hub (POST /cto/api/crm-event, the same Bearer secret the
+  // radar push already uses). A HubSpot CLIENT deal, NO emails: the website inquiry route would
+  // mail a confirmation to whatever address a visitor typed, without that form's reCAPTCHA.
+  // Never an atlas_* campaign either: a sign-up is not an ad conversion.
+  crmEventUrl: (process.env.ATLAS_CRM_EVENT_URL || 'https://webhook.aideazz.xyz/cto/api/crm-event').trim(),
+  leadRelayPerDay: limit(process.env.WHITESPACE_LEAD_RELAY_PER_DAY, 20),
 
   // Video providers (Runway → Luma → Gemini Omni → Veo failover in video.ts)
   runwayKey: process.env.RUNWAY_API_KEY?.trim() || '',
@@ -114,5 +139,7 @@ export const hasTelegram = (): boolean => !!(config.telegramBotToken && config.t
 export const hasImageProviders = (): boolean => !!(config.replicateToken || config.openaiKey);
 export const hasVideoProviders = (): boolean =>
   !!(config.runwayKey || config.lumaKey || config.geminiKey);
-export const shipTokenRequired = (): boolean => !!config.shipToken;
+/** Always true since 19 Oct 2026: ship is owner-only whether or not a token is configured. */
+export const shipTokenRequired = (): boolean => true;
+export const hasOwnerToken = (): boolean => !!config.ownerToken;
 export const hasPerformanceHub = (): boolean => !!(config.performanceHubUrl && config.performanceHubSecret);

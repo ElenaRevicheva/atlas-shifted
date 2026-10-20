@@ -4,127 +4,97 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>WHITESPACE — find the ad nobody is running yet</title>
+<meta name="description" content="WHITESPACE by AIdeazz AI Lab maps which ad and content angles are saturated in your market and surfaces the open one, with a sourced evidence trail. Free scans for LatAm markets." />
 <link rel="icon" type="image/svg+xml" href="favicon.svg" />
 <link rel="apple-touch-icon" href="favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700&display=swap" />
+<link rel="preload" as="image" href="media/ws-villa.webp" />
+<link rel="stylesheet" href="skin.css?v=20261019" />
 <style>
-  :root{
-    --bg:#0a0b0f; --panel:#12141c; --panel2:#171a24; --line:#242838;
-    --ink:#e8ebf2; --mut:#8b90a3; --dim:#5b6072;
-    --acc:#5eead4; --acc2:#a78bfa; --warn:#fbbf24; --hot:#fb7185; --ok:#34d399;
-    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-    --sans:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:radial-gradient(1200px 700px at 70% -10%,#1a1d2e 0%,var(--bg) 55%);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
-  .wrap{max-width:1080px;margin:0 auto;padding:32px 22px 80px}
-  header{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:6px}
-  .brand{font-family:var(--mono);font-weight:700;font-size:30px;letter-spacing:.18em}
-  .brand b{color:var(--acc)}
-  .by{font-size:12px;color:var(--dim);font-family:var(--mono)}
-  .by a{color:var(--acc2);text-decoration:none}
-  .langsw{display:inline-flex;gap:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-left:10px;vertical-align:middle}
-  .langsw button{background:#0c0e15;color:var(--dim);border:0;padding:4px 10px;font-size:11px;font-family:var(--mono);cursor:pointer;font-weight:700}
-  .langsw button.on{background:#0c1a17;color:var(--acc)}
-  .tag{color:var(--mut);font-size:15px;margin:8px 0 26px;max-width:680px;line-height:1.5}
-  .tag b{color:var(--ink);font-weight:600}
-  .card{background:linear-gradient(180deg,var(--panel),#0e1017);border:1px solid var(--line);border-radius:16px;padding:20px}
-  .modes{display:flex;gap:8px;margin-bottom:14px}
-  .mode{background:#0c0e15;color:var(--mut);border:1px solid var(--line);border-radius:10px;padding:9px 14px;font-size:13.5px;font-weight:600;cursor:pointer}
-  .mode span{color:var(--dim);font-weight:400;font-size:11.5px;font-family:var(--mono)}
-  .mode.on{border-color:var(--acc);color:var(--ink);background:#0c1a17}
-  .inrow{display:flex;gap:10px;flex-wrap:wrap}
-  input{flex:1;min-width:240px;background:#0c0e15;border:1px solid var(--line);border-radius:10px;color:var(--ink);font-size:16px;padding:14px 16px;outline:none;font-family:var(--sans)}
-  input:focus{border-color:var(--acc)}
-  button{background:var(--acc);color:#04231f;font-weight:700;border:0;border-radius:10px;padding:0 22px;font-size:15px;cursor:pointer;font-family:var(--sans)}
-  button:disabled{opacity:.5;cursor:default}
-  .chips{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
-  .chip{font-size:12.5px;color:var(--mut);border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer;background:#0c0e15}
-  .chip:hover{border-color:var(--acc2);color:var(--ink)}
-  .status{margin:18px 0 0;display:none}
-  .bar{height:5px;background:#0c0e15;border-radius:4px;overflow:hidden;border:1px solid var(--line)}
-  .fill{height:100%;width:0;background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .4s ease}
-  .feed{font-family:var(--mono);font-size:12.5px;margin-top:12px;max-height:168px;overflow:auto;color:var(--mut);border-left:2px solid var(--line);padding-left:12px}
-  .feed div{padding:2px 0}
-  .feed .st{color:var(--acc)}
-  .feed .er{color:var(--hot)}
-  .results{margin-top:26px;display:none}
-  .sec{margin-top:22px}
-  .h{font-family:var(--mono);font-size:12px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;margin:0 0 12px}
-  .rec{background:linear-gradient(180deg,#15212b,#101820);border:1px solid #1f4a44;border-radius:16px;padding:22px}
-  .rec .lab{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--acc);text-transform:uppercase}
-  .rec h2{margin:8px 0 10px;font-size:24px;line-height:1.25}
-  .rec p{color:var(--mut);margin:0 0 14px;line-height:1.55}
-  .conf{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;color:var(--ink);background:#04231f;border:1px solid #1f4a44;border-radius:999px;padding:5px 12px}
-  .adj{margin-top:12px;font-size:12.5px;color:var(--dim);font-family:var(--mono)}
-  .adj b{color:var(--acc2)}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  @media(max-width:720px){.grid{grid-template-columns:1fr}}
-  .tile{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:16px}
-  .tile h3{margin:0 0 8px;font-size:14px}
-  .tile .ct{font-family:var(--mono);font-size:12px;color:var(--mut);line-height:1.55}
-  .cta{display:inline-block;margin-top:8px;font-size:11px;font-family:var(--mono);color:var(--acc);border:1px solid #1f4a44;border-radius:6px;padding:3px 8px}
-  .lane{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
-  .sat{font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:.08em}
-  .sat.heavy{background:#3b1418;color:var(--hot);border:1px solid #5a1d22}
-  .sat.moderate{background:#3a2e10;color:var(--warn);border:1px solid #5a4715}
-  .sat.light{background:#10231a;color:var(--ok);border:1px solid #1d4a36}
-  .lane .ang{flex:1}
-  .lane .em{font-family:var(--mono);font-size:11.5px;color:var(--dim)}
-  .ev{font-size:13px;color:var(--mut);padding:9px 0;border-bottom:1px solid var(--line);line-height:1.5}
-  .ev a{color:var(--acc2);text-decoration:none;font-family:var(--mono);font-size:11px}
-  .ev b{color:var(--ink)}
-  .alt{font-size:13.5px;color:var(--mut);padding:8px 0;border-bottom:1px solid var(--line)}
-  .alt b{color:var(--ink)}
-  .alt .c{font-family:var(--mono);font-size:11px;color:var(--acc)}
-  .meta{margin-top:20px;font-family:var(--mono);font-size:11.5px;color:var(--dim);line-height:1.6}
-  .deg{margin-top:14px;background:#2a210c;border:1px solid #5a4715;color:var(--warn);border-radius:10px;padding:12px 14px;font-size:12.5px;font-family:var(--mono);display:none}
-  .how{margin-top:22px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-  @media(max-width:760px){.how{grid-template-columns:1fr}}
-  .howstep{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:15px 16px;font-size:13px;color:var(--mut);line-height:1.5}
-  .hn{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:#04231f;border:1px solid #1f4a44;color:var(--acc);font-family:var(--mono);font-size:12px;margin-right:8px}
-  .footnote{margin-top:18px;text-align:center;font-family:var(--mono);font-size:11.5px;color:var(--dim);line-height:1.7}
-  .footnote a{color:var(--acc2);text-decoration:none}
-  .trackcta{margin-top:20px;padding:14px 16px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;display:none;flex-direction:column;align-items:stretch;gap:10px}
-  .trackcta.show{display:flex}
-  .trackcta p{margin:0;font-size:13.5px;color:var(--mut);line-height:1.5}
-  .trackcta p b{color:var(--ink);font-weight:600}
-  .trackbtn{display:block;text-align:center;background:transparent;color:var(--acc) !important;font-weight:600;text-decoration:none !important;border:1px solid #1f4a44;border-radius:10px;padding:11px 18px;font-size:14px;cursor:pointer}
-  .trackbtn:hover{background:#0c1a17}
-  .trackcta .sub{font-family:var(--mono);font-size:11px;color:var(--dim);text-align:left;line-height:1.45}
+  /* result-specific pieces (the shared look lives in skin.css) */
+  .results{display:none}
+  .rec{padding:24px;border:1px solid rgba(237,184,103,.4);border-radius:var(--r);background:linear-gradient(180deg,rgba(237,184,103,.09),rgba(6,6,14,.55));-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);box-shadow:var(--shadow)}
+  .rec .lab{font:500 11px var(--mono);letter-spacing:.16em;color:var(--amber);text-transform:uppercase}
+  .rec h2{margin:10px 0 10px;font:400 34px/1.1 var(--serif);letter-spacing:-.01em}
+  @media(min-width:640px){.rec h2{font-size:42px}}
+  .rec p{color:var(--body);margin:0 0 14px;line-height:1.6}
+  .conf{display:inline-flex;align-items:center;gap:8px;font:12px var(--mono);color:#fff;background:rgba(255,255,255,.06);border:1px solid var(--line-2);border-radius:999px;padding:6px 13px}
+  .conf b{color:var(--amber)}
+  .adj{margin-top:12px;font:12.5px var(--mono);color:var(--dim)} .adj b{color:var(--lilac-2)}
+  .tile h3{margin:0 0 8px;font:700 16px/1.3 var(--display)}
+  .tile .ct{font-size:14px;color:var(--body);line-height:1.6}
+  .tile .ctag{display:inline-block;margin-top:10px;font:600 11px var(--mono);color:#020617;background:var(--amber);border-radius:999px;padding:4px 10px}
+  .lane{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+  .sat{font:600 10px var(--mono);padding:4px 9px;border-radius:999px;text-transform:uppercase;letter-spacing:.08em}
+  .sat.heavy{background:rgba(251,113,133,.14);color:#fda4af;border:1px solid rgba(251,113,133,.35)}
+  .sat.moderate{background:rgba(251,191,36,.12);color:#fcd34d;border:1px solid rgba(251,191,36,.35)}
+  .sat.light{background:var(--ok-bg);color:var(--ok-ink);border:1px solid rgba(52,211,153,.35)}
+  .lane .ang{flex:1} .lane .em{font:11.5px var(--mono);color:var(--dim)}
+  .ev{font-size:14px;color:var(--body);padding:11px 0;border-bottom:1px solid var(--line);line-height:1.55}
+  .ev a{color:var(--lilac-2);text-decoration:none;font:11px var(--mono)} .ev b{color:#fff}
+  .alt{font-size:14px;color:var(--body);padding:10px 0;border-bottom:1px solid var(--line);line-height:1.55}
+  .alt b{color:#fff} .alt .c{font:11px var(--mono);color:var(--amber)}
+  .metaline{margin-top:22px;font:11.5px/1.6 var(--mono);color:var(--ink-45)}
+  .cachedbadge{display:inline-block;margin-bottom:12px;font:600 11px var(--mono);color:var(--ok-ink);background:var(--ok-bg);border:1px solid rgba(52,211,153,.3);border-radius:999px;padding:4px 11px}
+  .deg{margin-top:14px;padding:12px 14px;border:1px solid rgba(251,191,36,.35);border-radius:12px;background:rgba(251,191,36,.08);color:#fcd34d;font:12.5px/1.5 var(--mono);display:none}
+  .only-mb,.only-ct{display:none}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div>
-      <div class="brand">WHITE<b>SPACE</b></div>
-    </div>
-    <div class="by"><span id="byLine">an AIdeazz agent</span> · <a href="https://aideazz.xyz/sop-ai-ops.html" target="_blank" rel="noopener">AI Ops SOP ↗</a> · <a href="atlas.html" id="byAtlas">← Atlas radar</a><span class="langsw"><button id="langEN">EN</button><button id="langES">ES</button></span></div>
-  </header>
-  <div class="tag" id="tagMain"></div>
-  <div class="tag" id="tagHonest" style="font-size:12.5px;color:var(--dim);margin-top:-14px"></div>
+<div class="bd" aria-hidden="true">
+  <img src="media/ws-villa.webp" alt="" />
+  <video id="va" muted playsinline preload="none" poster="media/ws-villa.webp"></video>
+  <video id="vb" muted playsinline preload="none"></video>
+  <div class="veil"></div>
+  <div class="dots"></div>
+  <div class="ray r1"></div><div class="ray r2"></div><div class="ray r3"></div>
+</div>
 
-  <div class="card">
-    <div class="modes" id="modes">
-      <button class="mode on" data-mode="media_buyer" id="modeMb"></button>
-      <button class="mode" data-mode="content" id="modeCt"></button>
+<main class="wrap">
+  <header class="top">
+    <a class="brandlink" href="https://aideazz.xyz/api" target="_blank" rel="noopener" aria-label="AIdeazz AI Lab">
+      <span class="mark"></span>
+      <span class="wordmark"><span class="w">WHITE<b>SPACE</b></span><span class="lab"><i></i>AIdeazz AI Lab<i></i></span></span>
+    </a>
+    <nav class="nav">
+      <a class="navl" href="atlas.html" id="navAtlas">Atlas radar →</a>
+      <span class="langsw"><button id="langEN">EN</button><button id="langES">ES</button></span>
+    </nav>
+  </header>
+
+  <div class="ticker" id="ticker"></div>
+
+  <p class="kicker" id="kicker"></p>
+  <h1 class="display" id="h1"></h1>
+  <p class="sub" id="sub"></p>
+  <p class="honest" id="honest"></p>
+
+  <section class="glass" id="tool">
+    <div class="modes">
+      <button class="mode on" data-mode="content" id="modeCt"></button>
+      <button class="mode" data-mode="media_buyer" id="modeMb"></button>
     </div>
     <div class="inrow">
-      <input id="q" placeholder="" autocomplete="off" />
-      <button id="go"></button>
+      <input class="field" id="q" autocomplete="off" />
+      <select class="field" id="country" aria-label="Country"></select>
+      <button class="btn" id="go"></button>
     </div>
     <div class="chips" id="chips"></div>
+    <div class="fine" id="fine"></div>
 
     <div class="status" id="status">
       <div class="bar"><div class="fill" id="fill"></div></div>
       <div class="feed" id="feed"></div>
     </div>
-  </div>
+    <div class="lead" id="quotaLead" style="display:none"></div>
+  </section>
 
   <div class="results" id="results">
     <div class="deg" id="deg"></div>
-
     <div class="sec">
+      <span class="cachedbadge" id="cachedBadge" style="display:none"></span>
       <div class="rec">
         <div class="lab" id="recLab"></div>
         <h2 id="recAngle"></h2>
@@ -134,200 +104,236 @@
       </div>
     </div>
 
-    <!-- media_buyer sections -->
-    <div class="sec mb">
-      <div class="h" id="hAdcopy"></div>
-      <div class="grid" id="adcopy"></div>
-    </div>
-    <div class="sec mb">
-      <div class="h" id="hLp"></div>
-      <div class="tile" id="lp"></div>
-    </div>
+    <div class="sec only-mb"><span class="eyebrow" id="hAdcopy"></span><div class="grid2" id="adcopy"></div></div>
+    <div class="sec only-mb"><span class="eyebrow" id="hLp"></span><div class="card tile" id="lp"></div></div>
 
-    <!-- content sections -->
-    <div class="sec ct">
-      <div class="h" id="hBlog"></div>
-      <div class="tile" id="blog"></div>
-    </div>
-    <div class="sec ct">
-      <div class="h" id="hSocial"></div>
-      <div class="grid" id="social"></div>
-    </div>
-    <div class="sec ct">
-      <div class="h" id="hHub"></div>
-      <div class="tile" id="hub"></div>
-    </div>
+    <div class="sec only-ct"><span class="eyebrow" id="hBlog"></span><div class="card tile" id="blog"></div></div>
+    <div class="sec only-ct"><span class="eyebrow" id="hSocial"></span><div class="grid3" id="social"></div></div>
+    <div class="sec only-ct"><span class="eyebrow" id="hHub"></span><div class="card tile" id="hub"></div></div>
 
-    <div class="sec">
-      <div class="h" id="hLanes"></div>
-      <div id="lanes"></div>
-    </div>
+    <div class="sec"><span class="eyebrow" id="hLanes"></span><div id="lanes"></div></div>
+    <div class="sec" id="altSec"><span class="eyebrow" id="hAlts"></span><div id="alts"></div></div>
+    <div class="sec"><span class="eyebrow" id="hEv"></span><div id="evidence"></div></div>
 
-    <div class="sec" id="altSec">
-      <div class="h" id="hAlts"></div>
-      <div id="alts"></div>
-    </div>
-
-    <div class="sec">
-      <div class="h" id="hEv"></div>
-      <div id="evidence"></div>
-    </div>
-
-    <div class="trackcta" id="trackCtaBottom">
-      <p><span id="trackP1"></span> <b id="trackLabel"></b> <span id="trackP2"></span></p>
-      <a id="trackLinkBottom" class="trackbtn" href="atlas.html"></a>
-      <div class="sub" id="trackSub"></div>
-    </div>
-
-    <div class="meta" id="meta"></div>
+    <section class="sec glass" id="trackBox">
+      <span class="eyebrow" id="trackEyebrow"></span>
+      <h3 class="h2" id="trackH" style="margin-top:8px"></h3>
+      <div class="lead" id="trackLead"></div>
+    </section>
+    <div class="metaline" id="meta"></div>
   </div>
 
-  <div class="how">
-    <div class="howstep"><span class="hn">1</span><span id="how1"></span></div>
-    <div class="howstep"><span class="hn">2</span><span id="how2"></span></div>
-    <div class="howstep"><span class="hn">3</span><span id="how3"></span></div>
-  </div>
-  <div class="footnote" id="footnote"></div>
+  <section class="sec">
+    <span class="eyebrow" id="exEyebrow"></span>
+    <h2 class="h2" id="exH"></h2>
+    <p class="lede" id="exLede"></p>
+    <div class="reels" id="reels"></div>
+  </section>
 
-</div>
+  <section class="sec">
+    <span class="eyebrow" id="tiersEyebrow"></span>
+    <h2 class="h2" id="tiersH"></h2>
+    <p class="lede" id="tiersLede"></p>
+    <div class="grid3" id="tiers"></div>
+    <div class="glass lead" id="contactBox" style="display:none;margin-top:16px"></div>
+  </section>
 
+  <section class="sec">
+    <span class="eyebrow" id="howEyebrow"></span>
+    <div class="how">
+      <div class="card"><span class="idx">01</span><span id="how1"></span></div>
+      <div class="card"><span class="idx">02</span><span id="how2"></span></div>
+      <div class="card"><span class="idx">03</span><span id="how3"></span></div>
+    </div>
+  </section>
+
+  <section class="cta-final">
+    <h2 id="finalH"></h2>
+    <p id="finalP"></p>
+    <a class="btn btn-pill" id="finalBtn" href="https://aideazz.xyz/pay/analisis-tecnico?sku=diagnostic_call&lng=es" target="_blank" rel="noopener"></a>
+  </section>
+
+  <footer class="foot">
+    <div class="cols">
+      <div><span class="eyebrow">AIdeazz AI Lab</span><a href="https://aideazz.xyz/api" target="_blank" rel="noopener">aideazz.xyz/api ↗</a><a href="https://aideazz.xyz/portfolio" target="_blank" rel="noopener" id="fPortfolio">Portfolio ↗</a></div>
+      <div><span class="eyebrow" id="fTools"></span><a href="./">WHITESPACE</a><a href="atlas.html">Atlas radar</a></div>
+    </div>
+    <div class="fine" id="fFilm" style="max-width:24rem"></div>
+    <div class="big">© AIdeazz AI Lab · Panamá</div>
+  </footer>
+</main>
+
+<script src="skin.js?v=20261019"></script>
 <script>
-const EXAMPLES = {
-  media_buyer: ['medicare advantage','solar installation','auto insurance','debt relief','weight loss'],
-  content: ['ai marketing agency','fractional CTO services','autonomous AI agents','AI customer support']
-};
-const $ = (id)=>document.getElementById(id);
-const esc = (s)=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const $=(id)=>document.getElementById(id);
+const esc=Skin.esc;
+const PAY='https://aideazz.xyz/pay/analisis-tecnico?sku=diagnostic_call&lng=';
+/* The owner's token (see Skin.ownerToken) is passed to the scan so the owner is never metered. */
+const OWNER_TOKEN=Skin.ownerToken;
 
-/* ── i18n (EN/ES) — same pattern as aideazz.xyz/portfolio: toggle + browser auto-detect ── */
-const I18N = {
-  en: {
-    title:'WHITESPACE — find the ad nobody is running yet',
-    byLine:'an AIdeazz agent', byAtlas:'← Atlas radar',
-    tagMain:'Every spy tool tells you to <b>copy the ad that\'s already winning</b> — so everyone piles into the same lane. WHITESPACE does the opposite: it maps which angles are <b>saturated</b> and surfaces the adjacent angle <b>almost nobody is running yet</b> — a ranked hypothesis to test, with a sourced evidence trail.',
-    tagHonest:'Honest by design: public ad libraries expose <b style="color:var(--mut)">no</b> CTR/spend/ROAS. WHITESPACE measures what\'s <b style="color:var(--mut)">observable</b> — angle saturation — and ranks the gap as a hypothesis, never a guaranteed winner.',
-    modeMb:'Ad angles <span>· media buyer</span>', modeCt:'Content angles <span>· AIdeazz engine</span>',
-    phMedia:'Enter a vertical or offer — e.g. medicare advantage, solar, auto insurance',
-    phContent:'Enter a topic you want to own — e.g. ai marketing agency, fractional CTO services',
-    go:'Find the whitespace',
-    recLab:'▸ Recommended whitespace angle',
-    hAdcopy:'Launch-ready ad copy', hLp:'Landing-page concept',
-    hBlog:'Blog brief — drops into your Dev.to / aideazz.xyz pipeline',
-    hSocial:'Social atoms — drop into Buffer', hHub:'HubSpot campaign angle',
-    hLanes:'Crowded lanes — what to avoid', hAlts:'Other whitespace bets',
-    hEv:'Evidence trail — live ads behind the call',
-    trackP1:'If this market is worth watching, you can add', trackP2:'to Atlas radar for daily scoring and campaign export.',
-    trackBtn:'Add to Atlas radar',
-    trackSub:'Optional · daily refresh at 9 AM Panama · one-shot discovery stays on this page',
-    how1:'Pick a vertical or offer — Atlas points its radar at that market.',
-    how2:'It mines the live ad libraries via Bright Data and deconstructs every running ad into its angle.',
-    how3:'You get the open angle almost nobody is running — ranked, with a clickable evidence trail.',
-    footnote:'Public ad-transparency data only · <b style="color:var(--mut)">One-shot discovery</b> — not daily tracking. To watch a market over time, use <b style="color:var(--acc)">Add to Atlas radar</b> at the bottom of your results · part of the <a href="atlas.html">Atlas Shifted</a> engine · <a href="https://aideazz.xyz/portfolio" target="_blank" rel="noopener">aideazz.xyz/portfolio ↗</a>',
-    confidence:'confidence', owns:'owns', borrows:'borrows proven psychology from →',
-    hero:'HERO', keyword:'KEYWORD', xhook:'X thread hook',
-    noEvidence:'No live evidence in this run.', scanned:'scanned', creatives:'creatives',
-    connecting:'connecting…', streamClosed:'stream closed',
-    noteCopyLang:'',
-  },
-  es: {
-    title:'WHITESPACE — encuentra el anuncio que nadie está publicando todavía',
-    byLine:'un agente de AIdeazz', byAtlas:'← Radar Atlas',
-    tagMain:'Todas las herramientas de espionaje te dicen que <b>copies el anuncio que ya está ganando</b> — y todos terminan en el mismo carril. WHITESPACE hace lo contrario: mapea qué ángulos están <b>saturados</b> y revela el ángulo adyacente que <b>casi nadie está usando todavía</b> — una hipótesis clasificada para probar, con evidencia verificable.',
-    tagHonest:'Honesto por diseño: las bibliotecas públicas de anuncios <b style="color:var(--mut)">no</b> exponen CTR/gasto/ROAS. WHITESPACE mide lo <b style="color:var(--mut)">observable</b> — la saturación de ángulos — y clasifica la brecha como hipótesis, nunca como ganador garantizado.',
-    modeMb:'Ángulos de anuncios <span>· media buyer</span>', modeCt:'Ángulos de contenido <span>· motor AIdeazz</span>',
-    phMedia:'Escribe un vertical u oferta — ej. seguros de auto, paneles solares, medicare',
-    phContent:'Escribe un tema que quieras dominar — ej. agencia de marketing con IA, CTO fraccional',
-    go:'Encontrar el whitespace',
-    recLab:'▸ Ángulo whitespace recomendado',
-    hAdcopy:'Copy de anuncio listo para lanzar', hLp:'Concepto de landing page',
-    hBlog:'Brief de blog — para tu pipeline Dev.to / aideazz.xyz',
-    hSocial:'Átomos sociales — listos para Buffer', hHub:'Ángulo de campaña HubSpot',
-    hLanes:'Carriles saturados — qué evitar', hAlts:'Otras apuestas whitespace',
-    hEv:'Evidencia — anuncios reales detrás del análisis',
-    trackP1:'Si este mercado vale la pena vigilarlo, puedes añadir', trackP2:'al radar Atlas para scoring diario y exportación de campañas.',
-    trackBtn:'Añadir al radar Atlas',
-    trackSub:'Opcional · actualización diaria a las 9 AM Panamá · el descubrimiento único se queda en esta página',
-    how1:'Elige un vertical u oferta — Atlas apunta su radar a ese mercado.',
-    how2:'Extrae las bibliotecas de anuncios en vivo vía Bright Data y descompone cada anuncio activo en su ángulo.',
-    how3:'Obtienes el ángulo abierto que casi nadie usa — clasificado, con evidencia clicable.',
-    footnote:'Solo datos públicos de transparencia publicitaria · <b style="color:var(--mut)">Descubrimiento único</b> — no es seguimiento diario. Para vigilar un mercado en el tiempo, usa <b style="color:var(--acc)">Añadir al radar Atlas</b> al final de tus resultados · parte del motor <a href="atlas.html">Atlas Shifted</a> · <a href="https://aideazz.xyz/portfolio" target="_blank" rel="noopener">aideazz.xyz/portfolio ↗</a>',
-    confidence:'confianza', owns:'domina', borrows:'toma psicología probada de →',
-    hero:'HERO', keyword:'PALABRA CLAVE', xhook:'Gancho de hilo X',
-    noEvidence:'Sin evidencia en vivo en esta corrida.', scanned:'escaneados', creatives:'creativos',
-    connecting:'conectando…', streamClosed:'conexión cerrada',
-    noteCopyLang:'Nota: el copy creativo se genera en inglés (mercado de anuncios de EE.UU.).',
-  }
-};
-let LANG = localStorage.getItem('ws_lang') || ((navigator.language||'').toLowerCase().startsWith('es') ? 'es' : 'en');
-const t = (k)=> (I18N[LANG] && I18N[LANG][k]!==undefined ? I18N[LANG][k] : I18N.en[k]||k);
+/* Strong-fit markets — a chip FILLS the form, it never starts a scan by itself. Country follows the market. */
+const MARKETS=[
+  {en:'dental implants', es:'implantes dentales', country:'PA', tagEn:'Panamá', tagEs:'Panamá'},
+  {en:'medical tourism', es:'turismo médico', country:'CR', tagEn:'Costa Rica', tagEs:'Costa Rica'},
+  {en:'immigration lawyer', es:'abogado de inmigración', country:'PA', tagEn:'Panamá', tagEs:'Panamá'},
+  {en:'yacht charter', es:'alquiler de yates', country:'CO', tagEn:'Cartagena', tagEs:'Cartagena'},
+];
+const COUNTRIES=[['PA','Panamá'],['CR','Costa Rica'],['CO','Colombia'],['MX','México'],['DO','Rep. Dominicana'],['GT','Guatemala'],['EC','Ecuador'],['PE','Perú'],['CL','Chile'],['AR','Argentina'],['ES','España'],['US','USA']];
+
+const I18N={
+en:{
+  title:'WHITESPACE — find the ad nobody is running yet',
+  navAtlas:'Atlas weekly radar →',
+  ticker:['GEO','AEO','Tech SEO','<b>WhatsApp AI agents</b>','AI automation','AI promo video','<b>Panamá</b>','Costa Rica','Colombia','México','Dental implants','Medical tourism','Immigration & relocation','Luxury charters'],
+  kicker:'Ad & content whitespace finder · LatAm',
+  h1:'Find the angle <em>nobody is running yet</em>',
+  sub:'Every spy tool says <b>copy the ad that is already winning</b>, so everyone piles into the same lane. WHITESPACE maps which angles are <b>saturated in your market</b> and surfaces the open one: a ranked hypothesis to test, with a sourced evidence trail.',
+  honest:'Honest by design: public ad libraries expose no CTR, spend or ROAS. We measure what is observable (angle saturation) and rank the gap as a hypothesis, never a guaranteed winner.',
+  modeCt:'GEO / AEO content angles <span>· what ranks and gets cited</span>', modeMb:'Ad angles <span>· Meta + TikTok ads</span>',
+  phContent:'A service you want to own — e.g. dental implants, immigration lawyer',
+  phMedia:'A market or offer — e.g. dental implants, yacht charter',
+  go:'Find the whitespace →',
+  chipsLab:'Strong-fit markets',
+  fine:'<b>2 free scans a day</b> · no sign-up · 10 LatAm markets + Spain + US · the same search is kept for 7 days',
+  recLab:'Recommended whitespace angle',
+  hAdcopy:'Launch-ready ad copy', hLp:'Landing-page concept',
+  hBlog:'Blog brief — built to be found and cited (GEO / AEO)', hSocial:'Social atoms', hHub:'HubSpot campaign angle',
+  hLanes:'Crowded lanes — what to avoid', hAlts:'Other whitespace bets', hEv:'Evidence trail — the live units behind the call',
+  trackEyebrow:'Keep watching this market',
+  trackH:'Watch <em id="trackMarket"></em> every week',
+  trackIntro:'A one-shot scan is a photo. Weekly scans are the film: the same market and country, every week, so you see a window open. Leave your email and we get back to you about setting it up.',
+  quotaIntro:'<b>Your free scans for today are used.</b> Leave your email and we get back to you about this market — or go straight to the $100 diagnostic.',
+  quotaGlobalIntro:'<b>Today\'s free scans are all taken.</b> Leave your email and we get back to you about this market — or go straight to the $100 diagnostic.',
+  exEyebrow:'Already shipped by the engine',
+  exH:'Seven campaigns, <em>made, not mocked up</em>',
+  exLede:'Atlas writes campaign copy for its lanes every week; when a window is picked, we render the creative: a still image, then a 5-second video. These seven were rendered in June–July 2026 and stay here as real output, with the model that made each one.',
+  tiersEyebrow:'From a free taste to a running system',
+  tiersH:'Three ways to <em>work with it</em>',
+  tiersLede:'Start free. Pay only when you want a person to look at your business with you.',
+  howEyebrow:'How it works',
+  how1:'Pick a market and a country. Meta ads and Google results are read for that country; TikTok top ads are global.',
+  how2:'It reads the live ad libraries or what ranks on Google, and breaks every unit down into its angle.',
+  how3:'You get the open angle almost nobody is running, ranked, with clickable evidence.',
+  finalH:'Know where <em>the open window</em> is before you spend.',
+  finalP:'The $100 diagnostic puts a person on your business and your channels, with written results and a 45-minute call.',
+  finalBtn:'Book the $100 diagnostic →',
+  fTools:'Tools', fPortfolio:'Portfolio ↗',
+  fFilm:'Background film: AIdeazz AI Lab promo footage, reused.',
+  confidence:'confidence', owns:'owns', borrows:'borrows proven psychology from →', hero:'HERO', keyword:'KEYWORD', xhook:'X thread hook',
+  noEvidence:'No live evidence in this run.', scanned:'scanned', creatives:'units', connecting:'connecting…', streamClosed:'stream closed',
+  cached:'Cached scan from', noteCopyLang:'',
+},
+es:{
+  title:'WHITESPACE — encuentra el anuncio que nadie publica todavía',
+  navAtlas:'Radar semanal Atlas →',
+  ticker:['GEO','AEO','SEO técnico','<b>Agentes de WhatsApp con IA</b>','Automatización con IA','Video promocional con IA','<b>Panamá</b>','Costa Rica','Colombia','México','Implantes dentales','Turismo médico','Inmigración y reubicación','Chárter de lujo'],
+  kicker:'Buscador de whitespace en anuncios y contenido · LatAm',
+  h1:'Encuentra el ángulo que <em>nadie está usando todavía</em>',
+  sub:'Todas las herramientas de espionaje dicen <b>copia el anuncio que ya gana</b>, y todos terminan en el mismo carril. WHITESPACE mapea qué ángulos están <b>saturados en tu mercado</b> y revela el que está abierto: una hipótesis clasificada para probar, con evidencia verificable.',
+  honest:'Honesto por diseño: las bibliotecas públicas de anuncios no muestran CTR, gasto ni ROAS. Medimos lo observable (la saturación de ángulos) y presentamos la brecha como hipótesis, nunca como ganador garantizado.',
+  modeCt:'Ángulos de contenido GEO / AEO <span>· lo que posiciona y la IA cita</span>', modeMb:'Ángulos de anuncios <span>· Meta + TikTok</span>',
+  phContent:'Un servicio que quieres dominar — ej. implantes dentales, abogado de inmigración',
+  phMedia:'Un mercado u oferta — ej. implantes dentales, alquiler de yates',
+  go:'Encontrar el whitespace →',
+  chipsLab:'Mercados con mejor encaje',
+  fine:'<b>2 escaneos gratis al día</b> · sin registro · 10 mercados de LatAm + España + EE.UU. · la misma búsqueda se guarda 7 días',
+  recLab:'Ángulo whitespace recomendado',
+  hAdcopy:'Copy de anuncio listo para lanzar', hLp:'Concepto de landing page',
+  hBlog:'Brief de blog — hecho para ser encontrado y citado (GEO / AEO)', hSocial:'Átomos sociales', hHub:'Ángulo de campaña HubSpot',
+  hLanes:'Carriles saturados — qué evitar', hAlts:'Otras apuestas whitespace', hEv:'Evidencia — las piezas reales detrás del análisis',
+  trackEyebrow:'Sigue vigilando este mercado',
+  trackH:'Vigila <em id="trackMarket"></em> cada semana',
+  trackIntro:'Un escaneo es una foto. Los escaneos semanales son la película: el mismo mercado y país cada semana, para ver cuándo se abre una ventana. Déjanos tu email y te contactamos para configurarlo.',
+  quotaIntro:'<b>Ya usaste tus escaneos gratis de hoy.</b> Déjanos tu email y te contactamos sobre este mercado — o ve directo al diagnóstico de $100.',
+  quotaGlobalIntro:'<b>Los escaneos gratis de hoy ya se agotaron.</b> Déjanos tu email y te contactamos sobre este mercado — o ve directo al diagnóstico de $100.',
+  exEyebrow:'Ya producido por el motor',
+  exH:'Siete campañas, <em>hechas, no maquetas</em>',
+  exLede:'Atlas escribe copy de campaña para sus carriles cada semana; cuando se elige una ventana, renderizamos el creativo: una imagen y luego un video de 5 segundos. Estas siete se renderizaron en junio–julio de 2026 y quedan aquí como producción real, con el modelo que hizo cada una.',
+  tiersEyebrow:'De una prueba gratis a un sistema en marcha',
+  tiersH:'Tres formas de <em>trabajar con esto</em>',
+  tiersLede:'Empieza gratis. Paga solo cuando quieras que una persona revise tu negocio contigo.',
+  howEyebrow:'Cómo funciona',
+  how1:'Elige un mercado y un país. Los anuncios de Meta y los resultados de Google se leen para ese país; los top ads de TikTok son globales.',
+  how2:'Lee las bibliotecas de anuncios en vivo o lo que posiciona en Google, y descompone cada pieza en su ángulo.',
+  how3:'Obtienes el ángulo abierto que casi nadie usa, clasificado, con evidencia clicable.',
+  finalH:'Sabe dónde está <em>la ventana abierta</em> antes de invertir.',
+  finalP:'El diagnóstico de $100 pone a una persona sobre tu negocio y tus canales, con resultados escritos y una llamada de 45 minutos.',
+  finalBtn:'Reservar el diagnóstico de $100 →',
+  fTools:'Herramientas', fPortfolio:'Portafolio ↗',
+  fFilm:'Película de fondo: material promocional de AIdeazz AI Lab, reutilizado.',
+  confidence:'confianza', owns:'domina', borrows:'toma psicología probada de →', hero:'HERO', keyword:'PALABRA CLAVE', xhook:'Gancho de hilo X',
+  noEvidence:'Sin evidencia en vivo en esta corrida.', scanned:'escaneadas', creatives:'piezas', connecting:'conectando…', streamClosed:'conexión cerrada',
+  cached:'Escaneo guardado del', noteCopyLang:'',
+}};
+let LANG=(()=>{try{return localStorage.getItem('ws_lang')}catch{return null}})()||((navigator.language||'').toLowerCase().startsWith('en')?'en':'es');
+const t=(k)=>(I18N[LANG]&&I18N[LANG][k]!==undefined?I18N[LANG][k]:I18N.en[k]);
+
+let mode='content';
+let pickedMarket=null;
+const countrySel=$('country');
+countrySel.innerHTML=COUNTRIES.map(([c,n])=>'<option value="'+c+'">'+n+'</option>').join('');
+countrySel.value='PA';
+
+function paintChips(){
+  $('chips').innerHTML='<span class="eyebrow">'+esc(t('chipsLab'))+'</span>'+MARKETS.map((m,i)=>
+    '<button type="button" class="chip'+(pickedMarket===i?' on':'')+'" data-i="'+i+'">'+esc(m[LANG])+' <small>'+esc(LANG==='es'?m.tagEs:m.tagEn)+'</small></button>').join('');
+  $('chips').querySelectorAll('.chip').forEach(b=>b.onclick=()=>{
+    const m=MARKETS[+b.dataset.i]; pickedMarket=+b.dataset.i;
+    $('q').value=m[LANG]; countrySel.value=m.country; paintChips(); $('q').focus();
+  });
+  $('q').placeholder=mode==='content'?t('phContent'):t('phMedia');
+}
+function paintTiers(){
+  Skin.tiers($('tiers'),$('contactBox'),{lang:LANG,freeHref:'#tool',market:()=>$('q').value.trim(),country:()=>lastQuery?lastCountry:''});
+}
 
 function applyLang(){
-  document.documentElement.lang = LANG;
-  document.title = t('title');
-  $('byLine').textContent = t('byLine');
-  $('byAtlas').textContent = t('byAtlas');
-  $('tagMain').innerHTML = t('tagMain');
-  $('tagHonest').innerHTML = t('tagHonest');
-  $('modeMb').innerHTML = t('modeMb');
-  $('modeCt').innerHTML = t('modeCt');
-  $('go').textContent = t('go');
-  $('recLab').textContent = t('recLab');
-  $('hAdcopy').textContent = t('hAdcopy');
-  $('hLp').textContent = t('hLp');
-  $('hBlog').textContent = t('hBlog');
-  $('hSocial').textContent = t('hSocial');
-  $('hHub').textContent = t('hHub');
-  $('hLanes').textContent = t('hLanes');
-  $('hAlts').textContent = t('hAlts');
-  $('hEv').textContent = t('hEv');
-  $('trackP1').textContent = t('trackP1');
-  $('trackP2').textContent = t('trackP2');
-  $('trackLinkBottom').textContent = t('trackBtn');
-  $('trackSub').textContent = t('trackSub');
-  $('how1').textContent = t('how1');
-  $('how2').textContent = t('how2');
-  $('how3').textContent = t('how3');
-  $('footnote').innerHTML = t('footnote');
-  $('langEN').classList.toggle('on', LANG==='en');
-  $('langES').classList.toggle('on', LANG==='es');
-  paintChips();
+  document.documentElement.lang=LANG;
+  document.title=t('title');
+  const set=(id,k,html)=>{const el=$(id); if(el) el[html?'innerHTML':'textContent']=t(k||id);};
+  set('navAtlas'); set('kicker'); set('h1',0,1); set('sub',0,1); set('honest');
+  $('modeCt').innerHTML=t('modeCt'); $('modeMb').innerHTML=t('modeMb');
+  set('go'); set('fine',0,1); set('recLab');
+  ['hAdcopy','hLp','hBlog','hSocial','hHub','hLanes','hAlts','hEv','trackEyebrow','exEyebrow','exLede','tiersEyebrow','tiersLede','howEyebrow','how1','how2','how3','finalP','finalBtn','fTools','fPortfolio','fFilm'].forEach(k=>set(k));
+  ['exH','tiersH','finalH'].forEach(k=>set(k,0,1));
+  $('finalBtn').href=PAY+LANG;
+  Skin.ticker($('ticker'),t('ticker'));
+  $('langEN').classList.toggle('on',LANG==='en'); $('langES').classList.toggle('on',LANG==='es');
+  paintChips(); paintTiers();
+  Skin.examples($('reels'),LANG);
+  if(lastQuery) paintTrack();
 }
-$('langEN').onclick=()=>{ LANG='en'; localStorage.setItem('ws_lang','en'); applyLang(); };
-$('langES').onclick=()=>{ LANG='es'; localStorage.setItem('ws_lang','es'); applyLang(); };
+function setLang(l){ LANG=l; try{localStorage.setItem('ws_lang',l)}catch{} applyLang(); }
+$('langEN').onclick=()=>setLang('en');
+$('langES').onclick=()=>setLang('es');
 
-let mode = 'media_buyer';
-function paintChips(){
-  const chips=$('chips'); chips.innerHTML='';
-  EXAMPLES[mode].forEach(e=>{const c=document.createElement('span');c.className='chip';c.textContent=e;c.onclick=()=>{$('q').value=e;run();};chips.appendChild(c);});
-  $('q').placeholder = mode==='content' ? t('phContent') : t('phMedia');
-}
 document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{
   mode=b.dataset.mode;
   document.querySelectorAll('.mode').forEach(x=>x.classList.toggle('on',x===b));
   paintChips();
 });
-applyLang();
 
-let running=false;
-let lastQuery='';
+let running=false, lastQuery='', lastCountry='PA';
 function run(){
   if(running) return;
   const v=$('q').value.trim();
-  if(!v) return;
-  lastQuery=v;
+  if(!v){ $('q').focus(); return; }
+  lastQuery=v; lastCountry=countrySel.value;
   running=true; $('go').disabled=true;
-  $('status').style.display='block';
-  $('results').style.display='none';
+  $('status').style.display='block'; $('results').style.display='none'; $('quotaLead').style.display='none';
   $('feed').innerHTML=''; $('fill').style.width='0%';
   feed('start',t('connecting'));
-
-  const es=new EventSource('api/run?vertical='+encodeURIComponent(v)+'&mode='+encodeURIComponent(mode));
+  const es=new EventSource('api/run?vertical='+encodeURIComponent(v)+'&mode='+encodeURIComponent(mode)+'&country='+encodeURIComponent(lastCountry)+(OWNER_TOKEN?'&token='+encodeURIComponent(OWNER_TOKEN):''));
   es.onmessage=(m)=>{
     let e; try{e=JSON.parse(m.data);}catch{return;}
     if(typeof e.pct==='number') $('fill').style.width=e.pct+'%';
+    if(e.stage==='done'&&e.data){ feed(e.stage,e.message); render(e.data); es.close(); finish(); return; }
+    if(e.stage==='error'){
+      es.close(); finish();
+      if(e.code==='quota'||e.code==='quota_global'){ showQuota(e.code); return; }
+      feed('error',e.message); return;
+    }
     feed(e.stage,e.message);
-    if(e.stage==='done'&&e.data){ render(e.data); es.close(); finish(); }
-    if(e.stage==='error'){ feed('error',e.message); es.close(); finish(); }
   };
   es.addEventListener('close',()=>{es.close();finish();});
   es.onerror=()=>{ if(running){feed('error',t('streamClosed'));} es.close(); finish(); };
@@ -335,9 +341,18 @@ function run(){
 function finish(){ running=false; $('go').disabled=false; }
 function feed(stage,msg){
   const d=document.createElement('div');
-  const cls = stage==='error'?'er':'st';
-  d.innerHTML='<span class="'+cls+'">'+esc(stage)+'</span> · '+esc(msg);
+  d.innerHTML='<span class="'+(stage==='error'?'er':'st')+'">'+esc(stage)+'</span> · '+esc(msg);
   $('feed').appendChild(d); $('feed').scrollTop=$('feed').scrollHeight;
+}
+function showQuota(code){
+  $('status').style.display='none';
+  const box=$('quotaLead'); box.style.display='block';
+  Skin.leadForm(box,{kind:'scan_quota',lang:LANG,intro:t(code==='quota_global'?'quotaGlobalIntro':'quotaIntro')+' <a href="'+PAY+LANG+'" target="_blank" rel="noopener">$100 →</a>',market:()=>lastQuery,country:()=>lastCountry});
+}
+function paintTrack(){
+  $('trackH').innerHTML=t('trackH');
+  const tm=$('trackMarket'); if(tm) tm.textContent=lastQuery;
+  Skin.leadForm($('trackLead'),{kind:'weekly_tracking',lang:LANG,intro:esc(t('trackIntro')),market:()=>lastQuery,country:()=>lastCountry});
 }
 
 function render(p){
@@ -345,19 +360,17 @@ function render(p){
   const r=p.recommendation||{};
   $('recAngle').textContent=r.angle||'—';
   $('recRationale').textContent=r.rationale||'';
-  $('recConf').innerHTML=t('confidence')+' <b style="color:var(--acc)">'+(r.confidence||0)+'</b>/100 · '+t('owns')+' <b>'+esc(r.emotion||'—')+'</b> · '+esc(r.hookType||'');
+  $('recConf').innerHTML=t('confidence')+' <b>'+(r.confidence||0)+'</b>/100 · '+t('owns')+' <b>'+esc(r.emotion||'—')+'</b> · '+esc(r.hookType||'');
   $('recAdj').innerHTML=(r.adjacentTo&&r.adjacentTo.length)?(t('borrows')+' <b>'+r.adjacentTo.map(esc).join('</b>, <b>')+'</b>'):'';
+  const cb=$('cachedBadge');
+  if(p.cached&&p.cached.at){ cb.textContent='↺ '+t('cached')+' '+String(p.cached.at).slice(0,10)+' · '+lastCountry; cb.style.display='inline-block'; } else cb.style.display='none';
 
-  const isContent = p.kind==='content';
-  document.querySelectorAll('.results .mb').forEach(el=>el.style.display=isContent?'none':'block');
-  document.querySelectorAll('.results .ct').forEach(el=>el.style.display=isContent?'block':'none');
-
-  const copyNote = (LANG==='es' && t('noteCopyLang')) ? '<div class="ct" style="color:var(--dim);margin-top:8px">'+t('noteCopyLang')+'</div>' : '';
+  const isContent=p.kind==='content';
+  document.querySelectorAll('.results .only-mb').forEach(el=>el.style.display=isContent?'none':'block');
+  document.querySelectorAll('.results .only-ct').forEach(el=>el.style.display=isContent?'block':'none');
 
   if(!isContent){
-    $('adcopy').innerHTML=((p.adCopy||[]).map(c=>(
-      '<div class="tile"><h3>'+esc(c.headline)+'</h3><div class="ct">'+esc(c.primaryText)+'</div><span class="cta">'+esc(c.cta)+'</span></div>'
-    )).join('')||'<div class="ct" style="color:var(--dim)">—</div>')+copyNote;
+    $('adcopy').innerHTML=(p.adCopy||[]).filter(Boolean).map(c=>'<div class="card tile"><h3>'+esc(c.headline)+'</h3><div class="ct">'+esc(c.primaryText)+'</div><span class="ctag">'+esc(c.cta)+'</span></div>').join('')||'<div class="ct">—</div>';
     const lp=p.landingPage||{};
     $('lp').innerHTML='<h3>'+esc(lp.hook||'—')+'</h3><div class="ct">'+esc(lp.subhead||'')+'<br><br><span style="color:var(--dim)">'+t('hero')+':</span> '+esc(lp.heroConcept||'')+'</div>';
   } else {
@@ -365,48 +378,29 @@ function render(p){
     $('blog').innerHTML='<h3>'+esc(b.title||'—')+'</h3><div class="ct"><span style="color:var(--dim)">'+t('keyword')+':</span> '+esc(b.targetKeyword||'')+'<br><br>'+
       (b.outline||[]).map(o=>'• '+esc(o)).join('<br>')+'<br><br><span style="color:var(--dim)">AEO:</span> '+esc(b.aeoHint||'')+'</div>';
     const s=p.social||{};
-    $('social').innerHTML=
-      '<div class="tile"><h3>LinkedIn</h3><div class="ct">'+esc(s.linkedin||'').replace(/\n/g,'<br>')+'</div></div>'+
-      '<div class="tile"><h3>Instagram</h3><div class="ct">'+esc(s.instagram||'')+'</div></div>'+
-      '<div class="tile"><h3>'+t('xhook')+'</h3><div class="ct">'+esc(s.xThreadHook||'')+'</div></div>';
-    $('hub').innerHTML='<div class="ct">'+esc(p.hubspotCampaignAngle||'—')+'</div>'+copyNote;
+    $('social').innerHTML='<div class="card tile"><h3>LinkedIn</h3><div class="ct">'+esc(s.linkedin||'').replace(/\n/g,'<br>')+'</div></div>'+
+      '<div class="card tile"><h3>Instagram</h3><div class="ct">'+esc(s.instagram||'')+'</div></div>'+
+      '<div class="card tile"><h3>'+t('xhook')+'</h3><div class="ct">'+esc(s.xThreadHook||'')+'</div></div>';
+    $('hub').innerHTML='<div class="ct">'+esc(p.hubspotCampaignAngle||'—')+'</div>';
   }
-
-  $('lanes').innerHTML=(p.crowdedLanes||[]).map(l=>(
-    '<div class="lane"><span class="sat '+esc(l.saturation)+'">'+esc(l.saturation)+'</span>'+
-    '<span class="ang">'+esc(l.angle)+' <span style="color:var(--dim)">('+ (l.creativeCount||0) +')</span></span>'+
-    '<span class="em">'+esc(l.dominantEmotion||'')+'</span></div>'
-  )).join('')||'<div class="ct" style="color:var(--dim)">—</div>';
-
+  $('lanes').innerHTML=(p.crowdedLanes||[]).map(l=>'<div class="lane"><span class="sat '+esc(l.saturation)+'">'+esc(l.saturation)+'</span><span class="ang">'+esc(l.angle)+' <span style="color:var(--dim)">('+(l.creativeCount||0)+')</span></span><span class="em">'+esc(l.dominantEmotion||'')+'</span></div>').join('')||'<div class="ct">—</div>';
   const alts=p.alternativeBets||[];
   $('altSec').style.display=alts.length?'block':'none';
-  $('alts').innerHTML=alts.map(a=>(
-    '<div class="alt"><b>'+esc(a.angle)+'</b> <span class="c">'+(a.confidence||0)+'</span><br>'+esc(a.rationale)+'</div>'
-  )).join('');
-
-  $('evidence').innerHTML=(p.evidence||[]).map(e=>(
-    '<div class="ev"><b>'+esc(e.advertiser||'unknown')+'</b> — '+esc(e.insight)+'<br>'+
-    (e.sourceUrl?('<a href="'+esc(e.sourceUrl)+'" target="_blank" rel="noopener">'+esc(e.sourceUrl).slice(0,72)+'</a>'):'')+'</div>'
-  )).join('')||'<div class="ct" style="color:var(--dim)">'+t('noEvidence')+'</div>';
-
+  $('alts').innerHTML=alts.map(a=>'<div class="alt"><b>'+esc(a.angle)+'</b> <span class="c">'+(a.confidence||0)+'</span><br>'+esc(a.rationale)+'</div>').join('');
+  $('evidence').innerHTML=(p.evidence||[]).map(e=>'<div class="ev"><b>'+esc(e.advertiser||'unknown')+'</b> — '+esc(e.insight)+'<br>'+(e.sourceUrl?('<a href="'+esc(e.sourceUrl)+'" target="_blank" rel="noopener">'+esc(String(e.sourceUrl).slice(0,72))+'</a>'):'')+'</div>').join('')||'<div class="ct">'+t('noEvidence')+'</div>';
   const m=p.meta||{};
-  $('meta').textContent=t('scanned')+' '+(m.creativesScanned||0)+' '+t('creatives')+' · '+((m.sources&&m.sources.join('+'))||'knowledge-mode')+' · '+esc(m.llmProvider||'')+' · '+(m.durationMs||0)+'ms'+(m.degraded?' · DEGRADED':'');
+  $('meta').textContent=t('scanned')+' '+(m.creativesScanned||0)+' '+t('creatives')+' · '+((m.sources&&m.sources.join(' + '))||'knowledge mode')+' · '+(m.llmProvider||'')+(p.cached?'':' · '+(m.durationMs||0)+' ms')+(m.degraded?' · DEGRADED':'');
   const deg=$('deg');
-  if(m.degraded&&m.notes&&m.notes.length){ deg.style.display='block'; deg.textContent='⚠ '+m.notes.join('  '); }
-  else deg.style.display='none';
-
-  if(lastQuery){
-    const trackHref='atlas.html?q='+encodeURIComponent(lastQuery)+'&track=1';
-    $('trackLinkBottom').href=trackHref;
-    $('trackLabel').textContent=lastQuery;
-    $('trackCtaBottom').classList.add('show');
-  } else {
-    $('trackCtaBottom').classList.remove('show');
-  }
+  if(m.degraded&&m.notes&&m.notes.length){ deg.style.display='block'; deg.textContent='⚠ '+m.notes.join('  '); } else deg.style.display='none';
+  paintTrack();
+  $('results').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 $('go').onclick=run;
-$('q').addEventListener('keydown',e=>{if(e.key==='Enter')run();});
+$('q').addEventListener('keydown',e=>{ if(e.key==='Enter') run(); });
+$('q').addEventListener('input',()=>{ if(pickedMarket!==null){ pickedMarket=null; paintChips(); } });
+applyLang();
+Skin.backdrop(['ws-villa','ws-catamaran','ws-archipelago']);
 </script>
 </body>
 </html>

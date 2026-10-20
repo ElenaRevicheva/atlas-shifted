@@ -5,6 +5,10 @@ BASE="${1:-http://127.0.0.1:8095}"
 WS="${2:-/home/ubuntu/whitespace}"
 LOG="$WS/data/e2e-$(date -u +%Y%m%dT%H%M%SZ).log"
 exec > >(tee -a "$LOG") 2>&1
+# Since 19 Oct 2026 a script on the box gets no privilege from its address: it presents the owner
+# token, or it is metered (and refused on track) like any visitor.
+OWNER=$(grep -m1 -E '^(ATLAS_OWNER_TOKEN|ATLAS_SHIP_TOKEN)=' "$WS/.env" 2>/dev/null | cut -d= -f2- | tr -d '\r"'"'")
+AUTH=(); [ -n "$OWNER" ] && AUTH=(-H "Authorization: Bearer $OWNER")
 
 pass=0
 fail=0
@@ -21,7 +25,7 @@ crontab -l 2>/dev/null | grep -q 'atlas-capture-cron' && ok "cron registered" ||
 [[ -x "$WS/scripts/atlas-capture-cron.sh" ]] && ok "cron script executable" || bad "cron script not executable"
 
 note "2 · ATLAS RADAR API (daily memory)"
-ATLAS=$(curl -sf --max-time 15 "$BASE/api/atlas" || echo '{}')
+ATLAS=$(curl -sf --max-time 15 "${AUTH[@]}" "$BASE/api/atlas" || echo '{}')
 echo "$ATLAS" | python3 -c "
 import json,sys
 d=json.load(sys.stdin)
@@ -41,13 +45,14 @@ note "3 · WHITESPACE FINDER (one-shot /api/run · media_buyer)"
 TEST_V="personal ai companions on the go"
 echo "  vertical: \"$TEST_V\""
 RUN_LOG=$(mktemp)
-if curl -sfN --max-time 240 "$BASE/api/run?vertical=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$TEST_V'))")&mode=media_buyer" 2>/dev/null | tee "$RUN_LOG" | while read -r line; do
+if curl -sfN --max-time 240 "${AUTH[@]}" "$BASE/api/run?vertical=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$TEST_V'))")&mode=media_buyer" 2>/dev/null | tee "$RUN_LOG" | while read -r line; do
   [[ "$line" == data:* ]] && echo "  $line" | head -c 200
   echo "$line" | grep -q '"stage":"done"' && exit 0
   echo "$line" | grep -q '"stage":"error"' && exit 1
 done; then
   grep -q '"stage":"done"' "$RUN_LOG" && ok "WHITESPACE run completed" || bad "WHITESPACE run no done event"
-  grep -q '"stage":"recon"' "$RUN_LOG" && ok "WHITESPACE recon stage seen" || bad "WHITESPACE no recon"
+  # a cached scan (same market within 7 days) replays start + done only
+  { grep -q '"stage":"recon"' "$RUN_LOG" || grep -q '"cached"' "$RUN_LOG"; } && ok "WHITESPACE recon stage seen (or cached)" || bad "WHITESPACE no recon"
 else
   bad "WHITESPACE run failed or timed out"
 fi
@@ -56,7 +61,7 @@ rm -f "$RUN_LOG"
 note "4 · ADD TO RADAR (persist + score on board)"
 TRACK_LOG=$(mktemp)
 echo "  tracking: \"$TEST_V\""
-if curl -sfN --max-time 600 "$BASE/api/atlas/track?vertical=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$TEST_V'))")" 2>/dev/null | tee "$TRACK_LOG" | while read -r line; do
+if curl -sfN --max-time 600 "${AUTH[@]}" "$BASE/api/atlas/track?vertical=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$TEST_V'))")" 2>/dev/null | tee "$TRACK_LOG" | while read -r line; do
   [[ "$line" == data:* ]] && echo "  $line" | head -c 220
   echo "$line" | grep -q '"stage":"done"' && exit 0
   echo "$line" | grep -q '"stage":"error"' && exit 1
@@ -71,7 +76,7 @@ rm -f "$TRACK_LOG"
 [[ -f "$WS/data/tracked-verticals.json" ]] && ok "tracked-verticals.json exists" || bad "tracked-verticals.json missing"
 cat "$WS/data/tracked-verticals.json" 2>/dev/null | head -20
 
-ATLAS2=$(curl -sf --max-time 15 "$BASE/api/atlas" || echo '{}')
+ATLAS2=$(curl -sf --max-time 15 "${AUTH[@]}" "$BASE/api/atlas" || echo '{}')
 TRACKED=$(echo "$ATLAS2" | python3 -c "import json,sys; d=json.load(sys.stdin); print(len(d.get('tracked_verticals') or []))" 2>/dev/null)
 [[ "${TRACKED:-0}" -ge 1 ]] && ok "tracked verticals in API ($TRACKED)" || bad "no tracked verticals in API"
 BOARD2=$(echo "$ATLAS2" | python3 -c "import json,sys; print(len(json.load(sys.stdin).get('board') or []))" 2>/dev/null)

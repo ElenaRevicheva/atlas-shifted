@@ -21,10 +21,12 @@ import { bdScrapingBrowserFetch, bdFetch, bdSmartFetch, bdSerpSearch, htmlToText
 import { llmJson } from './llm.js';
 import type { AdCreative } from './types.js';
 
-const META_LIBRARY = (q: string) =>
-  `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=${encodeURIComponent(
-    q,
-  )}&search_type=keyword_unordered`;
+// country (19 Oct 2026): the public one-shot scan can look at a LatAm market (PA, CR, CO…).
+// The weekly capture (capture.ts) keeps its own US URL.
+const META_LIBRARY = (q: string, country = 'US') =>
+  `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${encodeURIComponent(
+    country,
+  )}&media_type=all&q=${encodeURIComponent(q)}&search_type=keyword_unordered`;
 
 const TIKTOK_TOPADS = (q: string) =>
   `https://ads.tiktok.com/business/creativecenter/inspiration/topads/pc/en?keyword=${encodeURIComponent(q)}`;
@@ -96,9 +98,9 @@ ${text}
 }
 
 /** Recon Meta Ad Library for a vertical. */
-export async function reconMeta(vertical: string): Promise<AdCreative[]> {
+export async function reconMeta(vertical: string, country = 'US'): Promise<AdCreative[]> {
   if (!hasBrightData()) return [];
-  const url = META_LIBRARY(vertical);
+  const url = META_LIBRARY(vertical, country);
   const html = (await bdScrapingBrowserFetch(url)) || (await bdFetch(url));
   if (!html) return [];
   return extractAdsFromHtml(html, vertical, 'meta_ad_library', url);
@@ -154,6 +156,7 @@ ${text}
 export async function reconContentSources(
   topic: string,
   onProgress?: (msg: string) => void,
+  country = 'US',
 ): Promise<{ creatives: AdCreative[]; sources: string[]; degraded: boolean }> {
   if (!hasBrightData()) {
     onProgress?.('Bright Data not configured — degrading to LLM market-knowledge mode (flagged).');
@@ -161,7 +164,7 @@ export async function reconContentSources(
   }
 
   onProgress?.(`Searching what ranks for "${topic}"…`);
-  const serp = await bdSerpSearch(`${topic} marketing OR services OR agency`, { num: 10 }).catch(() => []);
+  const serp = await bdSerpSearch(`${topic} marketing OR services OR agency`, { num: 10, gl: country.toLowerCase() }).catch(() => []);
   onProgress?.(`Found ${serp.length} ranking competitors. Reading their positioning…`);
 
   // Parallelize with bounded concurrency — sequential heavy fetches were the
@@ -198,14 +201,15 @@ export async function reconContentSources(
 export async function reconAllSources(
   vertical: string,
   onProgress?: (msg: string) => void,
+  country = 'US',
 ): Promise<{ creatives: AdCreative[]; sources: string[]; degraded: boolean }> {
   if (!hasBrightData()) {
     onProgress?.('Bright Data not configured — degrading to LLM market-knowledge mode (flagged).');
     return { creatives: [], sources: [], degraded: true };
   }
 
-  onProgress?.('Scanning Meta Ad Library…');
-  const meta = await reconMeta(vertical).catch(() => []);
+  onProgress?.(`Scanning Meta Ad Library (${country})…`);
+  const meta = await reconMeta(vertical, country).catch(() => []);
   onProgress?.(`Meta Ad Library: ${meta.length} creatives.`);
 
   onProgress?.('Scanning TikTok Creative Center…');

@@ -23,7 +23,12 @@ import type { RunMode, RunOutput, RunEvent, BattlePlan } from './types.js';
 
 export type Emit = (e: RunEvent) => void;
 
-export async function runWhitespace(vertical: string, emit: Emit, mode: RunMode = 'media_buyer'): Promise<RunOutput> {
+export async function runWhitespace(
+  vertical: string,
+  emit: Emit,
+  mode: RunMode = 'media_buyer',
+  country = 'US',
+): Promise<RunOutput> {
   const started = Date.now();
   const notes: string[] = [];
   const v = vertical.trim();
@@ -63,8 +68,8 @@ export async function runWhitespace(vertical: string, emit: Emit, mode: RunMode 
   emit({ stage: 'recon', message: mode === 'content' ? 'Mining competitor content…' : 'Mining the live ad market…', pct: 8 });
   const recon =
     mode === 'content'
-      ? await reconContentSources(v, (m) => emit({ stage: 'recon', message: m }))
-      : await reconAllSources(v, (m) => emit({ stage: 'recon', message: m }));
+      ? await reconContentSources(v, (m) => emit({ stage: 'recon', message: m }), country)
+      : await reconAllSources(v, (m) => emit({ stage: 'recon', message: m }), country);
   const { creatives, sources } = recon;
 
   // Degraded path — no live evidence.

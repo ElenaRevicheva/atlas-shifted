@@ -4,570 +4,569 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Atlas Shifted AIPA — Angle Window Radar</title>
+<meta name="description" content="Atlas by AIdeazz AI Lab reads the live ad market every Monday, scores every angle and ships test-ready creative when a window opens." />
 <link rel="icon" type="image/svg+xml" href="favicon.svg" />
 <link rel="apple-touch-icon" href="favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700&display=swap" />
+<link rel="preload" as="image" href="media/ws-night.webp" />
+<link rel="stylesheet" href="skin.css?v=20261019" />
 <style>
-  :root{
-    --bg:#0a0b0f; --panel:#12141c; --panel2:#171a24; --line:#242838;
-    --ink:#e8ebf2; --mut:#8b90a3; --dim:#5b6072;
-    --acc:#5eead4; --acc2:#a78bfa; --warn:#fbbf24; --hot:#fb7185; --ok:#34d399;
-    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-    --sans:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:radial-gradient(1200px 700px at 70% -10%,#1a1d2e 0%,var(--bg) 55%);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
-  .wrap{max-width:1120px;margin:0 auto;padding:30px 22px 80px}
-  header{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px}
-  .brand{font-family:var(--mono);font-weight:700;font-size:30px;letter-spacing:.16em}
-  .brand b{color:var(--acc)}
-  .by{font-size:12px;color:var(--dim);font-family:var(--mono)}
-  .by a{color:var(--acc2);text-decoration:none}
-  .tag{color:var(--mut);font-size:14.5px;margin:8px 0 4px;max-width:760px;line-height:1.5}
-  .tag b{color:var(--ink)}
-  .shrug{font-family:var(--mono);font-size:12px;color:var(--acc);margin:10px 0 22px}
-  .stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px}
-  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;min-width:120px}
-  .stat .n{font-family:var(--mono);font-size:22px;color:var(--acc)}
-  .stat .l{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
-  .stat.refreshing .n{color:var(--warn);font-size:18px}
-  .stat.refreshing .l{color:var(--warn)}
-  .refresh-banner{font-family:var(--mono);font-size:12px;color:var(--warn);background:#2a210c;border:1px solid #5a4715;border-radius:12px;padding:12px 14px;margin:-8px 0 18px;line-height:1.5;display:none}
+  .shrug{margin:14px auto 0;text-align:center;font:12px var(--mono);color:var(--amber);max-width:46rem}
+  .stats{margin-top:40px;padding:30px 0;border-block:1px solid var(--line);display:grid;grid-template-columns:repeat(2,1fr);gap:24px;text-align:center}
+  @media(min-width:640px){.stats{grid-template-columns:repeat(4,1fr)}}
+  .stat .n{display:block;font:400 40px/1 var(--serif);font-variant-numeric:tabular-nums;color:#fff}
+  .stat .l{display:block;margin-top:8px;font:500 10.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-45)}
+  .stat.refreshing .n{color:var(--warn);font-size:26px}
+  .refresh-banner{margin-top:18px;padding:12px 14px;border:1px solid rgba(251,191,36,.35);border-radius:12px;background:rgba(251,191,36,.08);color:#fcd34d;font:12px/1.5 var(--mono);display:none}
   .refresh-banner.show{display:block}
-  h2.sec{font-family:var(--mono);font-size:12px;letter-spacing:.16em;color:var(--dim);text-transform:uppercase;margin:30px 0 14px;border-bottom:1px solid var(--line);padding-bottom:8px}
-  .vcard{background:linear-gradient(180deg,var(--panel),#0e1017);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:14px}
+  .hero .lab{font:500 11px var(--mono);letter-spacing:.18em;color:var(--amber);text-transform:uppercase;margin-bottom:14px}
+  .hero .hgrid{display:grid;grid-template-columns:1fr;gap:14px 26px}
+  @media(min-width:640px){.hero .hgrid{grid-template-columns:1fr 1fr}}
+  .hero .k{font:500 10.5px var(--mono);color:var(--ink-45);text-transform:uppercase;letter-spacing:.12em;margin-bottom:5px}
+  .hero .v{color:#fff;font-weight:600;line-height:1.45}
+  .hero .v.big{font:400 30px/1.1 var(--serif)}
+  .hero .btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+  .hero-note{margin-top:12px;font:12.5px/1.45 var(--mono);color:var(--amber);display:none}
+  .draftnote{margin-top:6px;font:11px/1.5 var(--mono);color:var(--ink-45)}
+  .badge{display:inline-block;font:600 10px var(--mono);padding:4px 8px;border-radius:999px;text-align:center;letter-spacing:.08em;vertical-align:middle}
+  .ENTER{background:var(--ok-bg);color:var(--ok-ink);border:1px solid rgba(52,211,153,.35)}
+  .WATCH{background:rgba(251,191,36,.12);color:#fcd34d;border:1px solid rgba(251,191,36,.35)}
+  .AVOID{background:rgba(251,113,133,.14);color:#fda4af;border:1px solid rgba(251,113,133,.35)}
+  .STABLE{background:rgba(255,255,255,.05);color:var(--dim);border:1px solid var(--line-2)}
+  .datepill{font:500 10.5px var(--mono);color:var(--ink-45);border:1px solid var(--line);border-radius:999px;padding:3px 9px}
+  .datepill.fresh{color:var(--ok-ink);border-color:rgba(52,211,153,.35)}
+  .vcard{margin-bottom:14px}
   .vhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px}
-  .vname{font-size:16px;font-weight:600;letter-spacing:.02em}
-  .vmove{font-family:var(--mono);font-size:12px;color:var(--mut)}
-  .intelrow{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 12px}
-  .pill{font-family:var(--mono);font-size:10px;padding:4px 9px;border-radius:999px;border:1px solid var(--line);color:var(--mut)}
-  .pill.now{background:#10231a;color:var(--ok);border-color:#1d4a36}
-  .pill.wait{background:#3a2e10;color:var(--warn);border-color:#5a4715}
-  .pill.avoid{background:#3b1418;color:var(--hot);border-color:#5a1d22}
-  .pill.fresh{background:#0c1a17;color:var(--acc);border-color:#1f4a44}
-  .absent{background:var(--panel2);border:1px dashed var(--line);border-radius:10px;padding:10px 12px;margin:8px 0;font-size:12.5px;color:var(--mut);line-height:1.45}
-  .absent b{color:var(--acc2);font-family:var(--mono);font-size:11px}
-  .lane{display:grid;grid-template-columns:84px 1fr 56px 120px 64px;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--line);font-size:13.5px;cursor:pointer}
-  .lane:hover{background:rgba(94,234,212,.04)}
-  .badge{font-family:var(--mono);font-size:10px;padding:3px 7px;border-radius:6px;text-align:center;letter-spacing:.06em}
-  .ENTER{background:#10231a;color:var(--ok);border:1px solid #1d4a36}
-  .WATCH{background:#3a2e10;color:var(--warn);border:1px solid #5a4715}
-  .AVOID{background:#3b1418;color:var(--hot);border:1px solid #5a1d22}
-  .STABLE{background:#15171f;color:var(--dim);border:1px solid var(--line)}
-  .angle{color:var(--ink)}
-  .angle .b{font-family:var(--mono);font-size:11px;color:var(--dim)}
+  .vname{font:700 17px var(--display)}
+  .vmove{font:12px var(--mono);color:var(--dim)}
+  .intelrow{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 12px}
+  .pill{font:600 10px var(--mono);padding:4px 10px;border-radius:999px;border:1px solid var(--line-2);color:var(--mut)}
+  .pill.now{background:var(--ok-bg);color:var(--ok-ink);border-color:rgba(52,211,153,.35)}
+  .pill.wait{background:rgba(251,191,36,.12);color:#fcd34d;border-color:rgba(251,191,36,.35)}
+  .pill.avoid{background:rgba(251,113,133,.14);color:#fda4af;border-color:rgba(251,113,133,.35)}
+  .pill.fresh{color:var(--amber);border-color:rgba(237,184,103,.45)}
+  .absent{border:1px dashed var(--line-2);border-radius:12px;padding:10px 12px;margin:8px 0;font-size:13px;color:var(--body);line-height:1.5}
+  .absent b{color:var(--lilac-2);font:600 11px var(--mono)}
+  .note{color:var(--dim);font:12.5px/1.55 var(--mono);margin-top:6px}
+  .lane{display:grid;grid-template-columns:78px 1fr 56px 110px 46px;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line);font-size:14px;cursor:pointer}
+  .lane:hover{background:rgba(237,184,103,.05)}
+  @media(max-width:720px){.lane{grid-template-columns:70px 1fr 46px}.lane .spark,.lane .satbar{display:none}}
+  .angle .b{font:11px var(--mono);color:var(--dim)}
   .spark{width:56px;height:22px;display:block}
-  .satbar{height:7px;background:#0c0e15;border-radius:4px;overflow:hidden;border:1px solid var(--line)}
-  .satfill{height:100%;background:linear-gradient(90deg,var(--acc),var(--hot))}
-  .score{font-family:var(--mono);font-size:13px;color:var(--acc);text-align:right}
-  .concept{background:linear-gradient(180deg,#15212b,#101820);border:1px solid #1f4a44;border-radius:14px;padding:18px;margin-bottom:14px}
-  .concept .k{font-family:var(--mono);font-size:11px;color:var(--acc);letter-spacing:.14em;text-transform:uppercase}
-  .concept h3{margin:6px 0 4px;font-size:19px}
-  .concept .em{font-family:var(--mono);font-size:11.5px;color:var(--acc2)}
-  .concept .row{margin-top:9px;font-size:13.5px;color:var(--mut);line-height:1.5}
-  .concept .row b{color:var(--ink);font-weight:600}
-  .mutgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}
-  @media(max-width:720px){.mutgrid{grid-template-columns:1fr}.lane{grid-template-columns:72px 1fr 64px}}
-  .mut{background:#0c0e15;border:1px solid var(--line);border-radius:8px;padding:10px;font-size:12px;color:var(--mut)}
-  .mut .mh{font-family:var(--mono);font-size:10px;color:var(--acc);margin-bottom:4px}
-  .casset{width:100%;max-width:300px;border-radius:10px;border:1px solid #1f4a44;margin:12px 0 4px;display:block}
-  .ev{margin-top:10px;font-size:11.5px;font-family:var(--mono);color:var(--dim)}
-  .ev a{color:var(--acc2);text-decoration:none}
-  .note{color:var(--dim);font-size:12.5px;font-family:var(--mono);margin-top:6px}
-  .loading{color:var(--mut);font-family:var(--mono);font-size:13px;padding:30px 0}
-  .navlink{font-size:12px;font-family:var(--mono);color:var(--acc2);text-decoration:none}
-  .langsw{display:inline-flex;gap:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-left:10px;vertical-align:middle}
-  .langsw button{background:#0c0e15;color:var(--dim);border:0;padding:4px 10px;font-size:11px;font-family:var(--mono);cursor:pointer;font-weight:700}
-  .langsw button.on{background:#0c1a17;color:var(--acc)}
-  .memory{font-size:12px;font-family:var(--mono);color:var(--dim);padding:6px 0;border-bottom:1px solid var(--line)}
-  .drawer{position:fixed;top:0;right:-420px;width:min(400px,92vw);height:100vh;background:var(--panel);border-left:1px solid var(--line);box-shadow:-8px 0 40px rgba(0,0,0,.5);transition:right .25s ease;z-index:100;overflow:auto;padding:20px}
-  .drawer.open{right:0}
-  .drawer h3{margin:0 0 4px;font-size:17px}
-  .drawer .sub{font-family:var(--mono);font-size:11px;color:var(--dim);margin-bottom:16px}
-  .drawer .x{float:right;background:none;border:0;color:var(--mut);font-size:22px;cursor:pointer}
-  .evitem{padding:10px 0;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--mut);line-height:1.45}
-  .evitem b{color:var(--ink);font-size:13px}
-  .evitem a{font-family:var(--mono);font-size:10px;color:var(--acc2)}
-  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99;display:none}
-  .overlay.open{display:block}
-  .scan{background:linear-gradient(180deg,var(--panel),#0e1017);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:0 0 22px}
-  .scan .hint{font-size:13px;color:var(--dim);margin:0 0 12px;line-height:1.55;font-weight:400}
-  .scan .hint a{color:var(--acc2);text-decoration:none}
-  .scan .hint a:hover{text-decoration:underline}
-  .scanrow{display:flex;gap:10px;flex-wrap:wrap}
-  .scanrow input{flex:1;min-width:220px;background:#0c0e15;border:1px solid var(--line);border-radius:10px;color:var(--ink);font-size:15px;padding:12px 14px;outline:none}
-  .scanrow input:focus{border-color:var(--acc)}
-  .scanrow button{background:var(--acc);color:#04231f;font-weight:700;border:0;border-radius:10px;padding:0 16px;font-size:13.5px;cursor:pointer;font-family:var(--mono);min-width:132px}
-  .scanrow button.secondary{background:#0c0e15;color:var(--mut);border:1px solid var(--line)}
-  .scanrow button:disabled:not(.running){opacity:.45;cursor:default}
-  .scanrow button.running{opacity:1;cursor:wait;min-width:160px}
-  .scanfeed{font-family:var(--mono);font-size:12px;color:var(--mut);margin-top:12px;max-height:120px;overflow:auto;border-left:2px solid var(--line);padding-left:10px}
-  .scanfeed div{padding:2px 0}
-  .scanfeed .ok{color:var(--acc)}
-  .scanfeed .bad{color:var(--hot)}
-  .scanout{margin-top:14px;display:none}
-  .scanout .rec{background:var(--panel2);border:1px solid #1f4a44;border-radius:12px;padding:14px;font-size:13.5px;color:var(--mut);line-height:1.5}
-  .scanout .rec h4{margin:0 0 6px;color:var(--acc);font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase}
-  .scanout .rec b{color:var(--ink)}
-  .tracked{margin-top:14px;font-size:12.5px;color:var(--dim);line-height:1.5}
-  .tracked .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-  .tracked .chip{font-family:var(--mono);font-size:11px;color:var(--mut);border:1px solid #1f4a44;border-radius:999px;padding:5px 11px;background:#0c1a17}
-  .tracked .chip b{color:var(--acc);font-weight:600}
-  .hero{background:linear-gradient(180deg,#15212b,#101820);border:1px solid #1f4a44;border-radius:16px;padding:20px 22px;margin:0 0 22px}
-  .hero .lab{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--acc);text-transform:uppercase;margin-bottom:14px}
-  .hero .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;font-size:14px}
-  @media(max-width:640px){.hero .grid{grid-template-columns:1fr}}
-  .hero .k{font-family:var(--mono);font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
-  .hero .v{color:var(--ink);font-weight:600;line-height:1.4}
-  .hero .v.big{font-size:18px}
-  .hero select{background:#0c0e15;border:1px solid var(--line);border-radius:8px;color:var(--ink);font-size:14px;padding:8px 10px;width:100%;max-width:280px}
-  .herobtns{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
-  .herobtns button{background:var(--acc);color:#04231f;font-weight:700;border:0;border-radius:10px;padding:10px 18px;font-size:13.5px;cursor:pointer;font-family:var(--sans)}
-  .herobtns button.secondary{background:#0c0e15;color:var(--mut);border:1px solid var(--line)}
-  .hero-note{margin-top:12px;font-size:12.5px;color:var(--warn);font-family:var(--mono);line-height:1.45;display:none}
-  .concept-pending{background:var(--panel2);border:1px dashed var(--line)}
-  .concept-pending .pending-msg{color:var(--mut);font-size:13.5px;line-height:1.55;margin-top:8px}
+  .satbar{height:6px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden}
+  .satfill{display:block;height:100%;background:linear-gradient(90deg,var(--amber),var(--hot))}
+  .score{font:13px var(--mono);color:var(--amber);text-align:right}
+  details.older{margin-top:14px;border:1px solid var(--line);border-radius:var(--r);padding:12px 16px;background:rgba(0,0,0,.25)}
+  details.older summary{cursor:pointer;font:500 12px var(--mono);letter-spacing:.08em;color:var(--ink-60)}
+  details.older[open] summary{margin-bottom:12px}
+  .concept{margin-bottom:16px}
+  .concept .k{font:500 11px var(--mono);color:var(--amber);letter-spacing:.12em;text-transform:uppercase;line-height:1.6}
+  .concept h3{margin:8px 0 4px;font:400 30px/1.1 var(--serif)}
+  .concept .em{font:11.5px var(--mono);color:var(--lilac-2)}
+  .concept .row{margin-top:9px;font-size:14px;color:var(--body);line-height:1.55}
+  .concept .row b{color:#fff;font-weight:700}
+  .mutgrid{display:grid;grid-template-columns:1fr;gap:8px;margin-top:12px}
+  @media(min-width:720px){.mutgrid{grid-template-columns:1fr 1fr 1fr}}
+  .mut{border:1px solid var(--line);border-radius:12px;padding:10px;font-size:12.5px;color:var(--body);background:rgba(0,0,0,.25)}
+  .mut .mh{font:600 10px var(--mono);color:var(--amber);margin-bottom:4px}
+  .casset{width:100%;max-width:260px;border-radius:12px;border:1px solid var(--line-2);margin:12px 0 4px;display:block}
+  .evl{margin-top:10px;font:11.5px var(--mono);color:var(--dim)} .evl a{color:var(--lilac-2);text-decoration:none}
+  .concept-pending .pending-msg{color:var(--body);font-size:14px;line-height:1.55;margin-top:8px}
   .shiprow{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
-  .shipbtn{background:transparent;color:var(--acc);font-weight:600;border:1px solid #1f4a44;border-radius:10px;padding:9px 16px;font-size:13px;cursor:pointer;font-family:var(--mono)}
-  .shipbtn:hover:not(:disabled){background:#0c1a17}
-  .shipbtn:disabled{opacity:.45;cursor:wait}
-  .shipfeed{font-family:var(--mono);font-size:11.5px;color:var(--mut);margin-top:10px;line-height:1.5;display:none}
-  .shipfeed.show{display:block}
-  .shipfeed .ok{color:var(--acc)}
-  .shipfeed .bad{color:var(--hot)}
-  .shipfeed div{padding:2px 0}
-  .ship-warn{margin:0 0 12px;padding:10px 12px;border-radius:10px;border:1px solid #5a4715;background:#2a210c;color:var(--warn);font-family:var(--mono);font-size:11.5px;line-height:1.5}
-  .perfbox{margin:12px 0 0;padding:12px 14px;border-radius:10px;border:1px solid #1f4a44;background:#0c1a17;font-size:12.5px;line-height:1.55}
-  .perfbox .ptitle{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--acc);text-transform:uppercase;margin-bottom:8px}
-  .perfbox .prow{color:var(--mut);margin:2px 0}
-  .perfbox .prow b{color:var(--ink)}
-  .trackbox{margin-top:12px;padding:10px 12px;border-radius:10px;border:1px dashed var(--line);font-family:var(--mono);font-size:11px;color:var(--dim);line-height:1.5;word-break:break-all}
+  .shipfeed{font:11.5px/1.5 var(--mono);color:var(--dim);margin-top:10px;display:none}
+  .shipfeed.show{display:block} .shipfeed .ok{color:var(--amber)} .shipfeed .bad{color:var(--hot)}
+  .ship-warn{margin:0 0 12px;padding:10px 12px;border-radius:12px;border:1px solid rgba(251,191,36,.35);background:rgba(251,191,36,.08);color:#fcd34d;font:11.5px/1.5 var(--mono)}
+  .perfbox{margin:12px 0 0;padding:12px 14px;border-radius:12px;border:1px solid rgba(237,184,103,.3);background:rgba(237,184,103,.06);font-size:13px;line-height:1.55}
+  .perfbox .ptitle{font:600 10px var(--mono);letter-spacing:.12em;color:var(--amber);text-transform:uppercase;margin-bottom:8px}
+  .perfbox .prow{color:var(--body);margin:2px 0} .perfbox .prow b{color:#fff}
+  .trackbox{margin-top:12px;padding:10px 12px;border-radius:12px;border:1px dashed var(--line-2);font:11px/1.5 var(--mono);color:var(--dim);word-break:break-all}
+  .trackbox a{color:var(--lilac-2)}
+  .memory{font:12px var(--mono);color:var(--dim);padding:7px 0;border-bottom:1px solid var(--line)} .memory b{color:#fff}
+  .drawer{position:fixed;top:0;right:-440px;width:min(420px,92vw);height:100vh;background:rgba(10,8,20,.94);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border-left:1px solid var(--line-2);box-shadow:-8px 0 40px rgba(0,0,0,.5);transition:right .25s ease;z-index:100;overflow:auto;padding:22px}
+  .drawer.open{right:0}
+  .drawer h3{margin:0 0 4px;font:400 26px var(--serif)}
+  .drawer .sub2{font:11px var(--mono);color:var(--dim);margin-bottom:16px}
+  .drawer .x{float:right;background:none;border:0;color:var(--mut);font-size:24px;cursor:pointer}
+  .evitem{padding:11px 0;border-bottom:1px solid var(--line);font-size:13px;color:var(--body);line-height:1.5}
+  .evitem b{color:#fff} .evitem a{font:10.5px var(--mono);color:var(--lilac-2)}
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;display:none} .overlay.open{display:block}
+  .scanfeed{font:12px/1.5 var(--mono);color:var(--dim);margin-top:12px;max-height:130px;overflow:auto;border-left:1px solid var(--line-2);padding-left:10px}
+  .scanfeed .ok{color:var(--amber)} .scanfeed .bad{color:var(--hot)}
+  .tracked{margin-top:14px;font-size:13px;color:var(--dim);line-height:1.5}
+  .tracked .chips{margin-top:8px}
+  .loading{color:var(--dim);font:13px var(--mono);padding:24px 0}
+  .ownerbar{margin-top:12px;font:600 11px var(--mono);letter-spacing:.1em;color:#020617;background:var(--amber);border-radius:999px;padding:5px 12px;display:inline-block}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div>
-      <div class="brand">ATLAS SHIFTED<b> AIPA</b></div>
-    </div>
-    <div class="by"><span id="byRole">autonomous marketing strategist</span> · <a href="https://aideazz.xyz/portfolio" target="_blank" rel="noopener">aideazz.xyz/portfolio</a> · <a class="navlink" href="./" id="byWs">WHITESPACE finder (one-shot discovery) →</a><span class="langsw"><button id="langEN">EN</button><button id="langES">ES</button></span></div>
+<div class="bd" aria-hidden="true">
+  <img src="media/ws-night.webp" alt="" />
+  <video id="va" muted playsinline preload="none" poster="media/ws-night.webp"></video>
+  <video id="vb" muted playsinline preload="none"></video>
+  <div class="veil"></div>
+  <div class="sweep"></div>
+  <div class="dots"></div>
+  <div class="ray r1"></div><div class="ray r3"></div>
+</div>
+
+<main class="wrap">
+  <header class="top">
+    <a class="brandlink" href="https://aideazz.xyz/api" target="_blank" rel="noopener" aria-label="AIdeazz AI Lab">
+      <span class="mark"></span>
+      <span class="wordmark"><span class="w">ATLAS <b>SHIFTED</b></span><span class="lab"><i></i>AIdeazz AI Lab<i></i></span></span>
+    </a>
+    <nav class="nav">
+      <a class="navl" href="./" id="byWs">WHITESPACE finder →</a>
+      <span class="langsw"><button id="langEN">EN</button><button id="langES">ES</button></span>
+    </nav>
   </header>
-  <div class="tag" id="tagline">Stop chasing the ad everyone's already running. <b>Atlas Shifted Adaptive Intelligent Personal Assistant reads the live ad market every week, spots the emotional angle opening before the crowd</b>, and ships <b>test-ready creative — copy + image + video</b> — to get there first. <b>Public data only</b>; we detect momentum, we never guess the future. Just what's heating now, it doesn't pretend to predict.</div>
+
+  <div class="ticker" id="ticker"></div>
+
+  <p class="kicker" id="kicker"></p>
+  <h1 class="display" id="h1"></h1>
+  <p class="sub" id="tagline"></p>
   <div class="shrug" id="shrug">⌐ loading resilience…</div>
+  <div style="text-align:center"><span class="ownerbar" id="ownerBar" style="display:none">OWNER MODE</span></div>
   <div class="refresh-banner" id="refreshBanner"></div>
-
-  <div class="hero" id="hero" style="display:none">
-    <div class="lab" id="heroLab">▸ Today's move</div>
-    <div style="margin-bottom:12px">
-      <div class="k" id="heroVertK">Vertical</div>
-      <select id="heroVertical"></select>
-    </div>
-    <div class="grid">
-      <div><div class="k" id="heroRecK">Recommendation</div><div class="v big" id="heroRec">—</div></div>
-      <div><div class="k" id="heroConfK">Confidence</div><div class="v" id="heroConf">—</div></div>
-      <div style="grid-column:1/-1"><div class="k" id="heroWhyK">Reason</div><div class="v" id="heroWhy">—</div></div>
-      <div style="grid-column:1/-1"><div class="k" id="heroActK">Action</div><div class="v" id="heroActV">Launch campaign test</div></div>
-    </div>
-    <div class="herobtns">
-      <button type="button" id="heroView">View campaign</button>
-      <button type="button" id="heroExport" class="secondary">Export test</button>
-    </div>
-    <div class="hero-note" id="heroNote"></div>
-  </div>
-
-  <div class="scan" id="scan">
-    <div class="hint" id="scanHint">Optional: add a market to weekly tracking. Atlas captures ads every Monday (9 AM Panama), scores angles on the board, and builds campaign copy for that vertical. For a one-time scan without memory, use <a href="./">WHITESPACE</a>.</div>
-    <div class="scanrow">
-      <input id="scanQ" placeholder="e.g. personal ai companions, medicare advantage, fractional CTO" autocomplete="off" />
-      <button id="scanTrack">Add to radar</button>
-    </div>
-    <div class="scanfeed" id="scanFeed" style="display:none"></div>
-    <div id="trackedList" class="tracked" style="display:none"></div>
-  </div>
 
   <div class="stats" id="stats"></div>
 
-  <h2 class="sec" id="secIntel">▸ Atlas Intelligence — what nobody else shows</h2>
-  <div id="intel"><div class="loading">Computing alternate universes…</div></div>
+  <section class="glass hero" id="hero" style="display:none">
+    <div class="lab" id="heroLab"></div>
+    <div style="margin-bottom:14px">
+      <div class="k" id="heroVertK"></div>
+      <select class="field" id="heroVertical" style="max-width:340px;width:100%"></select>
+    </div>
+    <div class="hgrid">
+      <div><div class="k" id="heroRecK"></div><div class="v big" id="heroRec">—</div></div>
+      <div><div class="k" id="heroConfK"></div><div class="v" id="heroConf">—</div></div>
+      <div style="grid-column:1/-1"><div class="k" id="heroWhyK"></div><div class="v" id="heroWhy">—</div></div>
+      <div style="grid-column:1/-1"><div class="k" id="heroActK"></div><div class="v" id="heroActV"></div></div>
+    </div>
+    <div class="btnrow">
+      <button type="button" class="btn" id="heroView"></button>
+      <button type="button" class="btn ghost" id="heroExport"></button>
+    </div>
+    <div class="hero-note" id="heroNote"></div>
+  </section>
 
-  <h2 class="sec" id="secRadar">▸ Angle Window Radar — latest snapshot <span style="font-weight:400;color:var(--dim)">(click a lane for evidence)</span></h2>
-  <div id="board"><div class="loading">Reading the radar…</div></div>
+  <section class="glass" id="scan" style="margin-top:20px">
+    <span class="eyebrow" id="scanEyebrow"></span>
+    <p class="lede" id="scanHint" style="margin:8px 0 12px"></p>
+    <div class="inrow">
+      <input class="field" id="scanQ" autocomplete="off" />
+      <button class="btn" id="scanTrack" style="display:none"></button>
+    </div>
+    <div class="lead" id="scanLead"></div>
+    <div class="scanfeed" id="scanFeed" style="display:none"></div>
+    <div id="trackedList" class="tracked" style="display:none"></div>
+  </section>
 
-  <h2 class="sec" id="secCreative">▸ Generated creative — DETECT → CREATE</h2>
-  <div id="concepts"><div class="loading">Loading concepts…</div></div>
+  <section class="sec">
+    <span class="eyebrow" id="secIntel"></span>
+    <div id="intel"><div class="loading" id="loadIntel"></div></div>
+  </section>
 
-  <h2 class="sec" id="secMemory">▸ Market memory — prior ENTER calls</h2>
-  <div id="memory"><div class="note" id="memNote">Logs each ENTER signal as the time-series grows.</div></div>
-</div>
+  <section class="sec">
+    <span class="eyebrow" id="secRadar"></span>
+    <div id="board"><div class="loading" id="loadRadar"></div></div>
+  </section>
+
+  <section class="sec">
+    <span class="eyebrow" id="exEyebrow"></span>
+    <h2 class="h2" id="exH"></h2>
+    <p class="lede" id="exLede"></p>
+    <div class="reels" id="reels"></div>
+  </section>
+
+  <section class="sec">
+    <span class="eyebrow" id="secCreative"></span>
+    <div id="concepts"><div class="loading" id="loadConcepts"></div></div>
+  </section>
+
+  <section class="sec">
+    <span class="eyebrow" id="secMemory"></span>
+    <div id="memory"><div class="note" id="memNote"></div></div>
+  </section>
+
+  <section class="sec">
+    <span class="eyebrow" id="tiersEyebrow"></span>
+    <h2 class="h2" id="tiersH"></h2>
+    <div class="grid3" id="tiers"></div>
+    <div class="glass lead" id="contactBox" style="display:none;margin-top:16px"></div>
+  </section>
+
+  <section class="cta-final">
+    <h2 id="finalH"></h2>
+    <p id="finalP"></p>
+    <a class="btn btn-pill" id="finalBtn" href="https://aideazz.xyz/pay/analisis-tecnico?sku=diagnostic_call&lng=es" target="_blank" rel="noopener"></a>
+  </section>
+
+  <footer class="foot">
+    <div class="cols">
+      <div><span class="eyebrow">AIdeazz AI Lab</span><a href="https://aideazz.xyz/api" target="_blank" rel="noopener">aideazz.xyz/api ↗</a><a href="https://aideazz.xyz/portfolio" target="_blank" rel="noopener" id="fPortfolio">Portfolio ↗</a></div>
+      <div><span class="eyebrow" id="fTools"></span><a href="./">WHITESPACE</a><a href="atlas.html">Atlas radar</a></div>
+    </div>
+    <div class="fine" id="fFilm" style="max-width:24rem"></div>
+    <div class="big">© AIdeazz AI Lab · Panamá</div>
+  </footer>
+</main>
 
 <div class="overlay" id="overlay"></div>
 <div class="drawer" id="drawer">
   <button class="x" id="drawerClose" aria-label="Close">×</button>
   <h3 id="drawerTitle">Evidence</h3>
-  <div class="sub" id="drawerSub"></div>
-  <div id="drawerBody"><div class="loading">Loading…</div></div>
+  <div class="sub2" id="drawerSub"></div>
+  <div id="drawerBody"><div class="loading">…</div></div>
 </div>
 
+<script src="skin.js?v=20261019"></script>
 <script>
 const $=(id)=>document.getElementById(id);
-const esc=(s)=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const esc=Skin.esc;
 const pct=(x)=>Math.round((x||0)*100);
+const PAY='https://aideazz.xyz/pay/analisis-tecnico?sku=diagnostic_call&lng=';
+const GEO='geo_aeo_tech_seo_makers';
 
-/* ── i18n (EN/ES) — same pattern as aideazz.xyz/portfolio: toggle + browser auto-detect.
-   Product vocabulary ENTER/WATCH/AVOID stays untranslated (brand terms). LLM-generated
-   ad copy renders in the language it was generated in (US ad market → English). ── */
+/* Owner view: the server decides (ATLAS_DATA.owner); the page only forwards a token it was given. */
+const URLP=new URLSearchParams(location.search);
+const OWNER_TOKEN=Skin.ownerToken;
+const withToken=(u)=>OWNER_TOKEN?(u+(u.includes('?')?'&':'?')+'token='+encodeURIComponent(OWNER_TOKEN)):u;
+const atlasUrl=()=>withToken('api/atlas');
+
+/* ── i18n — product vocabulary ENTER/WATCH/AVOID stays untranslated (brand terms) ── */
 const I18N={
 en:{
   title:'Atlas Shifted AIPA — Angle Window Radar',
-  byRole:'autonomous marketing strategist', byWs:'WHITESPACE finder (one-shot discovery) →',
-  tagline:'Stop chasing the ad everyone\'s already running. <b>Atlas Shifted Adaptive Intelligent Personal Assistant reads the live ad market every week, spots the emotional angle opening before the crowd</b>, and ships <b>test-ready creative — copy + image + video</b> — to get there first. <b>Public data only</b>; we detect momentum, we never guess the future. Just what\'s heating now, it doesn\'t pretend to predict.',
-  heroLab:'▸ Today\'s move', heroVertK:'Vertical', heroRecK:'Recommendation', heroConfK:'Confidence', heroWhyK:'Reason', heroActK:'Action', heroActV:'Launch campaign test',
-  heroView:'View campaign', heroExport:'Export test',
-  scanHint:'Optional: add a market to weekly tracking. Atlas captures ads every Monday (9 AM Panama), scores angles on the board, and builds campaign copy for that vertical. For a one-time scan without memory, use <a href="./">WHITESPACE</a>.',
-  scanPh:'e.g. personal ai companions, medicare advantage, fractional CTO',
+  byWs:'WHITESPACE finder →',
+  ticker:['Angle window radar','Every Monday · 9 AM Panamá','<b>GEO / AEO first</b>','WhatsApp AI agents','AI automation','AI promo video','Detect → Create → Ship','Public ad data only'],
+  kicker:'Atlas Shifted · weekly ad-market radar',
+  h1:'See the angle <em>opening</em> before the crowd does',
+  tagline:'Stop chasing the ad everyone is already running. <b>Atlas Shifted Adaptive Intelligent Personal Assistant reads the live ad market every week, spots the emotional angle opening before the crowd</b>, and ships <b>test-ready creative — copy + image + video</b> — to get there first. Public data only: we detect momentum, we never guess the future.',
+  heroLab:'Today’s move', heroVertK:'Lane', heroRecK:'Radar reading', heroConfK:'Confidence', heroWhyK:'Reason', heroActK:'Action', heroActV:'—',
+  actEnter:'Launch a campaign test on this angle', actWatch:'Watch it — the window is not open yet', actStable:'No open ad window this week — keep the content work going', actAvoid:'Stay out of this angle for now',
+  focusLane:'GEO / AEO is our focus lane, shown first whatever its score.', draftCopy:'Ad copy Atlas drafted for this lane — not reviewed, and not a claim about AIdeazz.', earlierVisual:'visual from an earlier campaign',
+  heroView:'View campaign', heroExport:'Export test', olderLanes:'Older lanes (not refreshed recently)',
+  scanEyebrow:'Weekly tracking',
+  scanHintPublic:'Want <b>your</b> market scanned every week? Tell us which market and where to reach you, and we get back to you about setting it up. For a one-time look, use the free <a href="./">WHITESPACE</a> scan.',
+  scanHintOwner:'Owner mode: add a market to the radar now.',
+  scanPh:'Your market — e.g. dental implants Panamá',
   trackBtn:'Add to radar', added:'Added ✓', working:'Working…', addingRadar:'Adding to radar…',
-  secIntel:'▸ Atlas Intelligence — what nobody else shows',
-  secRadar:'▸ Angle Window Radar — latest snapshot <span style="font-weight:400;color:var(--dim)">(click a lane for evidence)</span>',
-  secCreative:'▸ Generated creative — DETECT → CREATE',
-  secMemory:'▸ Market memory — prior ENTER calls',
-  memNote:'Logs each ENTER signal as the time-series grows.',
-  memNone:'No ENTER signals logged yet — memory grows every Monday.',
-  stDays:'days tracked', stAds:'ads in radar', stVerts:'verticals', stSnap:'snapshot', stRefreshing:' · refreshing',
-  loadIntel:'Computing alternate universes…', loadRadar:'Reading the radar…', loadConcepts:'Loading concepts…', loadEvidence:'Loading evidence…', loading:'Loading…',
-  intelPending:'Intelligence layer activates after first brief run.',
+  secIntel:'Atlas intelligence — what nobody else shows',
+  secRadar:'Angle window radar — click a lane for its evidence',
+  secCreative:'Campaigns written for the lanes that are live',
+  secMemory:'Market memory — earlier ENTER calls',
+  memNote:'Logs each ENTER signal as the time series grows.', memNone:'No ENTER signals logged yet — memory grows every Monday.',
+  stDays:'days tracked', stAds:'ads in radar', stVerts:'lanes', stSnap:'latest snapshot', stRefreshing:' · refreshing',
+  loadIntel:'Computing alternate universes…', loadRadar:'Reading the radar…', loadConcepts:'Loading campaigns…', loadEvidence:'Loading evidence…',
+  intelPending:'The intelligence layer activates after the first brief run.',
   noRadar:'No radar data yet.', noLane:'No ads in this lane yet.',
-  sparkNote:'⏳ Sparklines fill in as weekly snapshots accrue — one new snapshot every Monday (Panama time).',
-  evidenceT:'Evidence', viewInLib:'view in ad library ↗', match:'% match',
-  pendingH:'Campaign not generated yet',
-  pendingP:'Radar data exists for this vertical, but creative copy has not been built yet. Use <b>Add to radar</b> below or wait for the next morning capture — then View campaign will show copy grounded in today\'s ads (not another vertical).',
-  heroNoteGen:'Campaign copy for this vertical is still generating — check back after add-to-radar or Monday\'s capture.',
-  heroNoteNone:'No campaign for this vertical yet. Add it below or wait for Monday’s capture.',
-  trackedTitle:'Your tracked verticals', trackedCron:'(weekly cron · Mondays 9 AM Panama)', trackedPending:'· radar after capture',
+  sparkNote:'Sparklines fill in as weekly snapshots accrue — one new snapshot every Monday (Panama time).',
+  viewInLib:'view in ad library ↗', match:'% match', failed:'Failed',
+  pendingH:'Campaign not written yet',
+  pendingP:'Radar data exists for this lane, but the campaign copy has not been built yet. It is written after the Monday capture.',
+  heroNoteGen:'Campaign copy for this lane is still being written — check back after Monday’s capture.',
+  heroNoteNone:'No campaign for this lane yet.',
+  trackedTitle:'Markets on the radar', trackedCron:'(weekly · Mondays 9 AM Panamá)', trackedPending:'· on the board after capture',
   confHigh:'high', confMed:'medium', confLow:'low',
-  openWindow:'open window', adjHeating:'adjacent to heating',
+  openWindow:'open window', adjHeating:'adjacent to heating', owns:'owns', moveLab:'MOVE',
   hook:'Hook', headline:'Headline', body:'Body', scene:'Scene', cta:'CTA', mutations:'Mutations (A/B hooks)', grounded:'grounded in real ads',
-  assetPending:'Visual asset pending — copy is live; click Generate creative below to ship image + video.',
+  genVideoLab:'generated video', genStillLab:'generated still',
+  assetPending:'Visual not rendered yet — the copy is live.',
   genVideo:'Generate video (~3 min)', genStill:'Generate still only', genCreative:'Generate creative (~3 min)', generating:'Generating…',
-  perfTitle:'▸ AIdeazz performance', events:'event(s)',
+  perfTitle:'AIdeazz performance', events:'event(s)',
   spend:'Spend', clicks:'Clicks', sessions:'GA4 sessions', keyEvents:'GA4 key events', waClicks:'WhatsApp clicks', conversions:'Conversions', leads:'Leads', hsDeals:'HubSpot deals', crmStreams:'CRM streams', revenue:'Revenue',
-  liveLoop:'Live loop', loopFull:'Detect → Landing → Convert → HubSpot ✓', loopTagged:'Atlas tagged funnel → HubSpot ✓', deals:'deal(s)',
+  liveLoop:'Live loop', loopFull:'Detect → Landing → Convert → HubSpot ✓', loopTagged:'Atlas-tagged funnel → HubSpot ✓', deals:'deal(s)',
   track:'Track', landing:'landing ↗',
   stCapture:'Capturing ads…', stClassify:'Scoring angles…', stBrief:'Writing brief…', stConcept:'Writing campaign…',
-  waitCost:'Wait cost',
+  waitCost:'Wait cost', halfLife:'d half-life', room:'% room', absent:'ABSENT', demandNearby:'demand nearby',
+  olderCampaigns:'Earlier campaigns',
+  exEyebrow:'Already shipped by the engine',
+  exH:'Seven campaigns, <em>made, not mocked up</em>',
+  exLede:'Atlas writes campaign copy for its lanes every week; when a window is picked, we render the creative: a still, then a 5-second video. These seven were rendered in June–July 2026 and stay here as real output.',
+  tiersEyebrow:'Work with Atlas', tiersH:'From a free scan to <em>a running system</em>',
+  finalH:'Know where <em>the open window</em> is before you spend.',
+  finalP:'Start with the $100 diagnostic: written results on your business and channels, and a 45-minute call.',
+  finalBtn:'Book the $100 diagnostic →',
+  fTools:'Tools', fPortfolio:'Portfolio ↗', fFilm:'Background film: AIdeazz AI Lab promo footage, reused.',
+  stale:(d,a)=>'⏸ Radar paused — last live snapshot '+d+' ('+a+' days ago). The history and campaigns below are from that snapshot.',
+  stillReady:'Still image ready — waiting on video…', reconnect:'Connection dropped — checking whether the render finished…',
 },
 es:{
   title:'Atlas Shifted AIPA — Radar de Ventanas de Ángulo',
-  byRole:'estratega de marketing autónomo', byWs:'buscador WHITESPACE (descubrimiento único) →',
-  tagline:'Deja de perseguir el anuncio que todos ya están publicando. <b>Atlas Shifted lee el mercado publicitario en vivo cada día, detecta el ángulo emocional que se abre antes que la multitud</b>, y entrega <b>creativos listos para probar — copy + imagen + video</b> — para llegar primero. <b>Solo datos públicos</b>; detectamos impulso, nunca adivinamos el futuro. Solo lo que se está calentando ahora, sin pretender predecir.',
-  heroLab:'▸ La jugada de hoy', heroVertK:'Vertical', heroRecK:'Recomendación', heroConfK:'Confianza', heroWhyK:'Razón', heroActK:'Acción', heroActV:'Lanzar prueba de campaña',
-  heroView:'Ver campaña', heroExport:'Exportar prueba',
-  scanHint:'Opcional: añade un mercado al seguimiento semanal. Atlas captura anuncios cada lunes (9 AM Panamá), puntúa los ángulos en el tablero y genera copy de campaña para ese vertical. Para un escaneo único sin memoria, usa <a href="./">WHITESPACE</a>.',
-  scanPh:'ej. compañeros de IA personales, seguros médicos, CTO fraccional',
+  byWs:'Buscador WHITESPACE →',
+  ticker:['Radar de ventanas de ángulo','Cada lunes · 9 AM Panamá','<b>GEO / AEO primero</b>','Agentes de WhatsApp con IA','Automatización con IA','Video promocional con IA','Detectar → Crear → Lanzar','Solo datos públicos'],
+  kicker:'Atlas Shifted · radar semanal del mercado publicitario',
+  h1:'Ve el ángulo que <em>se abre</em> antes que la multitud',
+  tagline:'Deja de perseguir el anuncio que todos ya publican. <b>Atlas Shifted lee el mercado publicitario en vivo cada semana, detecta el ángulo emocional que se abre antes que la multitud</b>, y entrega <b>creativos listos para probar — copy + imagen + video</b> — para llegar primero. Solo datos públicos: detectamos impulso, nunca adivinamos el futuro.',
+  heroLab:'La jugada de hoy', heroVertK:'Carril', heroRecK:'Lectura del radar', heroConfK:'Confianza', heroWhyK:'Razón', heroActK:'Acción', heroActV:'—',
+  actEnter:'Lanzar una prueba de campaña en este ángulo', actWatch:'Vigilarlo — la ventana aún no está abierta', actStable:'Sin ventana de anuncios esta semana — seguir con el trabajo de contenido', actAvoid:'Evitar este ángulo por ahora',
+  focusLane:'GEO / AEO es nuestro carril principal: se muestra primero sea cual sea su puntuación.', draftCopy:'Copy de anuncio que Atlas redactó para este carril — sin revisar, y no es una afirmación sobre AIdeazz.', earlierVisual:'visual de una campaña anterior',
+  heroView:'Ver campaña', heroExport:'Exportar prueba', olderLanes:'Carriles anteriores (sin actualizar recientemente)',
+  scanEyebrow:'Seguimiento semanal',
+  scanHintPublic:'¿Quieres <b>tu</b> mercado escaneado cada semana? Dinos qué mercado y dónde contactarte, y te contactamos para configurarlo. Para una mirada única, usa el escaneo gratis de <a href="./">WHITESPACE</a>.',
+  scanHintOwner:'Modo propietario: añade un mercado al radar ahora.',
+  scanPh:'Tu mercado — ej. implantes dentales Panamá',
   trackBtn:'Añadir al radar', added:'Añadido ✓', working:'Trabajando…', addingRadar:'Añadiendo al radar…',
-  secIntel:'▸ Inteligencia Atlas — lo que nadie más muestra',
-  secRadar:'▸ Radar de Ventanas de Ángulo — último snapshot <span style="font-weight:400;color:var(--dim)">(haz clic en un carril para ver evidencia)</span>',
-  secCreative:'▸ Creativo generado — DETECTAR → CREAR',
-  secMemory:'▸ Memoria del mercado — señales ENTER previas',
-  memNote:'Registra cada señal ENTER a medida que crece la serie temporal.',
-  memNone:'Aún no hay señales ENTER registradas — la memoria crece cada lunes.',
-  stDays:'días seguidos', stAds:'anuncios en radar', stVerts:'verticales', stSnap:'snapshot', stRefreshing:' · actualizando',
-  loadIntel:'Calculando universos alternos…', loadRadar:'Leyendo el radar…', loadConcepts:'Cargando conceptos…', loadEvidence:'Cargando evidencia…', loading:'Cargando…',
+  secIntel:'Inteligencia Atlas — lo que nadie más muestra',
+  secRadar:'Radar de ventanas de ángulo — haz clic en un carril para ver su evidencia',
+  secCreative:'Campañas escritas para los carriles activos',
+  secMemory:'Memoria del mercado — señales ENTER previas',
+  memNote:'Registra cada señal ENTER a medida que crece la serie temporal.', memNone:'Aún no hay señales ENTER registradas — la memoria crece cada lunes.',
+  stDays:'días seguidos', stAds:'anuncios en radar', stVerts:'carriles', stSnap:'último snapshot', stRefreshing:' · actualizando',
+  loadIntel:'Calculando universos alternos…', loadRadar:'Leyendo el radar…', loadConcepts:'Cargando campañas…', loadEvidence:'Cargando evidencia…',
   intelPending:'La capa de inteligencia se activa tras el primer brief.',
   noRadar:'Aún no hay datos de radar.', noLane:'Aún no hay anuncios en este carril.',
-  sparkNote:'⏳ Las líneas de tendencia se llenan con cada snapshot semanal — uno nuevo cada lunes (hora de Panamá).',
-  evidenceT:'Evidencia', viewInLib:'ver en la biblioteca de anuncios ↗', match:'% coincidencia',
-  pendingH:'Campaña aún no generada',
-  pendingP:'Existen datos de radar para este vertical, pero el copy creativo aún no se ha generado. Usa <b>Añadir al radar</b> abajo o espera la próxima captura matinal — entonces Ver campaña mostrará copy basado en los anuncios de hoy (no de otro vertical).',
-  heroNoteGen:'El copy de campaña para este vertical aún se está generando — vuelve tras añadir al radar o la captura del lunes.',
-  heroNoteNone:'Aún no hay campaña para este vertical. Añádelo abajo o espera la próxima captura del lunes.',
-  trackedTitle:'Tus verticales en seguimiento', trackedCron:'(cron semanal · lunes 9 AM Panamá)', trackedPending:'· en radar tras captura',
+  sparkNote:'Las líneas de tendencia se llenan con cada snapshot semanal — uno nuevo cada lunes (hora de Panamá).',
+  viewInLib:'ver en la biblioteca de anuncios ↗', match:'% coincidencia', failed:'Error',
+  pendingH:'Campaña aún no escrita',
+  pendingP:'Existen datos de radar para este carril, pero el copy de campaña aún no se ha generado. Se escribe tras la captura del lunes.',
+  heroNoteGen:'El copy de campaña para este carril aún se está escribiendo — vuelve tras la captura del lunes.',
+  heroNoteNone:'Aún no hay campaña para este carril.',
+  trackedTitle:'Mercados en el radar', trackedCron:'(semanal · lunes 9 AM Panamá)', trackedPending:'· en el tablero tras la captura',
   confHigh:'alta', confMed:'media', confLow:'baja',
-  openWindow:'ventana abierta', adjHeating:'adyacente al carril caliente',
+  openWindow:'ventana abierta', adjHeating:'adyacente al carril caliente', owns:'domina', moveLab:'JUGADA',
   hook:'Gancho', headline:'Titular', body:'Texto', scene:'Escena', cta:'CTA', mutations:'Mutaciones (ganchos A/B)', grounded:'basado en anuncios reales',
-  assetPending:'Asset visual pendiente — el copy está listo; haz clic en Generar creativo abajo para producir imagen + video.',
+  genVideoLab:'video generado', genStillLab:'imagen generada',
+  assetPending:'Visual aún no renderizado — el copy está listo.',
   genVideo:'Generar video (~3 min)', genStill:'Generar solo imagen', genCreative:'Generar creativo (~3 min)', generating:'Generando…',
-  perfTitle:'▸ Rendimiento AIdeazz', events:'evento(s)',
+  perfTitle:'Rendimiento AIdeazz', events:'evento(s)',
   spend:'Gasto', clicks:'Clics', sessions:'Sesiones GA4', keyEvents:'Eventos clave GA4', waClicks:'Clics WhatsApp', conversions:'Conversiones', leads:'Leads', hsDeals:'Negocios HubSpot', crmStreams:'Flujos CRM', revenue:'Ingresos',
   liveLoop:'Circuito en vivo', loopFull:'Detectar → Landing → Convertir → HubSpot ✓', loopTagged:'Embudo etiquetado Atlas → HubSpot ✓', deals:'negocio(s)',
   track:'Rastreo', landing:'landing ↗',
   stCapture:'Capturando anuncios…', stClassify:'Puntuando ángulos…', stBrief:'Escribiendo brief…', stConcept:'Escribiendo campaña…',
-  waitCost:'Costo de esperar',
+  waitCost:'Costo de esperar', halfLife:'d de vida media', room:'% de margen', absent:'AUSENTE', demandNearby:'demanda cercana',
+  olderCampaigns:'Campañas anteriores',
+  exEyebrow:'Ya producido por el motor',
+  exH:'Siete campañas, <em>hechas, no maquetas</em>',
+  exLede:'Atlas escribe copy de campaña para sus carriles cada semana; cuando se elige una ventana, renderizamos el creativo: una imagen y luego un video de 5 segundos. Estas siete se renderizaron en junio–julio de 2026 y quedan aquí como producción real.',
+  tiersEyebrow:'Trabaja con Atlas', tiersH:'De un escaneo gratis a <em>un sistema en marcha</em>',
+  finalH:'Sabe dónde está <em>la ventana abierta</em> antes de invertir.',
+  finalP:'Empieza con el diagnóstico de $100: resultados escritos sobre tu negocio y tus canales, y una llamada de 45 minutos.',
+  finalBtn:'Reservar el diagnóstico de $100 →',
+  fTools:'Herramientas', fPortfolio:'Portafolio ↗', fFilm:'Película de fondo: material promocional de AIdeazz AI Lab, reutilizado.',
+  stale:(d,a)=>'⏸ Radar en pausa — último snapshot en vivo '+d+' (hace '+a+' días). La historia y las campañas de abajo son de ese snapshot.',
+  stillReady:'Imagen lista — esperando el video…', reconnect:'Se cortó la conexión — comprobando si el render terminó…',
 }};
-let LANG=localStorage.getItem('atlas_lang')||((navigator.language||'').toLowerCase().startsWith('es')?'es':'en');
-const t=(k)=>(I18N[LANG]&&I18N[LANG][k]!==undefined?I18N[LANG][k]:I18N.en[k]||k);
+let LANG=(()=>{try{return localStorage.getItem('atlas_lang')}catch{return null}})()||((navigator.language||'').toLowerCase().startsWith('en')?'en':'es');
+const t=(k)=>(I18N[LANG]&&I18N[LANG][k]!==undefined?I18N[LANG][k]:I18N.en[k]);
 /** Server-generated "why" strings are English templates — translate the known patterns. */
 function trWhy(s){
   if(LANG!=='es'||!s) return s||'';
-  return String(s)
-    .replace(/saturation (\d+)%/g,'saturación $1%')
-    .replace(/(\d+) advertisers?/g,'$1 anunciantes')
-    .replace(/(\d+) new in 7d/g,'$1 nuevos en 7 días')
-    .replace(/(\d+) launched ≤30d/g,'$1 lanzados ≤30 días')
-    .replace(/(\d+)% of lane/g,'$1% del carril')
-    .replace(/adjacent to heating/g,'adyacente al carril caliente')
-    .replace(/co-occurrence/g,'co-ocurrencia');
+  return String(s).replace(/saturation (\d+)%/g,'saturación $1%').replace(/(\d+) advertisers?/g,'$1 anunciantes')
+    .replace(/(\d+) new in 7d/g,'$1 nuevos en 7 días').replace(/(\d+) launched ≤30d/g,'$1 lanzados ≤30 días')
+    .replace(/(\d+)% of lane/g,'$1% del carril').replace(/adjacent to heating/g,'adyacente al carril caliente').replace(/co-occurrence/g,'co-ocurrencia');
 }
+const label=(v)=>String(v||'').replace(/_/g,' ');
+
+let SNAPSHOT='', ATLAS_DATA=null, shipBusyVertical='', scanBusy=false;
+const IS_OWNER=()=>!!(ATLAS_DATA&&ATLAS_DATA.owner);
+
 function applyStaticLang(){
   document.documentElement.lang=LANG;
   document.title=t('title');
-  $('byRole').textContent=t('byRole');
-  $('byWs').textContent=t('byWs');
-  $('tagline').innerHTML=t('tagline');
-  $('heroLab').textContent=t('heroLab');
-  $('heroVertK').textContent=t('heroVertK');
-  $('heroRecK').textContent=t('heroRecK');
-  $('heroConfK').textContent=t('heroConfK');
-  $('heroWhyK').textContent=t('heroWhyK');
-  $('heroActK').textContent=t('heroActK');
-  $('heroActV').textContent=t('heroActV');
-  $('heroView').textContent=t('heroView');
-  $('heroExport').textContent=t('heroExport');
-  $('scanHint').innerHTML=t('scanHint');
+  const set=(id,k,html)=>{const el=$(id); if(el) el[html?'innerHTML':'textContent']=t(k||id);};
+  ['byWs','kicker','heroLab','heroVertK','heroRecK','heroConfK','heroWhyK','heroActK','heroView','heroExport','scanEyebrow',
+   'secIntel','secRadar','secCreative','secMemory','memNote','exEyebrow','exLede','tiersEyebrow','finalP','finalBtn','fTools','fPortfolio','fFilm',
+   'loadIntel','loadRadar','loadConcepts'].forEach(k=>set(k));
+  ['h1','tagline','exH','tiersH','finalH'].forEach(k=>set(k,0,1));
+  $('finalBtn').href=PAY+LANG;
   $('scanQ').placeholder=t('scanPh');
-  if(!scanBusy) $('scanTrack').textContent=t('trackBtn');
-  $('secIntel').innerHTML=t('secIntel');
-  $('secRadar').innerHTML=t('secRadar');
-  $('secCreative').innerHTML=t('secCreative');
-  $('secMemory').innerHTML=t('secMemory');
-  const mn=$('memNote'); if(mn) mn.textContent=t('memNote');
-  $('langEN').classList.toggle('on',LANG==='en');
-  $('langES').classList.toggle('on',LANG==='es');
+  Skin.ticker($('ticker'),t('ticker'));
+  $('langEN').classList.toggle('on',LANG==='en'); $('langES').classList.toggle('on',LANG==='es');
+  Skin.examples($('reels'),LANG);
+  Skin.tiers($('tiers'),$('contactBox'),{lang:LANG,freeHref:'./',market:()=>$('scanQ').value.trim(),country:()=>''});
+  paintScanBox();
 }
-let SNAPSHOT='';
-let ATLAS_DATA=null;
-let shipBusyVertical='';
-const SHIP_TOKEN=new URLSearchParams(location.search).get('ship_token')||'';
+
+/* Public: a lead form ("put my market on the radar"). Owner: the real track button. */
+function paintScanBox(){
+  const owner=IS_OWNER();
+  const key=owner+'|'+LANG; // the refresh poll re-renders: never wipe a half-typed email
+  if(paintScanBox.k===key) return;
+  paintScanBox.k=key;
+  $('ownerBar').style.display=owner?'inline-block':'none';
+  $('scanHint').innerHTML=owner?t('scanHintOwner'):t('scanHintPublic');
+  $('scanTrack').style.display=owner?'':'none';
+  if(!scanBusy) $('scanTrack').textContent=t('trackBtn');
+  if(owner){ $('scanLead').innerHTML=''; }
+  else Skin.leadForm($('scanLead'),{kind:'weekly_tracking',lang:LANG,market:()=>$('scanQ').value.trim(),country:()=>''});
+}
 
 function assetSrc(path,generatedAt){
   if(!path) return '';
-  const bust=generatedAt?'?v='+encodeURIComponent(String(generatedAt).slice(0,19)):'';
-  return path+bust;
+  return path+(generatedAt?'?v='+encodeURIComponent(String(generatedAt).slice(0,19)):'');
 }
-
 function confLabel(score){ return score>=70?t('confHigh'):score>=40?t('confMed'):t('confLow'); }
 
-function pickDefaultVertical(brief){
-  const vs=brief?.verticals||[];
-  const enter=vs.filter(v=>v.move?.state==='ENTER').sort((a,b)=>(b.move?.score||0)-(a.move?.score||0));
+/** Lanes measured in the last 14 days, GEO/AEO first (server: fresh_verticals). */
+function freshList(d){ return (d&&d.fresh_verticals||[]).map(x=>x.vertical); }
+function boardDate(d,v){ const b=(d&&d.board||[]).find(x=>x.vertical===v); return b&&b.snapshot_date||''; }
+
+/** Today's move: GEO/AEO when it has a brief, else the best fresh ENTER, else the best fresh lane. Never a July lane. */
+function pickDefaultVertical(d){
+  const vs=(d&&d.brief&&d.brief.verticals)||[];
+  const fresh=new Set(freshList(d));
+  const pool=fresh.size?vs.filter(v=>fresh.has(v.vertical)):vs;
+  if(pool.some(v=>v.vertical===GEO)) return GEO;
+  const enter=pool.filter(v=>v.move&&v.move.state==='ENTER').sort((a,b)=>(b.move.score||0)-(a.move.score||0));
   if(enter.length) return enter[0].vertical;
-  return [...vs].sort((a,b)=>(b.move?.score||0)-(a.move?.score||0))[0]?.vertical||'';
+  return ([...pool].sort((a,b)=>((b.move&&b.move.score)||0)-((a.move&&a.move.score)||0))[0]||{}).vertical||'';
 }
 
 function buildExportText(vertical){
-  const brief=ATLAS_DATA?.brief; const concepts=ATLAS_DATA?.concepts||{};
-  const v=(brief?.verticals||[]).find(x=>x.vertical===vertical);
+  const brief=ATLAS_DATA&&ATLAS_DATA.brief; const concepts=(ATLAS_DATA&&ATLAS_DATA.concepts)||{};
+  const v=((brief&&brief.verticals)||[]).find(x=>x.vertical===vertical);
   const c=concepts[vertical];
   if(!v) return '';
-  const m=v.move; const cc=c?.concept||{};
-  const visual=c?.asset?.image_file||cc.scene_concept||'';
-  const tr=c?.tracking||{};
-  const trackLines=tr.concept_id?[
-    '','── TRACKING (wire into ad + landing URL) ──',
-    'concept_id: '+tr.concept_id,
-    'utm_campaign: '+(tr.utm_campaign||''),
-    'utm_content: '+(tr.utm_content||''),
-    'utm_source: '+(tr.utm_source||'meta'),
-    'utm_medium: '+(tr.utm_medium||'paid'),
-    'Landing URL: '+(tr.landing_url||''),
-    'Performance ingest: POST '+(tr.performance_ingest_url||'https://webhook.aideazz.xyz/cto/api/performance-event')
-  ]:[];
-  const lines=[
-    'ATLAS CAMPAIGN EXPORT · '+(brief.snapshot_date||SNAPSHOT),'Vertical: '+vertical,'',
-    'Campaign:',cc.concept_name||(m.state+' '+m.angle),'',
-    'Audience:','US buyers — '+vertical.replace(/_/g,' ')+' · angle '+m.angle.replace(/_/g,' '),'',
+  const m=v.move; const cc=(c&&c.concept)||{};
+  const tr=(c&&c.tracking)||{};
+  const trackLines=tr.concept_id?['','── TRACKING (wire into ad + landing URL) ──','concept_id: '+tr.concept_id,'utm_campaign: '+(tr.utm_campaign||''),
+    'utm_content: '+(tr.utm_content||''),'utm_source: '+(tr.utm_source||'meta'),'utm_medium: '+(tr.utm_medium||'paid'),'Landing URL: '+(tr.landing_url||'')]:[];
+  return ['ATLAS CAMPAIGN EXPORT · '+(brief.snapshot_date||SNAPSHOT),'Lane: '+vertical,'',
+    'Campaign:',cc.concept_name||(m.state+' '+m.angle),'','Audience:',label(vertical)+' · angle '+label(m.angle),'',
     'Hook:',cc.hook||'—','Headline:',cc.headline||'—','Primary text:',cc.primary_text||'—','',
-    'Visual:',visual,'CTA:',cc.cta||'—','',
-    'Landing angle:',m.state+' '+m.angle+' — '+m.why,'',
-    'Why Atlas picked it:',m.why,
-    (c?.grounding_evidence||[]).slice(0,2).map(e=>'• '+e.advertiser+': "'+e.excerpt.slice(0,100)+'…"').join('\n'),
-    ...trackLines
-  ];
-  return lines.filter(x=>x!==undefined).join('\n');
+    'Visual:',(c&&c.asset&&c.asset.image_file)||cc.scene_concept||'','CTA:',cc.cta||'—','',
+    'Landing angle:',m.state+' '+m.angle+' — '+m.why,'','Why Atlas picked it:',m.why,
+    ((c&&c.grounding_evidence)||[]).slice(0,2).map(e=>'• '+e.advertiser+': "'+String(e.excerpt).slice(0,100)+'…"').join('\n'),
+    ...trackLines].join('\n');
 }
-
 function downloadExport(vertical){
-  const text=buildExportText(vertical);
-  if(!text) return;
-  const blob=new Blob([text],{type:'text/plain'});
+  const text=buildExportText(vertical); if(!text) return;
   const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
+  a.href=URL.createObjectURL(new Blob([text],{type:'text/plain'}));
   a.download='atlas-campaign-'+vertical+'-'+(SNAPSHOT||'export')+'.txt';
-  a.click();
-  URL.revokeObjectURL(a.href);
+  a.click(); URL.revokeObjectURL(a.href);
 }
+function showHeroNote(msg){ const el=$('heroNote'); el.textContent=msg||''; el.style.display=msg?'block':'none'; }
 
-function showHeroNote(msg){
-  const el=$('heroNote');
-  if(!msg){ el.style.display='none'; el.textContent=''; return; }
-  el.textContent=msg;
-  el.style.display='block';
-}
-
-function renderHero(vertical){
-  const brief=ATLAS_DATA?.brief;
-  if(!brief?.verticals?.length){ $('hero').style.display='none'; return; }
+function renderHero(d,vertical){
+  const brief=d&&d.brief;
+  if(!brief||!brief.verticals||!brief.verticals.length){ $('hero').style.display='none'; return; }
+  const fresh=freshList(d); const freshSet=new Set(fresh);
   const sel=$('heroVertical');
-  sel.innerHTML='';
-  for(const v of brief.verticals){
-    const o=document.createElement('option');
-    o.value=v.vertical; o.textContent=v.vertical.replace(/_/g,' ');
-    sel.appendChild(o);
-  }
-  if(!vertical) vertical=pickDefaultVertical(brief);
+  const opt=(v)=>'<option value="'+esc(v)+'">'+esc(label(v))+(boardDate(d,v)?' · '+esc(boardDate(d,v)):'')+'</option>';
+  const freshOpts=fresh.filter(v=>brief.verticals.some(x=>x.vertical===v));
+  const older=brief.verticals.map(v=>v.vertical).filter(v=>!freshSet.has(v));
+  sel.innerHTML=freshOpts.map(opt).join('')+(older.length?'<optgroup label="'+esc(t('olderLanes'))+'">'+older.map(opt).join('')+'</optgroup>':'');
+  if(!vertical) vertical=pickDefaultVertical(d);
   sel.value=vertical;
-  sel.onchange=()=>{ showHeroNote(''); renderHero(sel.value); };
+  sel.onchange=()=>{ showHeroNote(''); renderHero(ATLAS_DATA,sel.value); };
   $('heroView').onclick=()=>{
-    const v=sel.value;
-    showHeroNote('');
-    const c=ATLAS_DATA?.concepts?.[v];
+    const v=sel.value; showHeroNote('');
+    const c=ATLAS_DATA&&ATLAS_DATA.concepts&&ATLAS_DATA.concepts[v];
     const el=document.getElementById('concept-'+v);
-    if(c&&el){ el.scrollIntoView({behavior:'smooth',block:'start'}); return; }
-    if(el){ el.scrollIntoView({behavior:'smooth',block:'start'}); showHeroNote(t('heroNoteGen')); return; }
+    if(el){ const det=el.closest('details'); if(det) det.open=true; el.scrollIntoView({behavior:'smooth',block:'start'}); if(!(c&&c.concept&&c.concept.headline)) showHeroNote(t('heroNoteGen')); return; }
     showHeroNote(t('heroNoteNone'));
-    $('scanQ').value=v.replace(/_/g,' ');
-    $('scan').scrollIntoView({behavior:'smooth',block:'start'});
   };
   $('heroExport').onclick=()=>downloadExport(sel.value);
   const row=brief.verticals.find(v=>v.vertical===vertical);
-  if(!row){ $('hero').style.display='none'; return; }
+  if(!row||!row.move){ $('hero').style.display='none'; return; }
   const m=row.move;
-  $('heroRec').innerHTML='<span class="badge '+esc(m.state)+'" style="display:inline-block;margin-right:6px">'+esc(m.state)+'</span>'+esc(m.angle.replace(/_/g,' '));
+  $('heroRec').innerHTML='<span class="badge '+esc(m.state)+'" style="margin-right:8px">'+esc(m.state)+'</span>'+esc(label(m.angle));
   $('heroConf').textContent=confLabel(m.score)+' ('+m.score+'/100)';
   $('heroWhy').textContent=trWhy(m.why)||'—';
+  $('heroActV').textContent=t(m.state==='ENTER'?'actEnter':m.state==='WATCH'?'actWatch':m.state==='AVOID'?'actAvoid':'actStable');
+  showHeroNote(vertical===GEO&&m.state!=='ENTER'&&vertical===pickDefaultVertical(d)?t('focusLane'):'');
   $('hero').style.display='block';
 }
 
 function sparkSvg(history){
-  if(!history||!history.length) return '<svg class="spark" viewBox="0 0 56 22"><text x="4" y="14" fill="#5b6072" font-size="8">—</text></svg>';
-  const pts=history.map((h,i)=>{
-    const x=history.length===1?28:(i/(history.length-1))*52+2;
-    const y=20-(h.score/100)*18;
-    return x+','+y;
-  }).join(' ');
-  return '<svg class="spark" viewBox="0 0 56 22"><polyline fill="none" stroke="#5eead4" stroke-width="1.5" points="'+pts+'"/></svg>';
+  if(!history||!history.length) return '<svg class="spark" viewBox="0 0 56 22"><text x="4" y="14" fill="#6b7280" font-size="8">—</text></svg>';
+  const pts=history.map((h,i)=>((history.length===1?28:(i/(history.length-1))*52+2)+','+(20-(h.score/100)*18))).join(' ');
+  return '<svg class="spark" viewBox="0 0 56 22"><polyline fill="none" stroke="#edb867" stroke-width="1.5" points="'+pts+'"/></svg>';
 }
 
 function closeDrawer(){ $('drawer').classList.remove('open'); $('overlay').classList.remove('open'); }
-$('drawerClose').onclick=closeDrawer;
-$('overlay').onclick=closeDrawer;
-
-async function openEvidence(vertical, angle){
-  $('drawer').classList.add('open');
-  $('overlay').classList.add('open');
-  $('drawerTitle').textContent=angle.replace(/_/g,' ');
-  $('drawerSub').textContent=vertical+' · snapshot '+SNAPSHOT;
+$('drawerClose').onclick=closeDrawer; $('overlay').onclick=closeDrawer;
+async function openEvidence(vertical, angle, date){
+  $('drawer').classList.add('open'); $('overlay').classList.add('open');
+  $('drawerTitle').textContent=label(angle);
+  $('drawerSub').textContent=label(vertical)+' · snapshot '+(date||SNAPSHOT);
   $('drawerBody').innerHTML='<div class="loading">'+t('loadEvidence')+'</div>';
   try{
-    const r=await fetch('api/atlas/evidence?vertical='+encodeURIComponent(vertical)+'&angle='+encodeURIComponent(angle)+'&date='+encodeURIComponent(SNAPSHOT));
+    const r=await fetch('api/atlas/evidence?vertical='+encodeURIComponent(vertical)+'&angle='+encodeURIComponent(angle)+'&date='+encodeURIComponent(date||SNAPSHOT));
     const d=await r.json();
     $('drawerBody').innerHTML=(d.evidence||[]).map(e=>'<div class="evitem"><b>'+esc(e.advertiser)+'</b> ('+e.confidence+t('match')+')<br>'+esc(e.excerpt)+'<br><a href="'+esc(e.url)+'" target="_blank" rel="noopener">'+t('viewInLib')+'</a></div>').join('')||'<div class="note">'+t('noLane')+'</div>';
-  }catch(e){ $('drawerBody').innerHTML='<div class="note">Failed: '+esc(e.message)+'</div>'; }
+  }catch(e){ $('drawerBody').innerHTML='<div class="note">'+t('failed')+': '+esc(e.message)+'</div>'; }
 }
 
+/* Ship (render still + video) is OWNER-only: paid, and force-rendering would overwrite a shipped file. */
 function conceptShipHtml(c, shipCfg){
-  const hasAsset=c.asset&&c.asset.image_file;
-  const hasVideo=c.video&&c.video.video_file;
+  if(!IS_OWNER()) return '';
+  if(Skin.EXAMPLES.some(x=>x.id===c.vertical)) return ''; // the 7 gallery creatives are never re-rendered
+  const hasAsset=c.asset&&c.asset.image_file, hasVideo=c.video&&c.video.video_file;
   if(hasVideo||!shipCfg||!shipCfg.image) return '';
-  const label=hasAsset
-    ? (shipCfg.video?t('genVideo'):t('genStill'))
-    : t('genCreative');
-  return '<div class="shiprow">'+
-    '<button type="button" class="shipbtn" data-v="'+esc(c.vertical)+'">'+label+'</button>'+
-    '<div class="shipfeed" id="shipfeed-'+esc(c.vertical)+'"></div></div>';
+  const lab=hasAsset?(shipCfg.video?t('genVideo'):t('genStill')):t('genCreative');
+  return '<div class="shiprow"><button type="button" class="btn ghost shipbtn" data-v="'+esc(c.vertical)+'">'+lab+'</button><div class="shipfeed" id="shipfeed-'+esc(c.vertical)+'"></div></div>';
 }
 
 function perfHtml(c){
-  const tid=c.tracking?.concept_id||(c.vertical+'_'+(c.snapshot_date||''));
-  const perf=ATLAS_DATA?.performance?.concepts?.[tid];
+  const tid=(c.tracking&&c.tracking.concept_id)||(c.vertical+'_'+(c.snapshot_date||''));
+  const perf=ATLAS_DATA&&ATLAS_DATA.performance&&ATLAS_DATA.performance.concepts&&ATLAS_DATA.performance.concepts[tid];
   if(!perf||!perf.totals||!perf.totals.event_count) return '';
-  const tot=perf.totals;
-  const hs=perf.hubspot;
+  const tot=perf.totals, hs=perf.hubspot||{};
   const rows=[];
-  if(tot.spend) rows.push('<div class="prow"><b>'+t('spend')+'</b> $'+tot.spend.toFixed(2)+'</div>');
-  if(tot.clicks) rows.push('<div class="prow"><b>'+t('clicks')+'</b> '+tot.clicks+'</div>');
-  if(tot.ga4_sessions) rows.push('<div class="prow"><b>'+t('sessions')+'</b> '+tot.ga4_sessions+'</div>');
-  if(tot.ga4_key_events) rows.push('<div class="prow"><b>'+t('keyEvents')+'</b> '+tot.ga4_key_events+'</div>');
-  if(tot.wa_clicks) rows.push('<div class="prow"><b>'+t('waClicks')+'</b> '+tot.wa_clicks+'</div>');
-  if(tot.conversions) rows.push('<div class="prow"><b>'+t('conversions')+'</b> '+tot.conversions+'</div>');
-  if(tot.leads) rows.push('<div class="prow"><b>'+t('leads')+'</b> '+tot.leads+'</div>');
-  if(tot.hubspot_deals) rows.push('<div class="prow"><b>'+t('hsDeals')+'</b> '+tot.hubspot_deals+'</div>');
-  if(hs&&(hs.espaluz||hs.client||hs.hiring)){
-    const parts=[];
-    if(hs.espaluz) parts.push('ESPALUZ '+hs.espaluz);
-    if(hs.client) parts.push('CLIENT '+hs.client);
-    if(hs.hiring) parts.push('HIRING '+hs.hiring);
-    rows.push('<div class="prow"><b>'+t('crmStreams')+'</b> '+parts.join(' · ')+'</div>');
-  }
-  if(tot.revenue) rows.push('<div class="prow"><b>'+t('revenue')+'</b> $'+tot.revenue.toFixed(2)+'</div>');
+  const add=(cond,k,v)=>{ if(cond) rows.push('<div class="prow"><b>'+t(k)+'</b> '+v+'</div>'); };
+  add(tot.spend,'spend','$'+(+tot.spend).toFixed(2)); add(tot.clicks,'clicks',tot.clicks); add(tot.ga4_sessions,'sessions',tot.ga4_sessions);
+  add(tot.ga4_key_events,'keyEvents',tot.ga4_key_events); add(tot.wa_clicks,'waClicks',tot.wa_clicks); add(tot.conversions,'conversions',tot.conversions);
+  add(tot.leads,'leads',tot.leads); add(tot.hubspot_deals,'hsDeals',tot.hubspot_deals);
+  add(tot.revenue,'revenue','$'+(+tot.revenue||0).toFixed(2));
   if(tot.roas!=null) rows.push('<div class="prow"><b>ROAS</b> '+tot.roas+'×</div>');
   if(tot.cpa!=null) rows.push('<div class="prow"><b>CPA</b> $'+tot.cpa+'</div>');
   if(!rows.length) return '';
-  const loop=hs&&hs.recent&&hs.recent.length
-    ? '<div class="prow crmloop"><b>'+t('liveLoop')+'</b> '+t('loopFull')+' ('+hs.recent.length+' '+t('deals')+')</div>'
-    : (tot.hubspot_deals||tot.conversions||tot.leads)
-      ? '<div class="prow crmloop"><b>'+t('liveLoop')+'</b> '+t('loopTagged')+'</div>'
-      : '';
+  const n=hs.deals!=null?hs.deals:(Number(hs.client)||0);
+  const loop=n?'<div class="prow"><b>'+t('liveLoop')+'</b> '+t('loopFull')+' ('+n+' '+t('deals')+')</div>'
+    :tot.hubspot_deals?'<div class="prow"><b>'+t('liveLoop')+'</b> '+t('loopTagged')+'</div>':'';
   return '<div class="perfbox"><div class="ptitle">'+t('perfTitle')+' ('+tot.event_count+' '+t('events')+')</div>'+loop+rows.join('')+'</div>';
 }
-
 function trackHtml(c){
   const tr=c.tracking;
   if(!tr||!tr.landing_url) return '';
-  const crm=tr.crm_event_url?(' · <span title="POST with Bearer OUTREACH_SECRET">CRM hub</span>'):'';
-  return '<div class="trackbox">Track: <b>'+esc(tr.concept_id)+'</b> · '+esc(tr.utm_campaign)+' · <a href="'+esc(tr.landing_url)+'" target="_blank" rel="noopener">landing ↗</a>'+crm+'</div>';
+  return '<div class="trackbox">'+t('track')+': <b>'+esc(tr.concept_id)+'</b> · '+esc(tr.utm_campaign)+' · <a href="'+esc(tr.landing_url)+'" target="_blank" rel="noopener">'+t('landing')+'</a></div>';
 }
 
 function conceptCardHtml(c, shipCfg){
-  const cc=c.concept||{};
+  const cc=c.concept||{}, mv=c.move||{};
   const ev=(c.grounding_evidence||[]).slice(0,2).map(e=>'<a href="'+esc(e.url)+'" target="_blank" rel="noopener">['+esc(e.angle)+' · '+esc(e.advertiser)+']</a>').join(' ');
-  const muts=(c.mutations||[]).map((m,i)=>'<div class="mut"><div class="mh">V'+(i+2)+' · '+esc(m.emotion)+'</div>'+esc(m.hook)+'<br><b style="color:var(--ink)">'+esc(m.headline)+'</b></div>').join('');
-  const imgAt=c.asset&&c.asset.generated_at;
-  const vidAt=c.video&&c.video.generated_at;
+  const muts=(c.mutations||[]).map((m,i)=>'<div class="mut"><div class="mh">V'+(i+2)+' · '+esc(m.emotion)+'</div>'+esc(m.hook)+'<br><b style="color:#fff">'+esc(m.headline)+'</b></div>').join('');
+  const imgAt=c.asset&&c.asset.generated_at, vidAt=c.video&&c.video.generated_at;
+  // A visual rendered for an earlier campaign (copy rotates weekly, the render stays) says so.
+  const visAt=String(vidAt||imgAt||'').slice(0,10), older=visAt&&c.snapshot_date&&visAt<String(c.snapshot_date).slice(0,10);
+  const visCap=(lab,model)=>older?(t('earlierVisual')+' · '+esc(visAt)):(lab+' · '+esc(model||''));
   const media=(c.video&&c.video.video_file
-    ?('<video class="casset" src="'+esc(assetSrc(c.video.video_file,vidAt))+'" controls muted loop playsinline poster="'+esc(assetSrc((c.asset&&c.asset.image_file)||'',imgAt))+'"></video><div class="ev">generated video · '+esc(c.video.model||'')+'</div>')
+    ?('<video class="casset" src="'+esc(assetSrc(c.video.video_file,vidAt))+'" controls muted loop playsinline preload="none" poster="'+esc(assetSrc((c.asset&&c.asset.image_file)||'',imgAt))+'"></video><div class="evl">'+visCap(t('genVideoLab'),c.video.model)+'</div>')
     :(c.asset&&c.asset.image_file
-      ?('<img class="casset" src="'+esc(assetSrc(c.asset.image_file,imgAt))+'" alt="generated creative" loading="lazy"><div class="ev">generated still · '+esc(c.asset.model||'')+'</div>')
+      ?('<img class="casset" src="'+esc(assetSrc(c.asset.image_file,imgAt))+'" alt="" loading="lazy"><div class="evl">'+visCap(t('genStillLab'),c.asset.model)+'</div>')
       :'<div class="note">'+t('assetPending')+'</div>'));
-  return '<div class="concept" id="concept-'+esc(c.vertical)+'">'+
-    '<div class="k">'+esc(c.vertical)+' · '+t('openWindow')+': '+esc(c.move.angle)+' ('+c.move.score+'/100)'+(c.heating_lane?(' · '+t('adjHeating')+' '+esc(c.heating_lane)):'')+'</div>'+
-    '<h3>'+esc(cc.concept_name||'—')+'</h3><div class="em">owns: '+esc(cc.emotion||'')+'</div>'+
-    media+
-    '<div class="row"><b>'+t('hook')+':</b> '+esc(cc.hook||'')+'</div>'+
-    '<div class="row"><b>'+t('headline')+':</b> '+esc(cc.headline||'')+'</div>'+
-    '<div class="row"><b>'+t('body')+':</b> '+esc(cc.primary_text||'')+'</div>'+
-    '<div class="row"><b>'+t('scene')+':</b> '+esc(cc.scene_concept||'')+'</div>'+
-    '<div class="row"><b>'+t('cta')+':</b> '+esc(cc.cta||'')+'</div>'+
+  const row=(k,v)=>v?'<div class="row"><b>'+t(k)+':</b> '+esc(v)+'</div>':'';
+  return '<div class="card concept" id="concept-'+esc(c.vertical)+'">'+
+    '<div class="k">'+esc(label(c.vertical))+(mv.angle?' · '+(mv.state==='ENTER'?t('openWindow'):esc(mv.state||''))+': '+esc(label(mv.angle))+' ('+mv.score+'/100)':'')+(c.heating_lane?(' · '+t('adjHeating')+' '+esc(label(c.heating_lane))):'')+'</div>'+
+    (IS_OWNER()?'':'<div class="draftnote">'+t('draftCopy')+'</div>')+
+    '<h3>'+esc(cc.concept_name||label(c.vertical))+'</h3>'+(cc.emotion?'<div class="em">'+t('owns')+': '+esc(cc.emotion)+'</div>':'')+
+    media+row('hook',cc.hook)+row('headline',cc.headline)+row('body',cc.primary_text)+row('scene',cc.scene_concept)+row('cta',cc.cta)+
     (muts?('<div class="row"><b>'+t('mutations')+':</b></div><div class="mutgrid">'+muts+'</div>'):'')+
-    (ev?('<div class="ev">'+t('grounded')+': '+ev+'</div>'):'')+
-    perfHtml(c)+
-    trackHtml(c)+
-    conceptShipHtml(c, shipCfg)+
-  '</div>';
+    (ev?('<div class="evl">'+t('grounded')+': '+ev+'</div>'):'')+perfHtml(c)+trackHtml(c)+conceptShipHtml(c, shipCfg)+'</div>';
 }
-
 function conceptPendingHtml(vertical, move){
-  const mv=move?(' · MOVE '+esc(move.state)+' '+esc(move.angle.replace(/_/g,' '))):'';
-  return '<div class="concept concept-pending" id="concept-'+esc(vertical)+'">'+
-    '<div class="k">'+esc(vertical)+mv+'</div>'+
-    '<h3>'+t('pendingH')+'</h3>'+
-    '<p class="pending-msg">'+t('pendingP')+'</p>'+
-  '</div>';
+  const mv=move?(' · '+t('moveLab')+' '+esc(move.state)+' '+esc(label(move.angle))):'';
+  return '<div class="card concept concept-pending" id="concept-'+esc(vertical)+'"><div class="k">'+esc(label(vertical))+mv+'</div><h3>'+t('pendingH')+'</h3><p class="pending-msg">'+t('pendingP')+'</p></div>';
 }
+const hasCopy=(c)=>!!(c&&c.concept&&(c.concept.headline||c.concept.hook));
 
+/** Live lanes first (focus, then fresh). Older campaigns with real copy go under a fold.
+    The 7 shipped creatives do NOT depend on this — they are the Examples gallery above. */
 function renderConceptSection(d, focusVertical){
-  const concepts=d.concepts||{};
-  const shipCfg=d.ship||{};
-  const briefVs=(d.brief?.verticals||[]).map(v=>v.vertical);
-  const boardVs=(d.board||[]).map(b=>b.vertical);
-  const trackedVs=(d.tracked_verticals||[]).map(t=>t.id);
-  const order=[...new Set([focusVertical,...briefVs,...boardVs,...trackedVs].filter(Boolean))];
-  const briefByV={};
-  for(const v of (d.brief?.verticals||[])) briefByV[v.vertical]=v;
-  const html=[];
-  for(const v of order){
-    if(concepts[v]) html.push(conceptCardHtml(concepts[v], shipCfg));
-    else html.push(conceptPendingHtml(v, briefByV[v]?.move));
-  }
-  return html.length? html.join('') : '<div class="loading">No concepts generated yet — add a vertical to radar.</div>';
+  const concepts=d.concepts||{}, shipCfg=d.ship||{};
+  const briefByV={}; for(const v of ((d.brief&&d.brief.verticals)||[])) briefByV[v.vertical]=v;
+  const live=[...new Set([focusVertical,...freshList(d)].filter(Boolean))];
+  const html=live.map(v=>concepts[v]?conceptCardHtml(concepts[v],shipCfg):conceptPendingHtml(v,briefByV[v]&&briefByV[v].move));
+  const older=Object.keys(concepts).filter(v=>!live.includes(v)&&hasCopy(concepts[v]));
+  if(older.length) html.push('<details class="older"><summary>'+esc(t('olderCampaigns'))+' ('+older.length+')</summary>'+older.map(v=>conceptCardHtml(concepts[v],shipCfg)).join('')+'</details>');
+  return html.join('')||'<div class="loading">—</div>';
 }
 
 let refreshPollTimer=null;
@@ -575,354 +574,193 @@ function scheduleRefreshPoll(d){
   if(refreshPollTimer){ clearInterval(refreshPollTimer); refreshPollTimer=null; }
   if(d&&d.pipeline&&d.pipeline.in_progress){
     refreshPollTimer=setInterval(()=>{
-      fetch('api/atlas').then(r=>r.json()).then(nd=>{
-        render(nd);
-        if(!nd.pipeline||!nd.pipeline.in_progress){
-          clearInterval(refreshPollTimer);
-          refreshPollTimer=null;
-        }
-      }).catch(()=>{});
+      fetch(atlasUrl()).then(r=>r.json()).then(nd=>{ render(nd); if(!nd.pipeline||!nd.pipeline.in_progress){ clearInterval(refreshPollTimer); refreshPollTimer=null; } }).catch(()=>{});
     },20000);
   }
 }
-fetch('api/atlas').then(r=>r.json()).then(render).catch(e=>{
-  $('board').innerHTML='<div class="loading">Could not load radar: '+esc(e.message)+'</div>';
-});
 
-let scanBusy=false;
-function setTrackRunning(running,label){
-  const btn=$('scanTrack');
-  scanBusy=running;
-  btn.disabled=running;
-  btn.textContent=label||(running?t('working'):t('trackBtn'));
-  btn.classList.toggle('running',!!running);
+function setTrackRunning(running,lab){
+  const btn=$('scanTrack'); scanBusy=running; btn.disabled=running; btn.textContent=lab||(running?t('working'):t('trackBtn'));
 }
 function scanFeed(stage,msg,cls){
-  const el=$('scanFeed');
-  el.style.display='block';
-  const d=document.createElement('div');
-  d.innerHTML='<span class="'+(cls||'ok')+'">'+esc(stage)+'</span> · '+esc(msg);
-  el.appendChild(d);
-  el.scrollTop=el.scrollHeight;
+  const el=$('scanFeed'); el.style.display='block';
+  const d=document.createElement('div'); d.innerHTML='<span class="'+(cls||'ok')+'">'+esc(stage)+'</span> · '+esc(msg);
+  el.appendChild(d); el.scrollTop=el.scrollHeight;
 }
-function scanFinish(ok){
-  setTrackRunning(false);
-  if(ok){ $('scanTrack').textContent=t('added'); setTimeout(()=>{ $('scanTrack').textContent=t('trackBtn'); },4000); }
-}
-
+function scanFinish(ok){ setTrackRunning(false); if(ok){ $('scanTrack').textContent=t('added'); setTimeout(()=>{ $('scanTrack').textContent=t('trackBtn'); },4000); } }
 function stageLabel(stage){
   if(stage==='capture'||stage==='register') return t('stCapture');
-  if(stage==='classify') return t('stClassify');
-  if(stage==='brief') return t('stBrief');
-  if(stage==='concept') return t('stConcept');
+  if(stage==='classify') return t('stClassify'); if(stage==='brief') return t('stBrief'); if(stage==='concept') return t('stConcept');
   return t('addingRadar');
 }
-
 function renderTrackedList(d){
-  const custom=(d.tracked_verticals||[]);
-  const el=$('trackedList');
-  if(!custom.length){ el.style.display='none'; return; }
+  const custom=d.tracked_verticals||[], el=$('trackedList');
+  if(!custom.length||!IS_OWNER()){ el.style.display='none'; return; }
   el.style.display='block';
-  el.innerHTML='<div>'+t('trackedTitle')+' <span style="color:var(--dim)">'+t('trackedCron')+'</span></div><div class="chips">'+
-    custom.map(v=>{
-      const onBoard=(ATLAS_DATA?.board||[]).some(b=>b.vertical===v.id);
-      const pending=onBoard?'':' <span style="color:var(--warn);font-size:10px">'+t('trackedPending')+'</span>';
-      return '<span class="chip"><b>'+esc(v.label)+'</b>'+pending+'</span>';
-    }).join('')+'</div>';
+  el.innerHTML='<div>'+t('trackedTitle')+' <span style="color:var(--ink-45)">'+t('trackedCron')+'</span></div><div class="chips">'+
+    custom.map(v=>{ const on=(d.board||[]).some(b=>b.vertical===v.id); return '<span class="chip">'+esc(v.label)+(on?'':' <small>'+t('trackedPending')+'</small>')+'</span>'; }).join('')+'</div>';
 }
-
-function runTrack(fromWhitespace){
-  if(scanBusy) return;
-  const v=$('scanQ').value.trim();
-  if(!v) return;
-  setTrackRunning(true,t('addingRadar'));
-  $('scanFeed').innerHTML='';
-  if(fromWhitespace) scanFeed('link','From WHITESPACE — finishing add to radar automatically','ok');
-  scanFeed('start','adding to radar…');
-  const es=new EventSource('api/atlas/track?vertical='+encodeURIComponent(v));
+/* Owner only. The public never starts a capture — there is no ?track=1 auto-run any more. */
+function runTrack(){
+  if(scanBusy||!IS_OWNER()) return;
+  const v=$('scanQ').value.trim(); if(!v) return;
+  setTrackRunning(true,t('addingRadar')); $('scanFeed').innerHTML='';
+  scanFeed('start',t('addingRadar'));
+  const es=new EventSource(withToken('api/atlas/track?vertical='+encodeURIComponent(v)));
   es.onmessage=(m)=>{
     let e; try{e=JSON.parse(m.data);}catch{return;}
     scanFeed(e.stage,e.message||'', e.stage==='error'?'bad':'ok');
     if(e.stage&&e.stage!=='error'&&e.stage!=='done') setTrackRunning(true,stageLabel(e.stage));
     if(e.stage==='done'){
-      es.close();
-      scanFinish(true);
-      fetch('api/atlas').then(r=>r.json()).then(render).then(()=>{
-        scanFeed('refresh','Radar board reloaded — look for "'+(e.vertical_id||verticalSlug(v))+'"','ok');
-        const el=document.getElementById('concept-'+(e.vertical_id||verticalSlug(v)));
-        if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
-      });
+      es.close(); scanFinish(true);
+      fetch(atlasUrl()).then(r=>r.json()).then(render).then(()=>{ const el=document.getElementById('concept-'+(e.vertical_id||'')); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); });
     }
     if(e.stage==='error'){ es.close(); scanFinish(false); }
   };
   es.addEventListener('close',()=>{ es.close(); if(scanBusy) scanFinish(false); });
   es.onerror=()=>{ if(scanBusy) scanFeed('error','stream closed','bad'); es.close(); scanFinish(false); };
 }
-function verticalSlug(s){ return s.trim().toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'').slice(0,48)||'custom'; }
 
 function shipFeed(vertical, stage, msg, cls){
-  const el=document.getElementById('shipfeed-'+vertical);
-  if(!el) return;
+  const el=document.getElementById('shipfeed-'+vertical); if(!el) return;
   el.classList.add('show');
-  const d=document.createElement('div');
-  d.innerHTML='<span class="'+(cls||'ok')+'">'+esc(stage)+'</span> · '+esc(msg);
-  el.appendChild(d);
-  el.scrollTop=el.scrollHeight;
+  const d=document.createElement('div'); d.innerHTML='<span class="'+(cls||'ok')+'">'+esc(stage)+'</span> · '+esc(msg);
+  el.appendChild(d); el.scrollTop=el.scrollHeight;
 }
-
 function setShipButtons(disabled, activeVertical){
-  document.querySelectorAll('.shipbtn').forEach(btn=>{
-    btn.disabled=disabled;
-    if(disabled&&btn.dataset.v===activeVertical){
-      btn.textContent='Generating…';
-    }
-  });
+  document.querySelectorAll('.shipbtn').forEach(btn=>{ btn.disabled=disabled; if(disabled&&btn.dataset.v===activeVertical) btn.textContent=t('generating'); });
 }
-
 function finishShipSuccess(d, vertical, partial, videoNote){
   ATLAS_DATA=d;
   $('concepts').innerHTML=renderConceptSection(d, vertical);
-  bindShipButtons();
-  setShipButtons(false);
+  bindShipButtons(); setShipButtons(false);
   const card=document.getElementById('concept-'+vertical);
   if(card){
-    if(partial&&!((d.concepts||{})[vertical]||{}).video){
-      const msg=videoNote||'Video step failed — Runway/Luma/Gemini unavailable. Still image is live.';
-      card.insertAdjacentHTML('afterbegin','<div class="ship-warn">'+esc(msg)+'</div>');
-    }
+    if(partial&&!((d.concepts||{})[vertical]||{}).video) card.insertAdjacentHTML('afterbegin','<div class="ship-warn">'+esc(videoNote||'Video step failed. Still image is live.')+'</div>');
     card.scrollIntoView({behavior:'smooth',block:'start'});
   }
 }
-
-/** Mobile SSE drops (screen sleep) while server keeps rendering — poll until asset/video lands. */
+/** Mobile SSE drops (screen sleep) while the server keeps rendering — poll until the asset lands. */
 function pollShipAfterDisconnect(vertical, ctx){
-  const { stage, hadAsset, hadVideo, videoNote }=ctx;
-  const startMs=Date.now();
-  const MAX_MS=660000;
-  const INTERVAL=8000;
-  shipFeed(vertical,'poll','Connection dropped — checking if render finished in background…','ok');
+  const startMs=Date.now(), MAX_MS=660000, INTERVAL=8000;
+  shipFeed(vertical,'poll',t('reconnect'),'ok');
   async function attempt(){
     if(ctx.shipDoneRef.done) return;
-    if(Date.now()-startMs>MAX_MS){
-      if(!ctx.shipDoneRef.done){
-        shipFeed(vertical,'error','Stream closed — refresh in a minute if creative doesn’t appear','bad');
-        shipBusyVertical='';
-        setShipButtons(false);
-      }
-      return;
-    }
+    if(Date.now()-startMs>MAX_MS){ shipFeed(vertical,'error','stream closed','bad'); shipBusyVertical=''; setShipButtons(false); return; }
     try{
-      const d=await (await fetch('api/atlas')).json();
+      const d=await (await fetch(atlasUrl())).json();
       const c=(d.concepts||{})[vertical]||{};
-      const hasAssetNow=!!(c.asset&&c.asset.image_file);
-      const hasVideoNow=!!(c.video&&c.video.video_file);
-      const videoReady=hasVideoNow&&!hadVideo;
-      const imageReady=hasAssetNow&&!hadAsset;
-      if(stage==='video'&&videoReady){
-        ctx.shipDoneRef.done=true;
-        shipBusyVertical='';
-        shipFeed(vertical,'done','Video ready (recovered after reconnect)','ok');
-        finishShipSuccess(d, vertical, false, videoNote);
-        return;
-      }
-      if(stage==='all'){
-        if(videoReady){
-          ctx.shipDoneRef.done=true;
-          shipBusyVertical='';
-          shipFeed(vertical,'done','Creative ready (recovered after reconnect)','ok');
-          finishShipSuccess(d, vertical, false, videoNote);
-          return;
-        }
-        if(imageReady&&!hadVideo&&!hasVideoNow){
-          shipFeed(vertical,'poll','Still image ready — waiting on video…','ok');
-        }
-      }
-      setTimeout(attempt, INTERVAL);
-    }catch{
-      setTimeout(attempt, INTERVAL);
-    }
+      const hasAssetNow=!!(c.asset&&c.asset.image_file), hasVideoNow=!!(c.video&&c.video.video_file);
+      if(hasVideoNow&&!ctx.hadVideo){ ctx.shipDoneRef.done=true; shipBusyVertical=''; finishShipSuccess(d, vertical, false, ctx.videoNote); return; }
+      if(ctx.stage==='all'&&hasAssetNow&&!ctx.hadAsset) shipFeed(vertical,'poll',t('stillReady'),'ok');
+    }catch{}
+    setTimeout(attempt, INTERVAL);
   }
   attempt();
 }
-
 function runShip(vertical){
-  if(shipBusyVertical||!vertical) return;
-  const cfg=ATLAS_DATA&&ATLAS_DATA.ship;
-  if(!cfg||!cfg.image){
-    shipFeed(vertical,'error','Image providers not configured on server','bad');
-    return;
-  }
-  if(cfg.tokenRequired&&!SHIP_TOKEN){
-    shipFeed(vertical,'error','Add ?ship_token=… to the URL for live generation','bad');
-    return;
-  }
+  if(shipBusyVertical||!vertical||!IS_OWNER()) return;
   const c=ATLAS_DATA&&ATLAS_DATA.concepts&&ATLAS_DATA.concepts[vertical];
-  const hasAsset=c&&c.asset&&c.asset.image_file;
-  const hasVideo=c&&c.video&&c.video.video_file;
+  const hasAsset=!!(c&&c.asset&&c.asset.image_file), hasVideo=!!(c&&c.video&&c.video.video_file);
   const stage=hasAsset&&!hasVideo?'video':'all';
-  shipBusyVertical=vertical;
-  setShipButtons(true, vertical);
-  const feedEl=document.getElementById('shipfeed-'+vertical);
-  if(feedEl) feedEl.innerHTML='';
-  shipFeed(vertical,'start',stage==='video'?'Animating 5s video (Runway → Luma → Gemini)…':'Rendering still, then video…','ok');
-  let url='api/atlas/ship?vertical='+encodeURIComponent(vertical)+'&stage='+stage;
-  if(SHIP_TOKEN) url+='&token='+encodeURIComponent(SHIP_TOKEN);
-  const shipDoneRef={ done:false };
-  let videoNote='';
-  const es=new EventSource(url);
+  shipBusyVertical=vertical; setShipButtons(true, vertical);
+  const feedEl=document.getElementById('shipfeed-'+vertical); if(feedEl) feedEl.innerHTML='';
+  shipFeed(vertical,'start',stage==='video'?'Animating 5s video…':'Rendering still, then video…','ok');
+  const shipDoneRef={done:false}; let videoNote='';
+  const es=new EventSource(withToken('api/atlas/ship?vertical='+encodeURIComponent(vertical)+'&stage='+stage));
   es.onmessage=(m)=>{
     let e; try{e=JSON.parse(m.data);}catch{return;}
     if(e.stage==='video'&&(e.partial||e.message)) videoNote=e.message||videoNote;
     shipFeed(vertical, e.stage, e.message||'', e.stage==='error'?'bad':'ok');
     if(e.stage==='done'){
-      shipDoneRef.done=true;
-      es.close();
-      shipBusyVertical='';
+      shipDoneRef.done=true; es.close(); shipBusyVertical='';
       const partial=e.video_status==='partial'||(!e.has_video&&hasAsset);
-      fetch('api/atlas').then(r=>r.json()).then(d=>finishShipSuccess(d, vertical, partial, videoNote));
+      fetch(atlasUrl()).then(r=>r.json()).then(d=>finishShipSuccess(d, vertical, partial, videoNote));
     }
-    if(e.stage==='error'){
-      shipDoneRef.done=true;
-      es.close();
-      shipBusyVertical='';
-      if(ATLAS_DATA){
-        $('concepts').innerHTML=renderConceptSection(ATLAS_DATA, vertical);
-        bindShipButtons();
-      } else {
-        setShipButtons(false);
-      }
-    }
+    if(e.stage==='error'){ shipDoneRef.done=true; es.close(); shipBusyVertical=''; setShipButtons(false); }
   };
-  es.addEventListener('close',()=>{
-    es.close();
-    if(!shipDoneRef.done&&shipBusyVertical===vertical){
-      pollShipAfterDisconnect(vertical, { stage, hadAsset: hasAsset, hadVideo: hasVideo, videoNote, shipDoneRef });
-    }
-  });
-  es.onerror=()=>{
-    if(shipDoneRef.done) return;
-    es.close();
-    if(shipBusyVertical===vertical){
-      pollShipAfterDisconnect(vertical, { stage, hadAsset: hasAsset, hadVideo: hasVideo, videoNote, shipDoneRef });
-    }
-  };
+  const lost=()=>{ es.close(); if(!shipDoneRef.done&&shipBusyVertical===vertical) pollShipAfterDisconnect(vertical,{stage,hadAsset:hasAsset,hadVideo:hasVideo,videoNote,shipDoneRef}); };
+  es.addEventListener('close',lost);
+  es.onerror=()=>{ if(!shipDoneRef.done) lost(); };
 }
-
-function bindShipButtons(){
-  document.querySelectorAll('.shipbtn').forEach(btn=>{
-    btn.onclick=()=>runShip(btn.dataset.v);
-  });
-}
+function bindShipButtons(){ document.querySelectorAll('.shipbtn').forEach(btn=>{ btn.onclick=()=>runShip(btn.dataset.v); }); }
 
 $('scanTrack').onclick=runTrack;
-$('scanQ').addEventListener('keydown',e=>{ if(e.key==='Enter') runTrack(); });
-const urlParams=new URLSearchParams(location.search);
-const qParam=urlParams.get('q');
-const trackParam=urlParams.get('track');
-if(qParam){ $('scanQ').value=qParam; }
-if(qParam&&trackParam==='1'){
+$('scanQ').addEventListener('keydown',e=>{ if(e.key==='Enter'&&IS_OWNER()) runTrack(); });
+const qParam=URLP.get('q'); if(qParam) $('scanQ').value=qParam;
+if(URLP.get('track')==='1'){ // old WHITESPACE links land on the request form
   history.replaceState(null,'',qParam?'atlas.html?q='+encodeURIComponent(qParam):'atlas.html');
-  $('scan').scrollIntoView({behavior:'smooth',block:'start'});
-  setTimeout(()=>{ if(!$('scanQ').value.trim()) $('scanQ').value=qParam; runTrack(true); }, 500);
+  setTimeout(()=>$('scan').scrollIntoView({behavior:'smooth',block:'start'}),300);
 }
 
 async function render(d){
   ATLAS_DATA=d;
   SNAPSHOT=d.snapshot_date||'';
-  const pipe=d.pipeline||{};
-  const refreshing=!!pipe.in_progress;
-  const snapLabel=refreshing
-    ? ((pipe.expected_snapshot_date||'today')+' ↻')
-    : (d.snapshot_date||'—');
-  $('stats').innerHTML=[
-    [t('stDays'), d.distinct_days||0],
-    [t('stAds'), d.total_rows||0],
-    [t('stVerts'), (d.board||[]).length],
-    [t('stSnap'), snapLabel],
-  ].map(([l,n],i)=>{
-    const cls=(i===3&&refreshing)?' stat refreshing':'';
-    return '<div class="stat'+cls+'"><div class="n">'+esc(String(n))+'</div><div class="l">'+esc(l+(refreshing&&i===3?t('stRefreshing'):'') )+'</div></div>';
-  }).join('');
+  paintScanBox();
+  const pipe=d.pipeline||{}, refreshing=!!pipe.in_progress;
+  const fresh=freshList(d);
+  const snapLabel=refreshing?((pipe.expected_snapshot_date||'today')+' ↻'):(d.snapshot_date||'—');
+  $('stats').innerHTML=[[t('stDays'),d.distinct_days||0],[t('stAds'),d.total_rows||0],[t('stVerts'),fresh.length||(d.board||[]).length],[t('stSnap'),snapLabel]]
+    .map(([l,n],i)=>'<div class="stat'+((i===3&&refreshing)?' refreshing':'')+'"><span class="n">'+esc(String(n))+'</span><span class="l">'+esc(l+(refreshing&&i===3?t('stRefreshing'):''))+'</span></div>').join('');
   const banner=$('refreshBanner');
-  if(pipe.stale_reason){
-    banner.textContent=pipe.stale_reason;
-    banner.classList.add('show');
-  } else if(d.stale){
-    banner.textContent='⏸ Radar paused — last live snapshot '+(d.snapshot_date||'—')+' ('+(d.snapshot_age_days!=null?d.snapshot_age_days:'?')+' days ago). Live ad capture resumes once Bright Data is funded; the history and concepts below are from that last snapshot.';
-    banner.classList.add('show');
-  } else {
-    banner.textContent='';
-    banner.classList.remove('show');
-  }
+  if(pipe.stale_reason){ banner.textContent=pipe.stale_reason; banner.classList.add('show'); }
+  else if(d.stale){ banner.textContent=t('stale')(d.snapshot_date||'—',d.snapshot_age_days!=null?d.snapshot_age_days:'?'); banner.classList.add('show'); }
+  else { banner.textContent=''; banner.classList.remove('show'); }
   scheduleRefreshPoll(d);
 
-  const res=d.brief&&d.brief.resilience;
-  $('shrug').textContent=res||'⌐ Atlas shifted — multi-tier LLM failover armed.';
-  renderHero(pickDefaultVertical(d.brief));
+  $('shrug').textContent=(d.brief&&d.brief.resilience)||'⌐ Atlas shifted — multi-tier LLM failover armed.';
+  const focus=pickDefaultVertical(d);
+  renderHero(d, focus);
   renderTrackedList(d);
 
+  // Intelligence: iterate the intelligence lanes themselves, live ones first (not the first 3 alphabetical).
   const intel=d.intelligence||{};
-  const intelByV={};
-  for(const v of (intel.verticals||[])) intelByV[v.vertical]=v;
-  $('intel').innerHTML=(d.board||[]).slice(0,3).map(v=>{
-    const iv=intelByV[v.vertical];
-    if(!iv) return '';
-    const wc=iv.wait_cost;
-    const hl=iv.half_life;
+  const freshSet=new Set(fresh);
+  const ivs=[...(intel.verticals||[])].sort((a,b)=>(freshSet.has(b.vertical)?1:0)-(freshSet.has(a.vertical)?1:0)).slice(0,4);
+  $('intel').innerHTML=ivs.map(iv=>{
+    const wc=iv.wait_cost, hl=iv.half_life;
     const pills=(wc?('<span class="pill '+(wc.verdict==='BUILD NOW'?'now':wc.verdict==='WAIT'?'wait':'avoid')+'">'+esc(wc.verdict)+'</span>'):'')+
-      (hl?('<span class="pill fresh">~'+hl.est_days_remaining+'d half-life · '+hl.opportunity_remaining_pct+'% room</span>'):'');
-    const absent=(iv.absent_universe||[]).slice(0,2).map(a=>'<div class="absent"><b>ABSENT · '+esc(a.angle_id)+'</b> — '+esc(a.opportunity)+(a.adjacent_heat?' (demand nearby: '+esc(a.adjacent_heat)+')':'')+'</div>').join('');
-    return '<div class="vcard"><div class="vname">'+esc(v.vertical)+'</div><div class="intelrow">'+pills+'</div>'+
-      (wc?('<div class="note">'+t('waitCost')+': '+esc(wc.reason)+'</div>'):'')+absent+'</div>';
+      (hl?('<span class="pill fresh">~'+hl.est_days_remaining+t('halfLife')+' · '+hl.opportunity_remaining_pct+t('room')+'</span>'):'')+
+      (boardDate(d,iv.vertical)?'<span class="datepill'+(freshSet.has(iv.vertical)?' fresh':'')+'">'+esc(boardDate(d,iv.vertical))+'</span>':'');
+    const absent=(iv.absent_universe||[]).slice(0,2).map(a=>'<div class="absent"><b>'+t('absent')+' · '+esc(label(a.angle_id))+'</b> — '+esc(a.opportunity)+(a.adjacent_heat?' ('+t('demandNearby')+': '+esc(a.adjacent_heat)+')':'')+'</div>').join('');
+    return '<div class="card vcard"><div class="vname">'+esc(label(iv.vertical))+'</div><div class="intelrow">'+pills+'</div>'+(wc?('<div class="note">'+t('waitCost')+': '+esc(wc.reason)+'</div>'):'')+absent+'</div>';
   }).join('')||'<div class="note">'+t('intelPending')+'</div>';
 
-  const briefByV={};
-  if(d.brief&&d.brief.verticals) for(const v of d.brief.verticals) briefByV[v.vertical]=v;
-
-  const histCache={};
-  async function hist(v,a){ const k=v+'|'+a; if(histCache[k]) return histCache[k]; try{ const r=await fetch('api/atlas/history?vertical='+encodeURIComponent(v)+'&angle='+encodeURIComponent(a)); const j=await r.json(); histCache[k]=j.history||[]; return histCache[k]; }catch{return [];} }
-
-  const boardEl=$('board');
-  boardEl.innerHTML='';
-  for(const v of (d.board||[])){
+  // Board: live lanes (≤14 days) first, the rest folded. History calls run in parallel.
+  const briefByV={}; for(const v of ((d.brief&&d.brief.verticals)||[])) briefByV[v.vertical]=v;
+  const histOf=async(v,a)=>{ try{ const r=await fetch('api/atlas/history?vertical='+encodeURIComponent(v)+'&angle='+encodeURIComponent(a)); return (await r.json()).history||[]; }catch{ return []; } };
+  const board=[...(d.board||[])].sort((a,b)=>(fresh.indexOf(a.vertical)<0?99:fresh.indexOf(a.vertical))-(fresh.indexOf(b.vertical)<0?99:fresh.indexOf(b.vertical)));
+  const cards=await Promise.all(board.map(async v=>{
     const mv=briefByV[v.vertical];
-    const moveTxt=mv?(' · MOVE → '+esc(mv.move.state)+' '+esc(mv.move.angle)+' ('+mv.move.score+'/100)'):'';
-    const lanes=[];
-    for(const a of v.angles){
-      const h=await hist(v.vertical,a.angle_id);
-      lanes.push('<div class="lane" data-v="'+esc(v.vertical)+'" data-a="'+esc(a.angle_id)+'">'+
-        '<span class="badge '+esc(a.window_state)+'">'+esc(a.window_state)+'</span>'+
-        '<span class="angle">'+esc(a.angle_id)+' <span class="b">'+a.distinct_advertisers+' adv · '+esc(a.signal_basis)+(a.adjacency_note?(' · '+esc(trWhy(a.adjacency_note))):'')+'</span></span>'+
-        sparkSvg(h)+
-        '<span class="satbar"><span class="satfill" style="width:'+pct(a.saturation)+'%"></span></span>'+
-        '<span class="score">'+pct(a.window_score)+'</span></div>');
-    }
-    boardEl.insertAdjacentHTML('beforeend','<div class="vcard"><div class="vhead"><span class="vname">'+esc(v.vertical)+'</span><span class="vmove">'+moveTxt+'</span></div>'+lanes.join('')+'</div>');
-  }
-  if(!(d.board||[]).length) boardEl.innerHTML='<div class="loading">'+t('noRadar')+'</div>';
-  boardEl.querySelectorAll('.lane').forEach(el=>el.onclick=()=>openEvidence(el.dataset.v, el.dataset.a));
+    const moveTxt=mv&&mv.move?(t('moveLab')+' → '+esc(mv.move.state)+' '+esc(label(mv.move.angle))+' ('+mv.move.score+'/100)'):'';
+    const isFresh=freshSet.has(v.vertical);
+    const hs=await Promise.all(v.angles.map(a=>isFresh?histOf(v.vertical,a.angle_id):Promise.resolve([])));
+    const lanes=v.angles.map((a,i)=>'<div class="lane" data-v="'+esc(v.vertical)+'" data-a="'+esc(a.angle_id)+'" data-d="'+esc(v.snapshot_date||'')+'">'+
+      '<span class="badge '+esc(a.window_state)+'">'+esc(a.window_state)+'</span>'+
+      '<span class="angle">'+esc(label(a.angle_id))+' <span class="b">'+a.distinct_advertisers+' adv · '+esc(a.signal_basis)+(a.adjacency_note?(' · '+esc(trWhy(a.adjacency_note))):'')+'</span></span>'+
+      sparkSvg(hs[i])+'<span class="satbar"><span class="satfill" style="width:'+pct(a.saturation)+'%"></span></span><span class="score">'+pct(a.window_score)+'</span></div>').join('');
+    return {fresh:isFresh, html:'<div class="card vcard"><div class="vhead"><span class="vname">'+esc(label(v.vertical))+' <span class="datepill'+(isFresh?' fresh':'')+'">'+esc(v.snapshot_date||'')+'</span></span><span class="vmove">'+moveTxt+'</span></div>'+lanes+'</div>'};
+  }));
+  const boardEl=$('board');
+  const live=cards.filter(c=>c.fresh).map(c=>c.html).join(''), old=cards.filter(c=>!c.fresh).map(c=>c.html).join('');
+  boardEl.innerHTML=(live||'')+(old?'<details class="older"><summary>'+esc(t('olderLanes'))+'</summary>'+old+'</details>':'')||'<div class="loading">'+t('noRadar')+'</div>';
+  if(!board.length) boardEl.innerHTML='<div class="loading">'+t('noRadar')+'</div>';
+  boardEl.querySelectorAll('.lane').forEach(el=>el.onclick=()=>openEvidence(el.dataset.v, el.dataset.a, el.dataset.d));
+  if((d.distinct_days||0)<2) boardEl.insertAdjacentHTML('beforeend','<div class="note">'+t('sparkNote')+'</div>');
 
-  $('concepts').innerHTML=renderConceptSection(d, pickDefaultVertical(d.brief));
+  $('concepts').innerHTML=renderConceptSection(d, focus);
   bindShipButtons();
 
-  const mem=(intel.memory||[]);
-  $('memory').innerHTML=mem.length? mem.map(m=>'<div class="memory">'+esc(m.snapshot_date)+' · '+esc(m.vertical)+' · ENTER <b>'+esc(m.angle_id)+'</b> ('+Math.round(m.window_score*100)+'/100)</div>').join('') : '<div class="note">'+t('memNone')+'</div>';
-
-  if((d.distinct_days||0)<2){
-    boardEl.insertAdjacentHTML('beforeend','<div class="note">'+t('sparkNote')+'</div>');
-  }
+  const mem=intel.memory||[];
+  $('memory').innerHTML=mem.length?mem.slice(0,12).map(m=>'<div class="memory">'+esc(m.snapshot_date)+' · '+esc(label(m.vertical))+' · ENTER <b>'+esc(label(m.angle_id))+'</b> ('+Math.round(m.window_score*100)+'/100)</div>').join(''):'<div class="note">'+t('memNone')+'</div>';
 }
 
-/* ── language toggle wiring (after all declarations; re-renders live data on switch) ── */
-function setLang(l){
-  LANG=l;
-  localStorage.setItem('atlas_lang',l);
-  applyStaticLang();
-  if(ATLAS_DATA) render(ATLAS_DATA);
-}
+function setLang(l){ LANG=l; try{localStorage.setItem('atlas_lang',l)}catch{} applyStaticLang(); if(ATLAS_DATA) render(ATLAS_DATA); }
 $('langEN').onclick=()=>setLang('en');
 $('langES').onclick=()=>setLang('es');
 applyStaticLang();
+fetch(atlasUrl()).then(r=>r.json()).then(render).catch(e=>{ $('board').innerHTML='<div class="loading">'+t('failed')+': '+esc(e.message)+'</div>'; });
+Skin.backdrop(['ws-night','ws-islet']);
 </script>
 </body>
 </html>

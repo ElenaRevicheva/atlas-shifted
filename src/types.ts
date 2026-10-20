@@ -166,4 +166,7 @@ export interface RunEvent {
   /** Optional structured payload (creatives found, partial clusters, final plan…). */
   data?: unknown;
   pct?: number;
+  /** Refusals the page turns into a call to action: 'quota' | 'busy'. */
+  code?: string;
+  cta_url?: string;
 }
