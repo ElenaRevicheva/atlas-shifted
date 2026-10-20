@@ -88,15 +88,16 @@ h1,h2,h3,h4{font-family:var(--display);letter-spacing:-.022em;text-wrap:balance}
 .wordmark .w{--wr:11.9;font:800 clamp(13px,(91.3vw - 140px) / var(--wr),26px)/1 'Syne',var(--display);letter-spacing:.015em;text-transform:uppercase;white-space:nowrap}
 @media(min-width:640px){.mark{height:60px}.wordmark .w{font-size:35px}.wordmark .lab{font-size:14px}}
 .wordmark .w b{font-weight:800;background-image:var(--ramp-fb);background-image:var(--ramp);background-size:220%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:az-flow 5s linear infinite}
-.wordmark .lab{margin-top:5px;display:flex;align-items:center;gap:7px;font:500 clamp(9.5px,3vw,12px) var(--mono);letter-spacing:.3em;color:var(--ink-80);text-transform:uppercase;white-space:nowrap}
+.wordmark .lab{margin-top:5px;display:flex;align-items:center;gap:7px;font:300 clamp(9.5px,3vw,12px) 'Sora',var(--sans);letter-spacing:.3em;color:var(--ink-80);text-transform:uppercase;white-space:nowrap}
 .wordmark .lab i{display:inline-block;width:14px;height:1px;background:#8b5cf6}.wordmark .lab i:last-child{background:var(--yellow)}
-@media(min-width:640px){.wordmark .lab{margin-top:8px;gap:10px;letter-spacing:.32em;font-size:14px}.wordmark .lab i{width:22px}}
+/* "AIdeazz AI Lab": Sora ExtraLight, wide tracking (Elena's pick #3, 20 Oct) */
+@media(min-width:640px){.wordmark .lab{margin-top:8px;gap:10px;letter-spacing:.5em;font-size:14px;font-weight:200;color:rgba(255,255,255,.9)}.wordmark .lab i{width:22px}}
 @media(min-width:1024px){.wordmark .lab{font-size:16px;gap:12px}.wordmark .lab i{width:26px}}
 /* the lockup keeps the header on ONE row at every width (D2). Measured, not guessed: the wordmark is --wr times
    its font size wide (WHITESPACE 11.7, ATLAS SHIFTED 13.2, rounded up), so its size follows the room left beside
    EN/ES + ♪ + ☰ (and the CTA from 900px). From 1024px it is the approved 35px. */
 .wordmark .w.wl{--wr:13.4}
-@media(max-width:639.98px){.wordmark .lab{letter-spacing:.24em}}
+@media(max-width:639.98px){.wordmark .lab{letter-spacing:.2em}}
 @media(min-width:640px) and (max-width:899.98px){.wordmark .w{font-size:clamp(22px,(100vw - 330px) / var(--wr),35px)}}
 @media(min-width:900px) and (max-width:1023.98px){.wordmark .w{font-size:clamp(22px,(100vw - 520px) / var(--wr),35px)}}
 @keyframes az-flow{100%{background-position:220% center}}
