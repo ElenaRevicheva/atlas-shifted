@@ -228,7 +228,7 @@ app.get('/healthz', (_req, res) => {
 
 /** Atlas dashboard data: the radar board + daily brief + generated concepts. */
 app.get('/api/atlas', async (req, res) => {
-  const out: Record<string, unknown> = { ok: true, board: [], brief: null, concepts: {}, snapshot_date: null, total_rows: 0, distinct_days: 0 };
+  const out: Record<string, unknown> = { ok: true, board: [], brief: null, concepts: {}, snapshot_date: null, total_rows: 0, distinct_days: 0, first_snapshot_date: null };
   const sqlitePath = join(DATA_DIR, 'radar.sqlite');
   try {
     if (existsSync(sqlitePath)) {
@@ -237,6 +237,9 @@ app.get('/api/atlas', async (req, res) => {
       out.snapshot_date = primarySnapshot;
       out.total_rows = (db.prepare('SELECT COUNT(*) c FROM angle_snapshots').get() as { c: number }).c;
       out.distinct_days = (db.prepare('SELECT COUNT(DISTINCT snapshot_date) c FROM angle_snapshots').get() as { c: number }).c;
+      // The first capture ever. The page counts "days tracked" from it to today, so the number grows every day;
+      // distinct_days counts capture days only (captures went weekly on 20 Jul 2026), which read as "33 days".
+      out.first_snapshot_date = (db.prepare('SELECT MIN(snapshot_date) d FROM angle_snapshots').get() as { d: string | null }).d;
       out.board = board.map(({ vertical, snapshot_date, angles }) => ({ vertical, snapshot_date, angles }));
       // Lanes measured in the last 14 days (19 Oct 2026). 'Today's move' is chosen from these,
       // GEO/AEO first, so the page never leads with a July lane again.

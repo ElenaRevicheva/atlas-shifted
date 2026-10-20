@@ -232,7 +232,7 @@
   <div id="drawerBody"><div class="loading">…</div></div>
 </div>
 
-<script src="skin.js?v=20261020"></script>
+<script src="skin.js?v=20261020b"></script>
 <script>
 const $=(id)=>document.getElementById(id);
 const esc=Skin.esc;
@@ -269,7 +269,8 @@ en:{
   secCreative:'Generated creative — DETECT → CREATE: campaigns for the lanes that are live',
   secMemory:'Market memory — earlier ENTER calls',
   memNote:'Logs each ENTER signal as the time series grows.', memNone:'No ENTER signals logged yet — memory grows every Monday.',
-  stDays:'days tracked', stAds:'ads in radar', stVerts:'lanes', stSnap:'latest snapshot', stRefreshing:' · refreshing',
+  stDays:'days tracked', stAds:'ads captured', stVerts:'live lanes', stSnap:'latest snapshot', stRefreshing:' · refreshing',
+  stDaysTip:(since,n)=>'Since '+since+' · '+n+' market snapshots (daily at first, every Monday since 20 Jul)',
   loadIntel:'Computing alternate universes…', loadRadar:'Reading the radar…', loadConcepts:'Loading campaigns…', loadEvidence:'Loading evidence…',
   intelPending:'The intelligence layer activates after the first brief run.',
   noRadar:'No radar data yet.', noLane:'No ads in this lane yet.',
@@ -330,7 +331,8 @@ es:{
   secCreative:'Creativo generado — DETECTAR → CREAR: campañas para los carriles activos',
   secMemory:'Memoria del mercado — señales ENTER previas',
   memNote:'Registra cada señal ENTER a medida que crece la serie temporal.', memNone:'Aún no hay señales ENTER registradas — la memoria crece cada lunes.',
-  stDays:'días seguidos', stAds:'anuncios en radar', stVerts:'carriles', stSnap:'último snapshot', stRefreshing:' · actualizando',
+  stDays:'días de seguimiento', stAds:'anuncios capturados', stVerts:'carriles activos', stSnap:'último snapshot', stRefreshing:' · actualizando',
+  stDaysTip:(since,n)=>'Desde '+since+' · '+n+' capturas del mercado (diarias al inicio, cada lunes desde el 20 jul)',
   loadIntel:'Calculando universos alternos…', loadRadar:'Leyendo el radar…', loadConcepts:'Cargando campañas…', loadEvidence:'Cargando evidencia…',
   intelPending:'La capa de inteligencia se activa tras el primer brief.',
   noRadar:'Aún no hay datos de radar.', noLane:'Aún no hay anuncios en este carril.',
@@ -720,8 +722,15 @@ async function render(d){
   const pipe=d.pipeline||{}, refreshing=!!pipe.in_progress;
   const fresh=freshList(d);
   const snapLabel=refreshing?((pipe.expected_snapshot_date||'today')+' ↻'):(d.snapshot_date||'—');
-  $('stats').innerHTML=[[t('stDays'),d.distinct_days||0],[t('stAds'),d.total_rows||0],[t('stVerts'),fresh.length||(d.board||[]).length],[t('stSnap'),snapLabel]]
-    .map(([l,n],i)=>'<div class="stat'+((i===3&&refreshing)?' refreshing':'')+'"><span class="n">'+esc(String(n))+'</span><span class="l">'+esc(l+(refreshing&&i===3?t('stRefreshing'):''))+'</span></div>').join('');
+  // Days tracked = days since the FIRST capture (25 Jun 2026), counted to today in Panamá: it grows by itself.
+  const since=d.first_snapshot_date||'2026-06-25';
+  let today=''; try{ today=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Panama'}).format(new Date()); }catch(e){ today=new Date().toISOString().slice(0,10); }
+  const daysTracked=Math.max(0,Math.round((Date.parse(today+'T00:00:00Z')-Date.parse(since+'T00:00:00Z'))/864e5));
+  $('stats').innerHTML=[[t('stDays'),daysTracked,'days',t('stDaysTip')(since,d.distinct_days||0)],[t('stAds'),d.total_rows||0,'ads'],[t('stVerts'),fresh.length||(d.board||[]).length,'lanes'],[t('stSnap'),snapLabel]]
+    .map(([l,n,key,tip],i)=>'<div class="stat'+((i===3&&refreshing)?' refreshing':'')+'"'+(tip?' title="'+esc(tip)+'"':'')+'>'+
+      (key?'<span class="n" data-count="'+(+n||0)+'" data-key="'+key+'">0</span>':'<span class="n">'+esc(String(n))+'</span>')+
+      '<span class="l">'+esc(l+(refreshing&&i===3?t('stRefreshing'):''))+'</span></div>').join('');
+  Skin.countUp($('stats'),LANG);
   const banner=$('refreshBanner');
   if(pipe.stale_reason){ banner.textContent=pipe.stale_reason; banner.classList.add('show'); }
   else if(d.stale){ banner.textContent=t('stale')(d.snapshot_date||'—',d.snapshot_age_days!=null?d.snapshot_age_days:'?'); banner.classList.add('show'); }

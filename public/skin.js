@@ -6,7 +6,8 @@
    3. leadForm(): the public's way in (weekly tracking, quota ran out, diagnostic) → POST api/atlas/lead.
    4. music(): the ambient track and its round sound button, the same behaviour as aideazz.xyz/api.
    5. hubspot() + whatsapp(): the two chat bubbles of aideazz.xyz/api.
-   6. footer(): the footer links of aideazz.xyz/api. */
+   6. footer(): the footer links of aideazz.xyz/api.
+   7. countUp(): numbers that run up from 0, like the /api counters. */
 (function () {
   'use strict';
   var Skin = (window.Skin = {});
@@ -412,6 +413,49 @@
     if (y) y.textContent = String(new Date().getFullYear());
     paint();
     try { new MutationObserver(paint).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] }); } catch (e) {}
+  };
+
+  /* ── 7. count-up — the stats run up from 0, like the counters on aideazz.xyz/api ──────────────
+     Same curve as /api's useCountUp (easeOutQuart over 2 s), started when the stats scroll into view. A value
+     already on screen is not re-run when the page refreshes its data (only a changed number moves, from where it
+     was); reduced-motion visitors get the final number at once. Numbers use the reader's grouping (3,519). */
+  var counted = {}, seen = false, pendingRun = null;
+  function numFmt(lang) {
+    try { return new Intl.NumberFormat(lang === 'es' ? 'es-PA' : 'en-US'); } catch (e) { return { format: String }; }
+  }
+  function runCount(root, lang) {
+    var fmt = numFmt(lang);
+    var calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    Array.prototype.forEach.call(root.querySelectorAll('[data-count]'), function (el) {
+      var end = +el.getAttribute('data-count') || 0, key = el.getAttribute('data-key') || '';
+      var from = counted[key] != null ? counted[key] : 0;
+      counted[key] = end;
+      if (calm || from === end || !window.requestAnimationFrame) { el.textContent = fmt.format(end); return; }
+      var t0 = null, D = 2000;
+      el.textContent = fmt.format(from);
+      (function step(ts) {
+        if (t0 === null) t0 = ts;
+        var p = Math.min((ts - t0) / D, 1), k = 1 - Math.pow(1 - p, 4);
+        el.textContent = fmt.format(Math.floor(from + (end - from) * k));
+        if (p < 1) requestAnimationFrame(step); else el.textContent = fmt.format(end);
+      })(performance.now());
+    });
+  }
+  Skin.countUp = function (root, lang) {
+    if (!root) return;
+    pendingRun = function () { runCount(root, lang); };
+    if (seen || !('IntersectionObserver' in window)) { seen = true; pendingRun(); return; }
+    // Until the stats are on screen they hold their REAL values (never a 0 for a screenshot or a reader that does
+    // not scroll); the count-up from 0 starts the moment the first pixel of them is visible.
+    var fmt = numFmt(lang);
+    Array.prototype.forEach.call(root.querySelectorAll('[data-count]'), function (el) { el.textContent = fmt.format(+el.getAttribute('data-count') || 0); });
+    if (root._cuObs) return;   // already waiting for it to come into view; the latest data runs then
+    root._cuObs = new IntersectionObserver(function (entries) {
+      for (var i = 0; i < entries.length; i++) if (entries[i].isIntersecting) {
+        seen = true; root._cuObs.disconnect(); if (pendingRun) pendingRun(); return;
+      }
+    }, { threshold: 0 });
+    root._cuObs.observe(root);
   };
 
   Skin.ticker = function (el, items) {
