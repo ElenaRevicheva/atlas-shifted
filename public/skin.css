@@ -187,6 +187,8 @@ h1,h2,h3,h4{font-family:var(--display);letter-spacing:-.022em;text-wrap:balance}
 /* ...and centred, as it was before the 21 Oct restructure (Elena: "See the angle opening should be centered as it was") */
 .intro.stack{justify-items:center}
 .intro.stack .intro-txt{width:100%;max-width:52rem;text-align:center}
+/* the two-sentence headline (Elena, 20 Oct): room for each sentence on one line on laptops, Spanish too; the sub-line keeps its own 44rem */
+@media(min-width:1024px){.intro.stack .intro-txt{max-width:76rem}}
 .intro.stack .display{text-align:center}
 .intro.stack .sub{margin-left:auto;margin-right:auto;max-width:44rem;text-align:center}
 .intro.stack .ctas{justify-content:center}
