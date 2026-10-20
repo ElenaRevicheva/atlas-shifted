@@ -311,6 +311,7 @@ en:{
   hook:'Hook', headline:'Headline', body:'Body', scene:'Scene', cta:'CTA', mutations:'Mutations (A/B hooks)', grounded:'grounded in real ads',
   genVideoLab:'generated video', genStillLab:'generated still',
   assetPending:'Visual not rendered yet — the copy is live.',
+  inExamples:'Its rendered creative plays in the Examples above ↑',
   genVideo:'Generate video (~3 min)', genStill:'Generate still only', genCreative:'Generate creative (~3 min)', generating:'Generating…',
   perfTitle:'AIdeazz performance', events:'event(s)',
   spend:'Spend', clicks:'Clicks', sessions:'GA4 sessions', keyEvents:'GA4 key events', waClicks:'WhatsApp clicks', conversions:'Conversions', leads:'Leads', hsDeals:'HubSpot deals', crmStreams:'CRM streams', revenue:'Revenue',
@@ -373,6 +374,7 @@ es:{
   hook:'Gancho', headline:'Titular', body:'Texto', scene:'Escena', cta:'CTA', mutations:'Mutaciones (ganchos A/B)', grounded:'basado en anuncios reales',
   genVideoLab:'video generado', genStillLab:'imagen generada',
   assetPending:'Visual aún no renderizado — el copy está listo.',
+  inExamples:'Su creativo renderizado está en los Ejemplos de arriba ↑',
   genVideo:'Generar video (~3 min)', genStill:'Generar solo imagen', genCreative:'Generar creativo (~3 min)', generating:'Generando…',
   perfTitle:'Rendimiento AIdeazz', events:'evento(s)',
   spend:'Gasto', clicks:'Clics', sessions:'Sesiones GA4', keyEvents:'Eventos clave GA4', waClicks:'Clics WhatsApp', conversions:'Conversiones', leads:'Leads', hsDeals:'Negocios HubSpot', crmStreams:'Flujos CRM', revenue:'Ingresos',
@@ -584,7 +586,9 @@ function conceptCardHtml(c, shipCfg){
   // A visual rendered for an earlier campaign (copy rotates weekly, the render stays) says so.
   const visAt=String(vidAt||imgAt||'').slice(0,10), older=visAt&&c.snapshot_date&&visAt<String(c.snapshot_date).slice(0,10);
   const visCap=(lab,model)=>older?(t('earlierVisual')+' · '+esc(visAt)):(lab+' · '+esc(model||''));
-  const media=(c.video&&c.video.video_file
+  // The 7 shipped creatives already play in the Examples gallery; a campaign card never repeats them (Elena, 20 Oct).
+  const inGallery=(Skin.EXAMPLES||[]).some(x=>x.id===c.vertical);
+  const media=inGallery?('<a class="evl" href="#exEyebrow">'+t('inExamples')+'</a>'):(c.video&&c.video.video_file
     ?('<video class="casset" src="'+esc(assetSrc(c.video.video_file,vidAt))+'" controls muted loop playsinline preload="none" poster="'+esc(assetSrc((c.asset&&c.asset.image_file)||'',imgAt))+'"></video><div class="evl">'+visCap(t('genVideoLab'),c.video.model)+'</div>')
     :(c.asset&&c.asset.image_file
       ?('<img class="casset" src="'+esc(assetSrc(c.asset.image_file,imgAt))+'" alt="" loading="lazy"><div class="evl">'+visCap(t('genStillLab'),c.asset.model)+'</div>')
