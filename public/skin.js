@@ -8,7 +8,9 @@
    5. hubspot() + whatsapp(): the two chat bubbles of aideazz.xyz/api.
    6. footer(): the footer links of aideazz.xyz/api.
    7. countUp(): numbers that run up from 0, like the /api counters.
-   8. lightField(): the cursor-lit dot field + drifting light of aideazz.xyz/api. */
+   8. lightField(): the cursor-lit dot field + drifting light of aideazz.xyz/api.
+   9. nav() + faq() + lane() (21 Oct 2026): the shared header (Tools dropdown, phone panel), the FAQ list, and plain
+      names for lane ids. Skin.NAME is the ONE place in this repo where the Atlas product name lives. */
 (function () {
   'use strict';
   var Skin = (window.Skin = {});
@@ -18,6 +20,15 @@
     });
   };
   Skin.esc = esc;
+
+  /* The Atlas product name (Elena's pick, 20 Oct 2026). The wordmark stays ATLAS SHIFTED; this is the product line. */
+  var NAME = (Skin.NAME = {
+    en: 'The Monday Move', es: 'La Jugada del Lunes',
+    tagEn: 'Your ad move this week: enter, watch, or avoid.',
+    tagEs: 'Tu jugada publicitaria de la semana: entrar, vigilar o evitar.',
+  });
+  var PAY = 'https://aideazz.xyz/pay/analisis-tecnico?sku=diagnostic_call&lng=';
+  var OP_PDF = function (lang) { return 'https://aideazz.xyz/AIdeazz_AI_Growth_Operator_2026' + (lang === 'es' ? '_ES' : '') + '.pdf'; };
 
   /** Owner token: read once from ?token= (or ?ship_token=), kept in this tab's sessionStorage so
    *  both pages share it, and removed from the address bar so it is never copied into a link. */
@@ -41,6 +52,15 @@
   try {
     if (window.top !== window.self) window.parent.postMessage({ ws: 'nav', page: /atlas\.html$/.test(location.pathname) ? 'atlas' : 'finder', search: location.search }, 'https://aideazz.xyz');
   } catch (e) {}
+
+  /* GA4 key events. This page has no GA4 of its own: framed by aideazz.xyz/atlas, the shell page fires the event on
+     its property (G-TL5S8V23LT). Two names only, never personal data (no email, no phone, no typed market). */
+  var TRACKED = { generate_lead: 1, contact_whatsapp: 1 };
+  Skin.track = function (name, params) {
+    if (!TRACKED[name]) return;
+    try { if (window.gtag) window.gtag('event', name, params || {}); } catch (e) {}
+    try { if (window.top !== window.self) window.parent.postMessage({ ws: 'event', name: name, params: params || {} }, 'https://aideazz.xyz'); } catch (e) {}
+  };
 
   /* ── 1. film backdrop ─────────────────────────────────────────────────────── */
   Skin.backdrop = function (names) {
@@ -187,6 +207,7 @@
         }),
       }).then(function (r) { return r.json(); }).then(function (j) {
         if (!j || !j.ok) throw new Error('x');
+        Skin.track('generate_lead', { form: opts.kind || '', lang: opts.lang || '' });
         f.style.display = 'none';
         msg.innerHTML = '<div class="okmsg">' + esc(T.ok) + '</div><div style="margin-top:12px"><a class="btn" href="' +
           esc(j.next || ('https://aideazz.xyz/pay/analisis-tecnico?sku=diagnostic_call&lng=' + opts.lang)) + '" target="_blank" rel="noopener">' + esc(T.okBtn) + ' →</a></div>';
@@ -318,23 +339,32 @@
     document.body.appendChild(s);
   };
 
+  var WA_PHONE = '50761666716';
+  var WA_T = {
+    en: { header: 'Chat on WhatsApp', online: 'Online', away: 'Away',
+      hiOn: 'Hello 👋 Thanks for looking at my work. Message me directly — I usually reply fast.',
+      hiAway: 'I’m offline right now 🌙 Leave a message and I’ll reply as soon as I’m back — or grab a time that works for you below.',
+      open: 'Open Chat', send: 'Send a Message', book: 'Book a Call', close: 'Close chat', launch: 'Open WhatsApp chat',
+      prefill: 'Hi Elena — I saw your AIdeazz portfolio and I’d like to talk.' },
+    es: { header: 'Chatea por WhatsApp', online: 'En línea', away: 'Ausente',
+      hiOn: '¡Hola! 👋 Gracias por ver mi trabajo. Escríbeme directamente — suelo responder rápido.',
+      hiAway: 'Ahora estoy desconectada 🌙 Déjame un mensaje y te respondo en cuanto vuelva — o agenda un horario que te convenga abajo.',
+      open: 'Abrir chat', send: 'Enviar mensaje', book: 'Agendar una llamada', close: 'Cerrar chat', launch: 'Abrir chat de WhatsApp',
+      prefill: 'Hola Elena — vi tu portafolio de AIdeazz y me gustaría conversar.' }
+  };
+  /** The same wa.me link + label the bubble uses, for an in-page "Chat on WhatsApp" link (FAQ "Still have questions?"). */
+  Skin.waLink = function (lang, prefill) {
+    var L = WA_T[lang === 'es' ? 'es' : 'en'];
+    var msg = (prefill && prefill[lang === 'es' ? 'es' : 'en']) || L.prefill;
+    return { url: 'https://wa.me/' + WA_PHONE + '?text=' + encodeURIComponent(msg), label: L.header };
+  };
+
   Skin.whatsapp = function (opts) {
     if (window.__wsFwd) return; // the page is moving to aideazz.xyz/atlas: start nothing here
     opts = opts || {};
-    var PHONE = '50761666716', TZ = 'America/Panama', OPEN = 9, CLOSE = 17, DAYS = [1, 2, 3, 4, 5, 6];
+    var PHONE = WA_PHONE, TZ = 'America/Panama', OPEN = 9, CLOSE = 17, DAYS = [1, 2, 3, 4, 5, 6];
     var BOOK = 'https://calendly.com/elena_revicheva/coffee-chat';
-    var T = {
-      en: { header: 'Chat on WhatsApp', online: 'Online', away: 'Away',
-        hiOn: 'Hello 👋 Thanks for looking at my work. Message me directly — I usually reply fast.',
-        hiAway: 'I’m offline right now 🌙 Leave a message and I’ll reply as soon as I’m back — or grab a time that works for you below.',
-        open: 'Open Chat', send: 'Send a Message', book: 'Book a Call', close: 'Close chat', launch: 'Open WhatsApp chat',
-        prefill: 'Hi Elena — I saw your AIdeazz portfolio and I’d like to talk.' },
-      es: { header: 'Chatea por WhatsApp', online: 'En línea', away: 'Ausente',
-        hiOn: '¡Hola! 👋 Gracias por ver mi trabajo. Escríbeme directamente — suelo responder rápido.',
-        hiAway: 'Ahora estoy desconectada 🌙 Déjame un mensaje y te respondo en cuanto vuelva — o agenda un horario que te convenga abajo.',
-        open: 'Abrir chat', send: 'Enviar mensaje', book: 'Agendar una llamada', close: 'Cerrar chat', launch: 'Abrir chat de WhatsApp',
-        prefill: 'Hola Elena — vi tu portafolio de AIdeazz y me gustaría conversar.' }
-    };
+    var T = WA_T;
     function svg(d, n) {
       return '<svg viewBox="0 0 24 24" width="' + n + '" height="' + n + '" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>';
     }
@@ -371,7 +401,7 @@
         (on ? '' : '<a class="wabook" href="' + BOOK + '" target="_blank" rel="noopener">' + svg(CAL, 16) + ' ' + esc(L.book) + '</a>') + '</div>';
       card.querySelector('.wax').onclick = function () { set(false); };
       card.querySelector('.wacta').onclick = function () {
-        try { if (window.gtag) window.gtag('event', 'contact_whatsapp', { placement: 'float', state: on ? 'online' : 'away', page: opts.page || '' }); } catch (e) {}
+        Skin.track('contact_whatsapp', { placement: 'float', state: on ? 'online' : 'away', page: opts.page || '' });
       };
       btn.setAttribute('aria-label', isOpen ? L.close : L.launch);
       btn.innerHTML = isOpen ? svg(X, 24) : svg(MSG, 28);
@@ -393,9 +423,9 @@
     var SITE = 'https://aideazz.xyz';
     var T = {
       en: { res: 'Resources', co: 'Company', about: 'Human-Backed AI', api: 'GEO/AEO Visibility API', start: 'Start a project',
-        pol: 'Service Policies', rights: 'All rights reserved' },
+        pol: 'Service Policies', rights: 'All rights reserved', tools: 'Tools', portfolio: 'Portfolio ↗' },
       es: { res: 'Recursos', co: 'Empresa', about: 'IA con respaldo humano', api: 'API de visibilidad GEO/AEO', start: 'Empezar un proyecto',
-        pol: 'Políticas de servicio', rights: 'Todos los derechos reservados' }
+        pol: 'Políticas de servicio', rights: 'Todos los derechos reservados', tools: 'Herramientas', portfolio: 'Portafolio ↗' }
     };
     var start = SITE + '/portfolio?utm_source=' + encodeURIComponent(page || 'atlas') +
       '&utm_medium=web&utm_campaign=atlas-shifted&utm_content=start-project#portfolio-inquiry-form';
@@ -403,9 +433,15 @@
       var ext = href.indexOf('mailto:') !== 0;
       return '<a href="' + esc(href) + '"' + (ext ? ' target="_blank" rel="noopener"' : '') + (cls ? ' class="' + cls + '"' : '') + '>' + esc(text) + '</a>';
     }
+    // the two tools themselves are relative links in the same tab (the pages are framed under aideazz.xyz/atlas)
+    function own(href, text) { return '<a href="' + esc(href) + '">' + esc(text) + '</a>'; }
     function paint() {
       var es = (document.documentElement.lang || '').slice(0, 2) === 'es', L = T[es ? 'es' : 'en'], deck = es ? '_ES' : '';
       cols.innerHTML =
+        '<div><span class="eyebrow">' + esc(L.tools) + '</span>' +
+          own('./', 'WHITESPACE') +
+          own('atlas.html', 'Atlas · ' + NAME[es ? 'es' : 'en']) +
+          a(SITE + '/portfolio', L.portfolio) + '</div>' +
         '<div><span class="eyebrow">' + esc(L.res) + '</span>' +
           a(SITE + '/Elena_Revicheva_Professional_Outlook_2026' + deck + '.pdf?v=20261011c', L.about) +
           a('https://www.youtube.com/@AIdeazz', 'YouTube') +
@@ -537,5 +573,192 @@
     var row = items.map(function (s) { return '<span>' + s + '</span>'; }).join('');
     var twin = items.map(function (s) { return '<span aria-hidden="true">' + s + '</span>'; }).join('');
     el.innerHTML = '<div class="track">' + row + twin + '</div>';
+  };
+
+  /* ── 9. shared header: Tools dropdown (desktop) + one panel behind ☰ (phone/tablet) ───────────────
+     The header markup is static in both pages; texts, hrefs and behaviour come from here. The Tools items are the same
+     items, in the same words, as the WHITESPACE "Two tools" section and the footer Tools column. */
+  var SVG0 = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
+  Skin.ICONS = {
+    // dashed square + magnifier: the open space nobody is running
+    scan: SVG0 + '<rect x="3" y="3" width="12" height="12" rx="2" stroke-dasharray="2.6 2.4"/><circle cx="15" cy="15" r="4.2"/><path d="m18.2 18.2 2.8 2.8"/></svg>',
+    // globe + two wave lines: the weekly market reading
+    globe: SVG0 + '<circle cx="12" cy="8.5" r="6"/><ellipse cx="12" cy="8.5" rx="2.5" ry="6"/><path d="M6 8.5h12"/><path d="M3 18c1.5-1.2 3-1.2 4.5 0s3 1.2 4.5 0 3-1.2 4.5 0 3 1.2 4.5 0"/><path d="M3 21.5c1.5-1.2 3-1.2 4.5 0s3 1.2 4.5 0 3-1.2 4.5 0 3 1.2 4.5 0"/></svg>',
+    // </> brackets + dot: the API
+    api: SVG0 + '<path d="m8 7-5 5 5 5"/><path d="m16 7 5 5-5 5"/><path d="m13.5 4.5-3 15"/><circle cx="20" cy="3.8" r="1.4" fill="currentColor" stroke="none"/></svg>',
+    // chat bubble + check (the WhatsApp bubble's own path): the AI Growth Operator
+    op: SVG0 + '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/><path d="m8.5 12 2.5 2.5 5-5"/></svg>',
+  };
+  var NAV_T = (Skin.NAV_T = {
+    en: {
+      tools: 'Tools', how: 'How it works', pricing: 'Pricing', faq: 'FAQ', free: 'Free scan', cta: '$100 diagnostic',
+      menuCta: 'Book the $100 diagnostic →', menu: 'Menu', main: 'Main', g1: 'Ad intelligence', g2: 'For your business',
+      ws: ['WHITESPACE · free scan', 'The ad or content angle nobody is running yet.'],
+      atlas: ['Atlas · ' + NAME.en, 'Every Monday: which ad angles are opening, which are crowded.'],
+      api: ['GEO/AEO Visibility API ↗', 'Free audit: can AI find, understand and cite your site?'],
+      op: ['AI Growth Operator ↗', 'Set up with you inside WhatsApp Business, Google Maps and Instagram — website or not.'],
+    },
+    es: {
+      tools: 'Herramientas', how: 'Cómo funciona', pricing: 'Precios', faq: 'FAQ', free: 'Escaneo gratis', cta: 'Diagnóstico de $100',
+      menuCta: 'Reservar el diagnóstico de $100 →', menu: 'Menú', main: 'Principal', g1: 'Inteligencia publicitaria', g2: 'Para tu negocio',
+      ws: ['WHITESPACE · escaneo gratis', 'El ángulo de anuncio o contenido que nadie usa todavía.'],
+      atlas: ['Atlas · ' + NAME.es, 'Cada lunes: qué ángulos se abren y cuáles están saturados.'],
+      api: ['API de visibilidad GEO/AEO ↗', 'Auditoría gratis: ¿puede la IA encontrar, entender y citar tu sitio?'],
+      op: ['AI Growth Operator ↗', 'Configurado contigo dentro de WhatsApp Business, Google Maps e Instagram — con o sin sitio web.'],
+    },
+  });
+  /** The 4 tool links (also used by the WHITESPACE "Two tools" section). */
+  Skin.toolHref = function (key, page, lang) {
+    if (key === 'ws') return page === 'whitespace' ? '#tool' : './';
+    if (key === 'atlas') return 'atlas.html';
+    if (key === 'api') return 'https://aideazz.xyz/api';
+    return OP_PDF(lang);
+  };
+  var CHEV = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 4.5 3 3 3-3"/></svg>';
+  var BURGER = SVG0 + '<path d="M4 7h16M4 12h16M4 17h16"/></svg>';
+  var CLOSE = SVG0 + '<path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+  var navS = { bound: false, onLang: null };
+  /** opts: { page: 'whitespace'|'atlas', lang, onLang(l) } — call it from every language paint; binds only once. */
+  Skin.nav = function (opts) {
+    opts = opts || {};
+    var lang = opts.lang === 'es' ? 'es' : 'en', T = NAV_T[lang], page = opts.page === 'atlas' ? 'atlas' : 'whitespace';
+    var top = document.getElementById('top'), menu = document.getElementById('menu');
+    if (!top || !menu) return;
+    var free = Skin.toolHref('ws', page, lang);
+    function txt(id, s, href) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = s;
+      if (href != null) el.setAttribute('href', href);
+    }
+    var tb = document.getElementById('navTools');
+    if (tb) tb.innerHTML = '<span>' + esc(T.tools) + '</span>' + CHEV;
+    txt('navHow', T.how, '#how'); txt('navPricing', T.pricing, '#pricing'); txt('navFaq', T.faq, '#faq');
+    txt('navFree', T.free, free); txt('menuFree', T.free, free);
+    txt('navCta', T.cta, PAY + lang); txt('menuCta', T.menuCta, PAY + lang);
+    menu.setAttribute('aria-label', T.main);
+    var dd = document.getElementById('ddTools');
+    if (dd) {
+      var item = function (key, icon) {
+        var href = Skin.toolHref(key, page, lang), ext = /^https?:/.test(href);
+        var cur = (key === 'ws' && page === 'whitespace') || (key === 'atlas' && page === 'atlas');
+        return '<a class="dditem" href="' + esc(href) + '"' + (ext ? ' target="_blank" rel="noopener"' : '') + (cur ? ' aria-current="page"' : '') + '>' +
+          '<span class="ddi">' + Skin.ICONS[icon] + '</span><span class="ddx"><span class="ddt">' + esc(T[key][0]) + '</span>' +
+          '<span class="ddb">' + esc(T[key][1]) + '</span></span></a>';
+      };
+      dd.innerHTML = '<span class="ddg">' + esc(T.g1) + '</span>' + item('ws', 'scan') + item('atlas', 'globe') +
+        '<div class="ddsep" role="separator"></div><span class="ddg">' + esc(T.g2) + '</span>' + item('api', 'api') + item('op', 'op');
+    }
+    navS.onLang = opts.onLang || null;
+    Array.prototype.forEach.call(document.querySelectorAll('[data-lang]'), function (b) {
+      var on = b.getAttribute('data-lang') === lang;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    var burger = document.getElementById('burger');
+    if (burger) {
+      var isOpen = top.classList.contains('open');
+      burger.setAttribute('aria-label', T.menu);
+      burger.innerHTML = isOpen ? CLOSE : BURGER;
+    }
+    if (navS.bound) return;
+    navS.bound = true;
+
+    var ddWrap = tb ? tb.closest('.dd') : null;
+    var wide = window.matchMedia ? matchMedia('(min-width:1360px)') : { matches: true };
+    var hover = window.matchMedia ? matchMedia('(hover:hover) and (min-width:1360px)') : { matches: false };
+    var tOpen = 0, tClose = 0, byHover = false;
+    function setDd(v) {
+      if (!ddWrap) return;
+      clearTimeout(tOpen); clearTimeout(tClose);
+      ddWrap.classList.toggle('open', v);
+      tb.setAttribute('aria-expanded', v ? 'true' : 'false');
+      if (!v) byHover = false;
+    }
+    function ddOpen() { return !!(ddWrap && ddWrap.classList.contains('open')); }
+    function setPanel(v) {
+      top.classList.toggle('open', v);
+      if (burger) {
+        burger.setAttribute('aria-expanded', v ? 'true' : 'false');
+        burger.innerHTML = v ? CLOSE : BURGER;
+      }
+    }
+    function panelOpen() { return top.classList.contains('open'); }
+    if (burger) burger.addEventListener('click', function () { setPanel(!panelOpen()); });
+    if (tb) {
+      tb.addEventListener('click', function () {
+        if (!ddOpen()) { setDd(true); return; }
+        if (byHover) { byHover = false; return; } // opened by hover a moment ago: the click keeps it open
+        setDd(false);
+      });
+    }
+    if (ddWrap) {
+      ddWrap.addEventListener('mouseenter', function () {
+        if (!hover.matches) return;
+        clearTimeout(tClose);
+        if (ddOpen()) return;
+        tOpen = setTimeout(function () { setDd(true); byHover = true; }, 120);
+      });
+      ddWrap.addEventListener('mouseleave', function () {
+        if (!hover.matches) return;
+        clearTimeout(tOpen);
+        tClose = setTimeout(function () { setDd(false); }, 180);
+      });
+    }
+    // a tap on any link in the menu (anchor or page) closes the panel and the dropdown
+    menu.addEventListener('click', function (e) {
+      var a = e.target.closest && e.target.closest('a');
+      if (!a) return;
+      setDd(false); setPanel(false);
+    });
+    // every EN/ES button on the page (header row and panel) switches the language
+    document.addEventListener('click', function (e) {
+      var b = e.target.closest && e.target.closest('[data-lang]');
+      if (b && navS.onLang) { e.preventDefault(); navS.onLang(b.getAttribute('data-lang') === 'es' ? 'es' : 'en'); return; }
+      // "inside" is read from the path the event took, not from e.target: tapping the ☰ swaps its icon for an ✕, so the
+      // tapped <svg> is already detached here and contains() would call it "outside" and close the menu it just opened.
+      var path = e.composedPath ? e.composedPath() : [];
+      var inside = function (el) { return !!el && (path.indexOf(el) >= 0 || el.contains(e.target)); };
+      if (ddOpen() && ddWrap && !inside(ddWrap)) setDd(false);
+      if (panelOpen() && !inside(top)) setPanel(false);
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape' && e.key !== 'Esc') return;
+      if (ddOpen()) { setDd(false); if (tb) tb.focus(); return; }
+      if (panelOpen()) { setPanel(false); if (burger) burger.focus(); }
+    });
+    var onWide = function () { if (wide.matches) setPanel(false); else setDd(false); };
+    if (wide.addEventListener) wide.addEventListener('change', onWide); else if (wide.addListener) wide.addListener(onWide);
+  };
+
+  /* ── 10. FAQ: plain text only, so what a visitor reads is word for word what the FAQPage JSON-LD says ── */
+  Skin.faq = function (el, items) {
+    if (!el) return;
+    el.innerHTML = (items || []).map(function (x) {
+      return '<details class="qa"><summary><h3>' + esc(x.q) + '</h3></summary><p>' + esc(x.a) + '</p></details>';
+    }).join('');
+  };
+
+  /* ── 11. plain names for lane ids (the board, the select, the drawer, the campaign cards) ── */
+  Skin.LANES = {
+    ai_automation: { en: 'AI automation', es: 'Automatización con IA' },
+    whatsapp_ai_agents: { en: 'WhatsApp AI agents', es: 'Agentes de WhatsApp con IA' },
+    fractional_cto: { en: 'Fractional CTO', es: 'CTO fraccional' },
+    ai_film_making_studios: { en: 'AI film-making studios', es: 'Estudios de cine con IA' },
+    ai_reliability_and_rescue: { en: 'AI reliability & rescue', es: 'Confiabilidad y rescate de IA' },
+    ai_video_generation: { en: 'AI video generation', es: 'Generación de video con IA' },
+    personal_ai_companions_on_the_go: { en: 'Personal AI companions on the go', es: 'Compañeros personales de IA siempre contigo' },
+    health_supplements: { en: 'Health supplements', es: 'Suplementos de salud' },
+    solar: { en: 'Solar', es: 'Energía solar' },
+  };
+  /** EXAMPLES, then LANES, then the tracked lane's own label (Atlas data), else the id with spaces. */
+  Skin.lane = function (id, lang, tracked) {
+    var k = String(id == null ? '' : id), l = lang === 'es' ? 'es' : 'en';
+    for (var i = 0; i < Skin.EXAMPLES.length; i++) if (Skin.EXAMPLES[i].id === k) return Skin.EXAMPLES[i][l] || Skin.EXAMPLES[i].en;
+    if (Skin.LANES[k]) return Skin.LANES[k][l] || Skin.LANES[k].en;
+    var tv = tracked;
+    if (!tv) { try { tv = (typeof ATLAS_DATA !== 'undefined' && ATLAS_DATA && ATLAS_DATA.tracked_verticals) || null; } catch (e) { tv = null; } }
+    if (tv && tv.length) for (var j = 0; j < tv.length; j++) if (tv[j] && tv[j].id === k && tv[j].label) return String(tv[j].label);
+    return k.replace(/_/g, ' ');
   };
 })();

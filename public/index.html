@@ -37,7 +37,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" />
 <link rel="preload" as="image" href="media/ws-catamaran.webp" />
-<link rel="stylesheet" href="skin.css?v=20261020f" />
+<link rel="stylesheet" href="skin.css?v=20261021a" />
 <style>
   /* result-specific pieces (the shared look lives in skin.css) */
   .results{display:none}
@@ -78,45 +78,64 @@
   <div class="ray r1"></div><div class="ray r2"></div><div class="ray r3"></div>
 </div>
 
+<header class="top" id="top">
+ <div class="topin">
+  <a class="brandlink" href="./" aria-label="WHITESPACE · AIdeazz AI Lab">
+    <span class="mark"></span>
+    <span class="wordmark"><span class="w">WHITE<b>SPACE</b></span><span class="lab"><i></i>AIdeazz AI Lab<i></i></span></span>
+  </a>
+  <nav class="links" id="menu" aria-label="Main">
+    <div class="dd">
+      <button type="button" class="ddbtn" id="navTools" aria-expanded="false" aria-controls="ddTools"></button>
+      <div class="ddpanel" id="ddTools"></div>
+    </div>
+    <a href="#how" id="navHow"></a><a href="#pricing" id="navPricing"></a><a href="#faq" id="navFaq"></a>
+    <div class="menu-only">
+      <span class="langsw"><button type="button" data-lang="en">EN</button><button type="button" data-lang="es">ES</button></span>
+      <a class="btn ghost" id="menuFree" href="#tool"></a><a class="btn" id="menuCta" target="_blank" rel="noopener"></a>
+    </div>
+  </nav>
+  <div class="nav"><span class="langsw"><button type="button" id="langEN" data-lang="en">EN</button><button type="button" id="langES" data-lang="es">ES</button></span></div>
+  <a class="navfree" id="navFree" href="#tool"></a>
+  <a class="btn navcta" id="navCta" target="_blank" rel="noopener"></a>
+  <button type="button" class="burger" id="burger" aria-expanded="false" aria-controls="menu"></button>
+ </div>
+</header>
+
 <main class="wrap">
-  <header class="top">
-    <a class="brandlink" href="https://aideazz.xyz/api" target="_blank" rel="noopener" aria-label="AIdeazz AI Lab">
-      <span class="mark"></span>
-      <span class="wordmark"><span class="w">WHITE<b>SPACE</b></span><span class="lab"><i></i>AIdeazz AI Lab<i></i></span></span>
-    </a>
-    <nav class="nav">
-      <a class="navl" href="atlas.html" id="navAtlas">Atlas radar →</a>
-      <span class="langsw"><button id="langEN">EN</button><button id="langES">ES</button></span>
-    </nav>
-  </header>
-
-  <div class="ticker" id="ticker"></div>
-
-  <p class="kicker" id="kicker"></p>
-  <h1 class="display" id="h1"></h1>
-  <p class="sub" id="sub"></p>
-  <p class="honest" id="honest"></p>
-
-  <section class="glass" id="tool">
-    <div class="modes">
-      <button class="mode on" data-mode="content" id="modeCt"></button>
-      <button class="mode" data-mode="media_buyer" id="modeMb"></button>
+  <!-- W2 hero: text left, the scan box (the real product) right; on phones the box sits right under the sub -->
+  <section class="intro">
+    <div class="intro-txt">
+      <p class="hchip"><i aria-hidden="true"></i><span id="kicker"></span></p>
+      <h1 class="display" id="h1"></h1>
+      <p class="sub" id="sub"></p>
     </div>
-    <div class="inrow">
-      <input class="field" id="q" autocomplete="off" />
-      <select class="field" id="country" aria-label="Country"></select>
-      <button class="btn" id="go"></button>
-    </div>
-    <div class="chips" id="chips"></div>
-    <div class="fine" id="fine"></div>
+    <section class="glass intro-prod" id="tool">
+      <div class="modes" role="group">
+        <button type="button" class="mode on" data-mode="content" id="modeCt"></button>
+        <button type="button" class="mode" data-mode="media_buyer" id="modeMb"></button>
+      </div>
+      <p class="fine" id="modeHint"></p>
+      <div class="inrow scanrow">
+        <input class="field" id="q" autocomplete="off" />
+        <select class="field" id="country" aria-label="Country"></select>
+        <button type="button" class="btn" id="go"></button>
+      </div>
+      <div class="chips" id="chips"></div>
 
-    <div class="status" id="status">
-      <div class="bar"><div class="fill" id="fill"></div></div>
-      <div class="feed" id="feed"></div>
+      <div class="status" id="status">
+        <div class="bar"><div class="fill" id="fill"></div></div>
+        <div class="feed" id="feed"></div>
+      </div>
+      <div class="lead" id="quotaLead" style="display:none"></div>
+    </section>
+    <div class="intro-meta">
+      <ul class="ticks" id="fine"></ul>
+      <a class="textlink" id="seeHow" href="#how"></a>
     </div>
-    <div class="lead" id="quotaLead" style="display:none"></div>
   </section>
 
+  <!-- W3 results (after a scan) -->
   <div class="results" id="results">
     <div class="deg" id="deg"></div>
     <div class="sec">
@@ -138,46 +157,93 @@
     <div class="sec only-ct"><span class="eyebrow" id="hHub"></span><div class="card tile" id="hub"></div></div>
 
     <div class="sec"><span class="eyebrow" id="hLanes"></span><div id="lanes"></div></div>
-    <div class="sec" id="altSec"><span class="eyebrow" id="hAlts"></span><div id="alts"></div></div>
-    <div class="sec"><span class="eyebrow" id="hEv"></span><div id="evidence"></div></div>
+    <details class="fold" id="altSec"><summary><span class="eyebrow" id="hAlts"></span></summary><div id="alts"></div></details>
+    <details class="fold" id="evSec"><summary><span class="eyebrow" id="hEv"></span></summary><div id="evidence"></div></details>
 
     <section class="sec glass" id="trackBox">
       <span class="eyebrow" id="trackEyebrow"></span>
       <h3 class="h2" id="trackH" style="margin-top:8px"></h3>
       <div class="lead" id="trackLead"></div>
     </section>
-    <div class="metaline" id="meta"></div>
+    <details class="fold" id="metaSec"><summary><span class="eyebrow" id="hMeta"></span></summary><div class="metaline" id="meta"></div></details>
   </div>
 
-  <section class="sec">
-    <span class="eyebrow" id="exEyebrow"></span>
-    <h2 class="h2" id="exH"></h2>
-    <p class="lede" id="exLede"></p>
+  <!-- W4 the strip -->
+  <div class="ticker" id="ticker"></div>
+
+  <!-- W5 why -->
+  <section class="blk tint" id="why">
+    <div class="shead" style="margin:0">
+      <span class="eyebrow" id="whyEyebrow"></span>
+      <h2 class="h2" id="whyH"></h2>
+      <p class="lede" id="whyLede"></p>
+    </div>
+  </section>
+
+  <!-- W6 two tools: the same items as the Tools menu -->
+  <section class="blk" id="tools">
+    <div class="shead">
+      <span class="eyebrow" id="pickEyebrow"></span>
+      <h2 class="h2" id="pickH"></h2>
+    </div>
+    <div class="grid2">
+      <a class="card pickc" href="#tool"><span class="ddi" id="pick1I"></span><span class="idx" id="pick1L"></span><h3 id="pick1H"></h3><p id="pick1P"></p><span class="go" id="pick1B"></span></a>
+      <a class="card pickc" href="atlas.html"><span class="ddi" id="pick2I"></span><span class="idx" id="pick2L"></span><h3 id="pick2H"></h3><p id="pick2P"></p><span class="go" id="pick2B"></span></a>
+    </div>
+    <p class="pickmore" id="pickMore"></p>
+    <p class="foot-note" id="engine"></p>
+  </section>
+
+  <!-- W7 how -->
+  <section class="blk tint" id="how">
+    <div class="shead">
+      <span class="eyebrow" id="howEyebrow"></span>
+      <h2 class="h2" id="howH"></h2>
+    </div>
+    <div class="how">
+      <div class="card"><span class="idx">01</span><p id="how1"></p></div>
+      <div class="card"><span class="idx">02</span><p id="how2"></p></div>
+      <div class="card"><span class="idx">03</span><p id="how3"></p></div>
+    </div>
+  </section>
+
+  <!-- W8 examples -->
+  <section class="blk" id="examples">
+    <div class="shead">
+      <span class="eyebrow" id="exEyebrow"></span>
+      <h2 class="h2" id="exH"></h2>
+      <p class="lede" id="exLede"></p>
+    </div>
     <div class="reels" id="reels"></div>
   </section>
 
-  <section class="sec">
-    <span class="eyebrow" id="tiersEyebrow"></span>
-    <h2 class="h2" id="tiersH"></h2>
-    <p class="lede" id="tiersLede"></p>
+  <!-- W9 pricing -->
+  <section class="blk tint" id="pricing">
+    <div class="shead">
+      <span class="eyebrow" id="tiersEyebrow"></span>
+      <h2 class="h2" id="tiersH"></h2>
+      <p class="lede" id="tiersLede"></p>
+    </div>
     <div class="grid3" id="tiers"></div>
     <div class="glass lead" id="contactBox" style="display:none;margin-top:16px"></div>
   </section>
 
-  <section class="sec">
-    <span class="eyebrow" id="howEyebrow"></span>
-    <div class="how">
-      <div class="card"><span class="idx">01</span><span id="how1"></span></div>
-      <div class="card"><span class="idx">02</span><span id="how2"></span></div>
-      <div class="card"><span class="idx">03</span><span id="how3"></span></div>
+  <!-- W10 FAQ (the same block feeds the aideazz.xyz/atlas/finder article + its FAQPage JSON-LD) -->
+  <section class="blk" id="faq">
+    <div class="shead">
+      <span class="eyebrow" id="faqEyebrow"></span>
+      <h2 class="h2" id="faqH"></h2>
     </div>
-    <p class="fine" id="engine" style="text-align:center;margin-top:18px;font-size:12.5px;color:#e5e7eb;text-shadow:0 1px 2px rgba(0,0,0,.95),0 1px 14px rgba(8,5,14,.95)"></p>
+    <div class="faq" id="faqList"></div>
+    <p class="stillq"><span id="stillQ"></span> <a id="stillWa" target="_blank" rel="noopener"></a></p>
   </section>
 
-  <section class="cta-final">
+  <!-- W11 the $100 -->
+  <section class="blk tint cta-final">
     <h2 id="finalH"></h2>
     <p id="finalP"></p>
     <a class="btn btn-pill" id="finalBtn" href="https://aideazz.xyz/pay/analisis-tecnico?sku=diagnostic_call&lng=es" target="_blank" rel="noopener"></a>
+    <p class="fine" id="finalTrust"></p>
   </section>
 
   <footer class="foot">
@@ -188,11 +254,36 @@
   </footer>
 </main>
 
-<script src="skin.js?v=20261020e"></script>
+<!-- The FAQ, one source: this page renders it (Skin.faq), and aideazz.xyz's make_shells.py reads this same block for
+     the /atlas/finder article and its FAQPage JSON-LD. Plain text only. "card": shown as the 3 article cards. -->
+<script type="application/json" id="faqData">
+{"en":[
+{"q":"What does WHITESPACE do?","a":"Every spy tool says copy the ad that is already winning, so everyone piles into the same lane. WHITESPACE does the opposite: it maps which angles are saturated in your market and surfaces the adjacent angle almost nobody is running yet — a ranked hypothesis to test, with a sourced evidence trail.","card":true},
+{"q":"How does it work?","a":"Pick a market and a country. Meta ads and Google results are read for that country; TikTok top ads are global. It mines the live ad libraries (or what ranks on Google) via Bright Data and deconstructs every running unit into its angle. You get the open angle almost nobody is running, ranked, with clickable evidence.","card":true},
+{"q":"Why does it not report CTR or ROAS?","a":"Honest by design: public ad libraries expose no CTR, spend or ROAS. We measure what is observable (angle saturation) and rank the gap as a hypothesis, never a guaranteed winner.","card":true},
+{"q":"Do I need to sign up or pay?","a":"No sign-up. 2 free scans a day, and the same search is kept for 7 days. Start free. Pay only when you want a person to look at your business with you."},
+{"q":"Which countries can I scan?","a":"10 LatAm markets + Spain + US: Panamá, Costa Rica, Colombia, México, Rep. Dominicana, Guatemala, Ecuador, Perú, Chile, Argentina, España and USA."},
+{"q":"Ad angles or content angles?","a":"The Ad angles mode (Meta + TikTok ads) gives launch-ready ad copy and a landing-page concept. The GEO / AEO content angles mode (what ranks and gets cited) gives a blog brief built to be found and cited, social atoms and a HubSpot campaign angle."},
+{"q":"What does the $100 AI Growth diagnostic include?","a":"3-question intake: website, how customers reach you, typical sale · Written results on how AI search, Google and your WhatsApp treat your business · 45-minute call to walk through it · Credited if you continue to the full audit."},
+{"q":"Can you watch my market every week?","a":"A one-shot scan is a photo. Weekly scans are the film: the same market and country, every week, so you see a window open. Leave your email and we get back to you about setting it up."}
+],"es":[
+{"q":"¿Qué hace WHITESPACE?","a":"Todas las herramientas de espionaje dicen copia el anuncio que ya gana, y todos terminan en el mismo carril. WHITESPACE hace lo contrario: mapea qué ángulos están saturados en tu mercado y revela el ángulo adyacente que casi nadie está usando todavía — una hipótesis clasificada para probar, con evidencia verificable.","card":true},
+{"q":"¿Cómo funciona?","a":"Elige un mercado y un país. Los anuncios de Meta y los resultados de Google se leen para ese país; los top ads de TikTok son globales. Extrae las bibliotecas de anuncios en vivo (o lo que posiciona en Google) vía Bright Data y descompone cada pieza activa en su ángulo. Obtienes el ángulo abierto que casi nadie usa, clasificado, con evidencia clicable.","card":true},
+{"q":"¿Por qué no reporta CTR ni ROAS?","a":"Honesto por diseño: las bibliotecas públicas de anuncios no muestran CTR, gasto ni ROAS. Medimos lo observable (la saturación de ángulos) y presentamos la brecha como hipótesis, nunca como ganador garantizado.","card":true},
+{"q":"¿Necesito registrarme o pagar?","a":"Sin registro. 2 escaneos gratis al día, y la misma búsqueda se guarda 7 días. Empieza gratis. Paga solo cuando quieras que una persona revise tu negocio contigo."},
+{"q":"¿Qué países puedo escanear?","a":"10 mercados de LatAm + España + EE.UU.: Panamá, Costa Rica, Colombia, México, Rep. Dominicana, Guatemala, Ecuador, Perú, Chile, Argentina, España y EE.UU."},
+{"q":"¿Ángulos de anuncios o de contenido?","a":"El modo «Ángulos de anuncios» (Meta + TikTok) da copy de anuncio listo para lanzar y un concepto de landing page. El modo «Ángulos de contenido GEO / AEO» (lo que posiciona y la IA cita) da un brief de blog hecho para ser encontrado y citado, átomos sociales y un ángulo de campaña HubSpot."},
+{"q":"¿Qué incluye el diagnóstico AI Growth de $100?","a":"3 preguntas: sitio web, cómo te contactan, venta típica · Resultados escritos: cómo te tratan la búsqueda con IA, Google y tu WhatsApp · Llamada de 45 minutos para revisarlo · Se acredita si continúas a la auditoría completa."},
+{"q":"¿Pueden vigilar mi mercado cada semana?","a":"Un escaneo es una foto. Los escaneos semanales son la película: el mismo mercado y país cada semana, para ver cuándo se abre una ventana. Déjanos tu email y te contactamos para configurarlo."}
+]}
+</script>
+<script src="skin.js?v=20261021a"></script>
 <script>
 const $=(id)=>document.getElementById(id);
 const esc=Skin.esc;
 const PAY='https://aideazz.xyz/pay/analisis-tecnico?sku=diagnostic_call&lng=';
+const FAQ=(()=>{try{return JSON.parse($('faqData').textContent)}catch(e){return {en:[],es:[]}}})();
+const WA_PREFILL={en:'Hi Elena — I saw the AIdeazz WHITESPACE finder and I’d like to talk.',es:'Hola Elena — vi el buscador WHITESPACE de AIdeazz y me gustaría conversar.'};
 /* The owner's token (see Skin.ownerToken) is passed to the scan so the owner is never metered. */
 const OWNER_TOKEN=Skin.ownerToken;
 
@@ -208,12 +299,28 @@ const COUNTRIES=[['PA','Panamá'],['CR','Costa Rica'],['CO','Colombia'],['MX','M
 const I18N={
 en:{
   title:'WHITESPACE — find the ad nobody is running yet',
-  navAtlas:'Atlas weekly radar →',
   ticker:['GEO','AEO','Tech SEO','<b>WhatsApp AI agents</b>','AI automation','AI promo video','<b>Panamá</b>','Costa Rica','Colombia','México','Dental implants','Medical tourism','Immigration & relocation','Luxury charters'],
   kicker:'Ad & content whitespace finder · LatAm',
   h1:'Find the angle <em>nobody is running yet</em>',
-  sub:'Every spy tool says <b>copy the ad that is already winning</b>, so everyone piles into the same lane. WHITESPACE maps which angles are <b>saturated in your market</b> and surfaces the open one: a ranked hypothesis to test, with a sourced evidence trail.',
-  honest:'Honest by design: public ad libraries expose no CTR, spend or ROAS. We measure what is observable (angle saturation) and rank the gap as a hypothesis, never a guaranteed winner.',
+  sub:'WHITESPACE maps which angles are <b>saturated in your market</b> and surfaces the adjacent angle almost nobody is running yet: a ranked hypothesis to test, with a sourced evidence trail.',
+  seeHow:'See how it works ↓',
+  whyEyebrow:'Honest by design',
+  whyH:'Every spy tool says <em>copy the ad that is already winning</em>, so everyone piles into the same lane.',
+  whyLede:'Public ad libraries expose no CTR, spend or ROAS. We measure what is observable (angle saturation) and rank the gap as a hypothesis, never a guaranteed winner.',
+  pickEyebrow:'Two tools',
+  pickH:'A one-shot scan is a photo. Weekly scans are the film.',
+  pick1L:'01 · WHITESPACE · $0',
+  pick1P:'One-shot discovery, not tracking. 2 scans a day · 10 LatAm markets + Spain + US.',
+  pick1B:'Scan a market →',
+  pick2L:'02 · '+Skin.NAME.en,
+  pick2H:'See the angle <em>opening</em> before the crowd does',
+  pick2P:'Every Monday at 9 AM Panamá. Market memory keeps every ENTER call, so you see angles open and close over time.',
+  pick2B:'See this week’s move →',
+  pickMore:'Also from AIdeazz AI Lab:',
+  howH:'From a market name to the open angle.',
+  hMeta:'Scan details',
+  faqEyebrow:'FAQ', faqH:'Frequently asked questions.', stillQ:'Still have questions?',
+  finalTrust:'Written results · 45-minute call · credited if you continue to the full audit',
   modeCt:'GEO / AEO content angles <span>· what ranks and gets cited</span>', modeMb:'Ad angles <span>· Meta + TikTok ads</span>',
   phContent:'A service you want to own — e.g. dental implants, immigration lawyer',
   phMedia:'A market or offer — e.g. dental implants, yacht charter',
@@ -236,7 +343,7 @@ en:{
   tiersH:'Three ways to <em>work with it</em>',
   tiersLede:'Start free. Pay only when you want a person to look at your business with you.',
   howEyebrow:'How it works',
-  how1:'Pick a market and a country — Atlas points its radar at that market. Meta ads and Google results are read for that country; TikTok top ads are global.',
+  how1:'Pick a market and a country. Meta ads and Google results are read for that country; TikTok top ads are global.',
   how2:'It mines the live ad libraries (or what ranks on Google) via Bright Data and deconstructs every running unit into its angle.',
   how3:'You get the open angle almost nobody is running, ranked, with clickable evidence.',
   finalH:'Know where <em>the open window</em> is before you spend.',
@@ -244,19 +351,35 @@ en:{
   finalBtn:'Book the $100 diagnostic →',
   fTools:'Tools', fPortfolio:'Portfolio ↗',
   fFilm:'Background film: AIdeazz AI Lab promo-shoot footage, incl. Pexels/Pixabay clips. Music: “Essence de la Nuit” by MeditativeTiger via Pixabay (royalty-free).',
-  engine:'An AIdeazz agent · public ad-transparency data only · <b>one-shot discovery</b>, not tracking: to watch a market over time, use the <a href="atlas.html">Atlas weekly radar</a> · part of the Atlas Shifted engine · <a href="https://aideazz.xyz/sop-ai-ops.html" target="_blank" rel="noopener">AI Ops SOP ↗</a> · <a href="https://aideazz.xyz/portfolio" target="_blank" rel="noopener">aideazz.xyz/portfolio ↗</a>',
+  engine:'An AIdeazz agent · public ad-transparency data only · part of the Atlas Shifted engine · <a href="https://aideazz.xyz/sop-ai-ops.html" target="_blank" rel="noopener">AI Ops SOP ↗</a> · <a href="https://aideazz.xyz/portfolio" target="_blank" rel="noopener">aideazz.xyz/portfolio ↗</a>',
   confidence:'confidence', owns:'owns', borrows:'borrows proven psychology from →', hero:'HERO', keyword:'KEYWORD', xhook:'X thread hook',
   noEvidence:'No live evidence in this run.', scanned:'scanned', creatives:'units', connecting:'connecting…', streamClosed:'stream closed',
   cached:'Cached scan from', noteCopyLang:'',
 },
 es:{
   title:'WHITESPACE — encuentra el anuncio que nadie publica todavía',
-  navAtlas:'Radar semanal Atlas →',
   ticker:['GEO','AEO','SEO técnico','<b>Agentes de WhatsApp con IA</b>','Automatización con IA','Video promocional con IA','<b>Panamá</b>','Costa Rica','Colombia','México','Implantes dentales','Turismo médico','Inmigración y reubicación','Chárter de lujo'],
   kicker:'Buscador de whitespace en anuncios y contenido · LatAm',
   h1:'Encuentra el ángulo que <em>nadie está usando todavía</em>',
-  sub:'Todas las herramientas de espionaje dicen <b>copia el anuncio que ya gana</b>, y todos terminan en el mismo carril. WHITESPACE mapea qué ángulos están <b>saturados en tu mercado</b> y revela el que está abierto: una hipótesis clasificada para probar, con evidencia verificable.',
-  honest:'Honesto por diseño: las bibliotecas públicas de anuncios no muestran CTR, gasto ni ROAS. Medimos lo observable (la saturación de ángulos) y presentamos la brecha como hipótesis, nunca como ganador garantizado.',
+  sub:'WHITESPACE mapea qué ángulos están <b>saturados en tu mercado</b> y revela el ángulo adyacente que casi nadie está usando todavía: una hipótesis clasificada para probar, con evidencia verificable.',
+  seeHow:'Ver cómo funciona ↓',
+  whyEyebrow:'Honesto por diseño',
+  whyH:'Todas las herramientas de espionaje dicen <em>copia el anuncio que ya gana</em>, y todos terminan en el mismo carril.',
+  whyLede:'Las bibliotecas públicas de anuncios no muestran CTR, gasto ni ROAS. Medimos lo observable (la saturación de ángulos) y presentamos la brecha como hipótesis, nunca como ganador garantizado.',
+  pickEyebrow:'Dos herramientas',
+  pickH:'Un escaneo es una foto. Los escaneos semanales son la película.',
+  pick1L:'01 · WHITESPACE · $0',
+  pick1P:'Descubrimiento puntual, no seguimiento. 2 escaneos al día · 10 mercados de LatAm + España + EE.UU.',
+  pick1B:'Escanear un mercado →',
+  pick2L:'02 · '+Skin.NAME.es,
+  pick2H:'Ve el ángulo que <em>se abre</em> antes que la multitud',
+  pick2P:'Cada lunes a las 9 AM Panamá. La memoria del mercado guarda cada señal ENTER, para ver cómo se abren y cierran los ángulos.',
+  pick2B:'Ver la jugada de esta semana →',
+  pickMore:'También de AIdeazz AI Lab:',
+  howH:'De un mercado al ángulo abierto.',
+  hMeta:'Detalles del escaneo',
+  faqEyebrow:'FAQ', faqH:'Preguntas frecuentes.', stillQ:'¿Más preguntas?',
+  finalTrust:'Resultados escritos · llamada de 45 minutos · se acredita si continúas a la auditoría completa',
   modeCt:'Ángulos de contenido GEO / AEO <span>· lo que posiciona y la IA cita</span>', modeMb:'Ángulos de anuncios <span>· Meta + TikTok</span>',
   phContent:'Un servicio que quieres dominar — ej. implantes dentales, abogado de inmigración',
   phMedia:'Un mercado u oferta — ej. implantes dentales, alquiler de yates',
@@ -279,7 +402,7 @@ es:{
   tiersH:'Tres formas de <em>trabajar con esto</em>',
   tiersLede:'Empieza gratis. Paga solo cuando quieras que una persona revise tu negocio contigo.',
   howEyebrow:'Cómo funciona',
-  how1:'Elige un mercado y un país — Atlas apunta su radar a ese mercado. Los anuncios de Meta y los resultados de Google se leen para ese país; los top ads de TikTok son globales.',
+  how1:'Elige un mercado y un país. Los anuncios de Meta y los resultados de Google se leen para ese país; los top ads de TikTok son globales.',
   how2:'Extrae las bibliotecas de anuncios en vivo (o lo que posiciona en Google) vía Bright Data y descompone cada pieza activa en su ángulo.',
   how3:'Obtienes el ángulo abierto que casi nadie usa, clasificado, con evidencia clicable.',
   finalH:'Sabe dónde está <em>la ventana abierta</em> antes de invertir.',
@@ -287,7 +410,7 @@ es:{
   finalBtn:'Reservar el diagnóstico de $100 →',
   fTools:'Herramientas', fPortfolio:'Portafolio ↗',
   fFilm:'Película de fondo: material de las producciones promocionales de AIdeazz AI Lab, incl. clips de Pexels/Pixabay. Música: “Essence de la Nuit” de MeditativeTiger vía Pixabay (libre de regalías).',
-  engine:'Un agente de AIdeazz · solo datos públicos de transparencia publicitaria · <b>descubrimiento único</b>, no seguimiento: para vigilar un mercado en el tiempo, usa el <a href="atlas.html">radar semanal Atlas</a> · parte del motor Atlas Shifted · <a href="https://aideazz.xyz/sop-ai-ops.html" target="_blank" rel="noopener">SOP de AI Ops ↗</a> · <a href="https://aideazz.xyz/portfolio" target="_blank" rel="noopener">aideazz.xyz/portfolio ↗</a>',
+  engine:'Un agente de AIdeazz · solo datos públicos de transparencia publicitaria · parte del motor Atlas Shifted · <a href="https://aideazz.xyz/sop-ai-ops.html" target="_blank" rel="noopener">SOP de AI Ops ↗</a> · <a href="https://aideazz.xyz/portfolio" target="_blank" rel="noopener">aideazz.xyz/portfolio ↗</a>',
   confidence:'confianza', owns:'domina', borrows:'toma psicología probada de →', hero:'HERO', keyword:'PALABRA CLAVE', xhook:'Gancho de hilo X',
   noEvidence:'Sin evidencia en vivo en esta corrida.', scanned:'escaneadas', creatives:'piezas', connecting:'conectando…', streamClosed:'conexión cerrada',
   cached:'Escaneo guardado del', noteCopyLang:'',
@@ -302,8 +425,8 @@ countrySel.innerHTML=COUNTRIES.map(([c,n])=>'<option value="'+c+'">'+n+'</option
 countrySel.value='PA';
 
 function paintChips(){
-  $('chips').innerHTML='<span class="eyebrow">'+esc(t('chipsLab'))+'</span>'+MARKETS.map((m,i)=>
-    '<button type="button" class="chip'+(pickedMarket===i?' on':'')+'" data-i="'+i+'">'+esc(m[LANG])+' <small>'+esc(LANG==='es'?m.tagEs:m.tagEn)+'</small></button>').join('');
+  $('chips').innerHTML='<span class="eyebrow">'+esc(t('chipsLab'))+'</span><div class="chiprow">'+MARKETS.map((m,i)=>
+    '<button type="button" class="chip'+(pickedMarket===i?' on':'')+'" data-i="'+i+'">'+esc(m[LANG])+' <small>'+esc(LANG==='es'?m.tagEs:m.tagEn)+'</small></button>').join('')+'</div>';
   $('chips').querySelectorAll('.chip').forEach(b=>b.onclick=()=>{
     const m=MARKETS[+b.dataset.i]; pickedMarket=+b.dataset.i;
     $('q').value=m[LANG]; countrySel.value=m.country; paintChips(); $('q').focus();
@@ -314,29 +437,46 @@ function paintTiers(){
   Skin.tiers($('tiers'),$('contactBox'),{lang:LANG,freeHref:'#tool',market:()=>$('q').value.trim(),country:()=>lastQuery?lastCountry:''});
 }
 
+/** The active mode's sub-label ("what ranks and gets cited"), shown under the 2-segment control on phones. */
+function paintModeHint(){
+  const b=document.querySelector('.mode.on'), s=b&&b.querySelector('span');
+  $('modeHint').textContent=s?s.textContent.replace(/^\s*·\s*/,''):'';
+}
+/** W6 "Two tools": the same two items, words and links as the Tools menu (Skin.NAV_T / Skin.toolHref). */
+function paintTools(){
+  $('pick1I').innerHTML=Skin.ICONS.scan; $('pick2I').innerHTML=Skin.ICONS.globe;
+  const N=Skin.NAV_T[LANG]||Skin.NAV_T.en;
+  const a=(k)=>'<a href="'+esc(Skin.toolHref(k,'whitespace',LANG))+'" target="_blank" rel="noopener">'+esc(N[k][0])+'</a>';
+  $('pickMore').innerHTML=esc(t('pickMore'))+' '+a('api')+' · '+a('op');
+}
 function applyLang(){
   document.documentElement.lang=LANG;
   document.title=t('title');
   const set=(id,k,html)=>{const el=$(id); if(el) el[html?'innerHTML':'textContent']=t(k||id);};
-  set('navAtlas'); set('kicker'); set('h1',0,1); set('sub',0,1); set('honest');
-  $('modeCt').innerHTML=t('modeCt'); $('modeMb').innerHTML=t('modeMb');
-  set('go'); set('fine',0,1); set('recLab');
-  ['hAdcopy','hLp','hBlog','hSocial','hHub','hLanes','hAlts','hEv','trackEyebrow','exEyebrow','exLede','tiersEyebrow','tiersLede','howEyebrow','how1','how2','how3','finalP','finalBtn','fTools','fPortfolio','fFilm'].forEach(k=>set(k));
-  ['exH','tiersH','finalH','engine'].forEach(k=>set(k,0,1));
+  Skin.nav({page:'whitespace',lang:LANG,onLang:setLang});
+  set('kicker'); set('h1',0,1); set('sub',0,1);
+  $('modeCt').innerHTML=t('modeCt'); $('modeMb').innerHTML=t('modeMb'); paintModeHint();
+  set('go'); set('recLab');
+  $('fine').innerHTML=t('fine').split(' · ').map(s=>'<li>'+s+'</li>').join('');
+  ['seeHow','whyEyebrow','whyLede','pickEyebrow','pickH','pick1L','pick1P','pick1B','pick2L','pick2P','pick2B','howH','hMeta','faqEyebrow','faqH','stillQ','finalTrust',
+   'hAdcopy','hLp','hBlog','hSocial','hHub','hLanes','hAlts','hEv','trackEyebrow','exEyebrow','exLede','tiersEyebrow','tiersLede','howEyebrow','how1','how2','how3','finalP','finalBtn','fTools','fPortfolio','fFilm'].forEach(k=>set(k));
+  ['exH','tiersH','finalH','engine','whyH','pick2H'].forEach(k=>set(k,0,1));
+  set('pick1H','h1',1);
   $('finalBtn').href=PAY+LANG;
   Skin.ticker($('ticker'),t('ticker'));
-  $('langEN').classList.toggle('on',LANG==='en'); $('langES').classList.toggle('on',LANG==='es');
+  paintTools();
+  Skin.faq($('faqList'),FAQ[LANG]||FAQ.en);
+  const wa=Skin.waLink(LANG,WA_PREFILL); $('stillWa').href=wa.url; $('stillWa').textContent=wa.label;
   paintChips(); paintTiers();
   Skin.examples($('reels'),LANG);
   if(lastQuery) paintTrack();
 }
 function setLang(l){ LANG=l; try{localStorage.setItem('ws_lang',l)}catch{} applyLang(); }
-$('langEN').onclick=()=>setLang('en');
-$('langES').onclick=()=>setLang('es');
 
 document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{
   mode=b.dataset.mode;
   document.querySelectorAll('.mode').forEach(x=>x.classList.toggle('on',x===b));
+  paintModeHint();
   paintChips();
 });
 
@@ -413,6 +553,9 @@ function render(p){
   $('lanes').innerHTML=(p.crowdedLanes||[]).map(l=>'<div class="lane"><span class="sat '+esc(l.saturation)+'">'+esc(l.saturation)+'</span><span class="ang">'+esc(l.angle)+' <span style="color:var(--dim)">('+(l.creativeCount||0)+')</span></span><span class="em">'+esc(l.dominantEmotion||'')+'</span></div>').join('')||'<div class="ct">—</div>';
   const alts=p.alternativeBets||[];
   $('altSec').style.display=alts.length?'block':'none';
+  // Other bets + Evidence: open on wide screens, folded on phones (the recommended angle stays the first thing read)
+  const wide=!window.matchMedia||matchMedia('(min-width:720px)').matches;
+  $('altSec').open=wide; $('evSec').open=wide;
   $('alts').innerHTML=alts.map(a=>'<div class="alt"><b>'+esc(a.angle)+'</b> <span class="c">'+(a.confidence||0)+'</span><br>'+esc(a.rationale)+'</div>').join('');
   $('evidence').innerHTML=(p.evidence||[]).map(e=>'<div class="ev"><b>'+esc(e.advertiser||'unknown')+'</b> — '+esc(e.insight)+'<br>'+(e.sourceUrl?('<a href="'+esc(e.sourceUrl)+'" target="_blank" rel="noopener">'+esc(String(e.sourceUrl).slice(0,72))+'</a>'):'')+'</div>').join('')||'<div class="ct">'+t('noEvidence')+'</div>';
   const m=p.meta||{};
@@ -430,7 +573,7 @@ applyLang();
 Skin.backdrop(['ws-catamaran','ws-jungle-island','ws-cartagena','ws-surf-beach','ws-casco-viejo','ws-beach-boats','ws-bocagrande','ws-sunset-real']);
 Skin.lightField();
 Skin.music('media/ws-music');
-Skin.whatsapp({page:'whitespace',prefill:{en:'Hi Elena — I saw the AIdeazz WHITESPACE finder and I’d like to talk.',es:'Hola Elena — vi el buscador WHITESPACE de AIdeazz y me gustaría conversar.'}});
+Skin.whatsapp({page:'whitespace',prefill:WA_PREFILL});
 Skin.hubspot();
 Skin.footer('whitespace');
 </script>
