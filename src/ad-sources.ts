@@ -164,7 +164,16 @@ export async function reconContentSources(
   }
 
   onProgress?.(`Searching what ranks for "${topic}"…`);
-  const serp = await bdSerpSearch(`${topic} marketing OR services OR agency`, { num: 10, gl: country.toLowerCase() }).catch(() => []);
+  const q = `${topic} marketing OR services OR agency`;
+  let serp = await bdSerpSearch(q, { num: 10, gl: country.toLowerCase() }).catch(() => []);
+  // Bright Data sometimes answers a niche local query with an empty body (20 Oct: PA empty twice, US 8 results);
+  // fall back to US results rather than hand the visitor a scan with no clickable proof.
+  let serpGl = country.toUpperCase();
+  if (!serp.length && serpGl !== 'US') {
+    onProgress?.(`No ${serpGl} results answered — reading what ranks in the US instead…`);
+    serp = await bdSerpSearch(q, { num: 10, gl: 'us' }).catch(() => []);
+    serpGl = 'US';
+  }
   onProgress?.(`Found ${serp.length} ranking competitors. Reading their positioning…`);
 
   // Parallelize with bounded concurrency — sequential heavy fetches were the
@@ -192,7 +201,7 @@ export async function reconContentSources(
   onProgress?.(`Captured positioning from ${out.length} competitors.`);
   return {
     creatives: out,
-    sources: out.length ? ['Google SERP', 'Competitor sites'] : [],
+    sources: out.length ? [`Google SERP (${serpGl})`, 'Competitor sites'] : [],
     degraded: out.length === 0,
   };
 }
