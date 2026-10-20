@@ -46,7 +46,7 @@
   .rec h2{margin:10px 0 10px;font:400 34px/1.1 var(--serif);letter-spacing:-.01em}
   @media(min-width:640px){.rec h2{font-size:42px}}
   .rec p{color:var(--body);margin:0 0 14px;line-height:1.6}
-  .conf{display:inline-flex;align-items:center;gap:8px;font:12px var(--mono);color:#fff;background:rgba(255,255,255,.06);border:1px solid var(--line-2);border-radius:999px;padding:6px 13px}
+  .conf{display:inline-block;max-width:100%;font:12px/1.6 var(--mono);color:#fff;background:rgba(255,255,255,.06);border:1px solid var(--line-2);border-radius:16px;padding:6px 13px;overflow-wrap:anywhere}
   .conf b{color:var(--amber)}
   .adj{margin-top:12px;font:12.5px var(--mono);color:var(--dim)} .adj b{color:var(--lilac-2)}
   .tile h3{margin:0 0 8px;font:700 16px/1.3 var(--display)}
@@ -59,7 +59,7 @@
   .sat.light{background:var(--ok-bg);color:var(--ok-ink);border:1px solid rgba(52,211,153,.35)}
   .lane .ang{flex:1} .lane .em{font:11.5px var(--mono);color:var(--dim)}
   .ev{font-size:14px;color:var(--body);padding:11px 0;border-bottom:1px solid var(--line);line-height:1.55}
-  .ev a{color:var(--lilac-2);text-decoration:none;font:11px var(--mono)} .ev b{color:#fff}
+  .ev a{color:var(--lilac-2);text-decoration:none;font:11px var(--mono);overflow-wrap:anywhere} .ev b{color:#fff}
   .alt{font-size:14px;color:var(--body);padding:10px 0;border-bottom:1px solid var(--line);line-height:1.55}
   .alt b{color:#fff} .alt .c{font:11px var(--mono);color:var(--amber)}
   .metaline{margin-top:22px;font:11.5px/1.6 var(--mono);color:var(--ink-45)}
@@ -352,7 +352,7 @@ en:{
   fFilm:'Background film: AIdeazz AI Lab promo-shoot footage, incl. Pexels/Pixabay clips. Music: “Essence de la Nuit” by MeditativeTiger via Pixabay (royalty-free).',
   engine:'An AIdeazz agent · public ad-transparency data only · part of the Atlas Shifted engine · <a href="https://aideazz.xyz/sop-ai-ops.html" target="_blank" rel="noopener">AI Ops SOP ↗</a> · <a href="https://aideazz.xyz/portfolio" target="_blank" rel="noopener">aideazz.xyz/portfolio ↗</a>',
   confidence:'confidence', owns:'owns', borrows:'borrows proven psychology from →', hero:'HERO', keyword:'KEYWORD', xhook:'X thread hook',
-  noEvidence:'No live evidence in this run.', scanned:'scanned', creatives:'units', connecting:'connecting…', streamClosed:'stream closed',
+  noEvidence:'No live evidence in this run.', degradedNote:'The live sources did not answer in time, so this read comes from market knowledge, with no clickable proof. It did not use one of your free scans — run it again in a few minutes for the evidence trail.', scanned:'scanned', creatives:'units', connecting:'connecting…', streamClosed:'stream closed',
   cached:'Cached scan from', noteCopyLang:'',
 },
 es:{
@@ -411,7 +411,7 @@ es:{
   fFilm:'Película de fondo: material de las producciones promocionales de AIdeazz AI Lab, incl. clips de Pexels/Pixabay. Música: “Essence de la Nuit” de MeditativeTiger vía Pixabay (libre de regalías).',
   engine:'Un agente de AIdeazz · solo datos públicos de transparencia publicitaria · parte del motor Atlas Shifted · <a href="https://aideazz.xyz/sop-ai-ops.html" target="_blank" rel="noopener">SOP de AI Ops ↗</a> · <a href="https://aideazz.xyz/portfolio" target="_blank" rel="noopener">aideazz.xyz/portfolio ↗</a>',
   confidence:'confianza', owns:'domina', borrows:'toma psicología probada de →', hero:'HERO', keyword:'PALABRA CLAVE', xhook:'Gancho de hilo X',
-  noEvidence:'Sin evidencia en vivo en esta corrida.', scanned:'escaneadas', creatives:'piezas', connecting:'conectando…', streamClosed:'conexión cerrada',
+  noEvidence:'Sin evidencia en vivo en esta corrida.', degradedNote:'Las fuentes en vivo no respondieron a tiempo, así que esta lectura viene del conocimiento del mercado, sin pruebas con enlace. No usó uno de tus escaneos gratis: vuelve a correrlo en unos minutos para ver la evidencia.', scanned:'escaneadas', creatives:'piezas', connecting:'conectando…', streamClosed:'conexión cerrada',
   cached:'Escaneo guardado del', noteCopyLang:'',
 }};
 let LANG=(()=>{try{return localStorage.getItem('ws_lang')}catch{return null}})()||((navigator.language||'').toLowerCase().startsWith('en')?'en':'es');
@@ -560,7 +560,7 @@ function render(p){
   const m=p.meta||{};
   $('meta').textContent=t('scanned')+' '+(m.creativesScanned||0)+' '+t('creatives')+' · '+((m.sources&&m.sources.join(' + '))||'knowledge mode')+' · '+(m.llmProvider||'')+(p.cached?'':' · '+(m.durationMs||0)+' ms')+(m.degraded?' · DEGRADED':'');
   const deg=$('deg');
-  if(m.degraded&&m.notes&&m.notes.length){ deg.style.display='block'; deg.textContent='⚠ '+m.notes.join('  '); } else deg.style.display='none';
+  if(m.degraded){ deg.style.display='block'; deg.textContent='⚠ '+t('degradedNote'); } else deg.style.display='none';
   paintTrack();
   $('results').scrollIntoView({behavior:'smooth',block:'start'});
 }

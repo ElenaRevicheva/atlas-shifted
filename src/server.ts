@@ -525,9 +525,9 @@ app.get('/api/run', async (req, res) => {
         const hit = JSON.parse(readFileSync(cachePath, 'utf8')) as {
           at: string; degraded?: boolean; vertical?: string; mode?: string; country?: string; out: Record<string, unknown>;
         };
-        const ttlDays = hit.degraded ? 1 : config.runCacheDays;
+        // A no-evidence (degraded) result is never served again: the next visitor gets a fresh live try.
         const same = normQuery(String(hit.vertical || '')) === normQuery(vertical) && hit.mode === mode && hit.country === country;
-        if (same && Date.now() - Date.parse(hit.at) < ttlDays * 86_400_000) {
+        if (!hit.degraded && same && Date.now() - Date.parse(hit.at) < config.runCacheDays * 86_400_000) {
           send({ stage: 'start', message: `Scan from ${hit.at.slice(0, 10)} (${country}) — served from this week's cache`, pct: 2 });
           send({ stage: 'done', message: 'Deliverable ready (cached).', data: { ...hit.out, cached: { at: hit.at } }, pct: 100 });
           logRun({ ip, vertical, mode, country, result: 'cache' });
@@ -608,7 +608,7 @@ app.get('/api/run', async (req, res) => {
         message: 'The analysis came back empty this time. It did not use one of your free scans — try again in a few minutes.',
       });
     }
-    if (usable) {
+    if (usable && !degraded) {
       try {
         mkdirSync(RUN_CACHE_DIR, { recursive: true });
         const tmp = `${cachePath}.tmp`;
@@ -616,7 +616,8 @@ app.get('/api/run', async (req, res) => {
         renameSync(tmp, cachePath);
       } catch { /* uncached is still a delivered scan */ }
     } else {
-      refund(); // the empty fallback an LLM outage leaves: never cached, never charged
+      // empty, or no live evidence (the page promises clickable proof): never cached, never charged
+      refund();
     }
     logRun({
       ip, vertical, mode, country, result: usable ? 'live' : 'empty', degraded, ms: Date.now() - t0,

@@ -114,7 +114,8 @@ function normalize(out: AnalysisOut, dna: AngleDNA[]): AnalysisOut {
       adjacentTo: (Array.isArray(w.adjacentTo) ? w.adjacentTo : []).map((a) => String(a).slice(0, 80)).slice(0, 4),
       confidence: Math.max(0, Math.min(100, Number(w.confidence) || 50)),
       emotion: String(w.emotion || '').slice(0, 40),
-      hookType: String(w.hookType || 'other').slice(0, 40),
+      // Models sometimes write a sentence here; cut on a word, never mid-phrase (a public result showed "…benefits of ").
+      hookType: ((h) => (h.length <= 80 ? h : `${h.slice(0, 80).replace(/\s+\S*$/, '')}…`))(String(w.hookType || 'other').trim()),
     }))
     .filter((w) => w.angle)
     .sort((a, b) => b.confidence - a.confidence);

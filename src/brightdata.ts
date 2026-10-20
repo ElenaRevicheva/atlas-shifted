@@ -138,12 +138,22 @@ export async function bdSerpSearch(
   });
   const url = `https://www.google.com/search?${params.toString()}`;
   try {
-    const res = await fetch(BD_API, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${config.brightDataToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ zone: config.brightDataZone, url, format: 'raw' }),
-      signal: AbortSignal.timeout(30_000),
-    });
+    // One retry with a longer wait: a single slow SERP answer left a free scan with no evidence (20 Oct).
+    let res!: Response;
+    for (const ms of [30_000, 45_000]) {
+      try {
+        res = await fetch(BD_API, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${config.brightDataToken}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ zone: config.brightDataZone, url, format: 'raw' }),
+          signal: AbortSignal.timeout(ms),
+        });
+        break;
+      } catch (e) {
+        if (ms === 45_000) throw e;
+        console.warn(`[bd-serp] retry "${query.slice(0, 40)}":`, (e as Error).message);
+      }
+    }
     if (!res.ok) {
       console.warn(`[bd-serp] ${query.slice(0, 40)} → ${res.status}`);
       return [];
