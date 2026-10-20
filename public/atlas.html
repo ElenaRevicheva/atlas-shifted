@@ -301,7 +301,7 @@ en:{
   finalH:'Know where <em>the open window</em> is before you spend.',
   finalP:'Start with the $100 diagnostic: written results on your business and channels, and a 45-minute call.',
   finalBtn:'Book the $100 diagnostic →',
-  fTools:'Tools', fPortfolio:'Portfolio ↗', fFilm:'Background film: AIdeazz AI Lab promo-shoot footage, incl. Pexels/Pixabay clips.',
+  fTools:'Tools', fPortfolio:'Portfolio ↗', fFilm:'Background film: AIdeazz AI Lab promo-shoot footage, incl. Pexels/Pixabay clips. Music: YuraSoop via Pixabay (royalty-free).',
   stale:(d,a)=>'⏸ Radar paused — last live snapshot '+d+' ('+a+' days ago). The history and campaigns below are from that snapshot.',
   howEyebrow:'How Atlas works',
   how1:'Every Monday at 9 AM Panamá, Atlas captures the live ads of every tracked market from the public ad libraries.',
@@ -362,7 +362,7 @@ es:{
   finalH:'Sabe dónde está <em>la ventana abierta</em> antes de invertir.',
   finalP:'Empieza con el diagnóstico de $100: resultados escritos sobre tu negocio y tus canales, y una llamada de 45 minutos.',
   finalBtn:'Reservar el diagnóstico de $100 →',
-  fTools:'Herramientas', fPortfolio:'Portafolio ↗', fFilm:'Película de fondo: material de las producciones promocionales de AIdeazz AI Lab, incl. clips de Pexels/Pixabay.',
+  fTools:'Herramientas', fPortfolio:'Portafolio ↗', fFilm:'Película de fondo: material de las producciones promocionales de AIdeazz AI Lab, incl. clips de Pexels/Pixabay. Música: YuraSoop vía Pixabay (libre de regalías).',
   stale:(d,a)=>'⏸ Radar en pausa — último snapshot en vivo '+d+' (hace '+a+' días). La historia y las campañas de abajo son de ese snapshot.',
   howEyebrow:'Cómo funciona Atlas',
   how1:'Cada lunes a las 9 AM Panamá, Atlas captura los anuncios activos de cada mercado en seguimiento desde las bibliotecas públicas de anuncios.',
@@ -781,7 +781,8 @@ $('langEN').onclick=()=>setLang('en');
 $('langES').onclick=()=>setLang('es');
 applyStaticLang();
 fetch(atlasUrl()).then(r=>r.json()).then(render).catch(e=>{ $('board').innerHTML='<div class="loading">'+t('failed')+': '+esc(e.message)+'</div>'; });
-Skin.backdrop(['ws-night','ws-city-night-grid','ws-banking-towers','ws-monserrate','ws-city-night-towers']);
+Skin.backdrop(['ws-night','ws-city-night-grid','ws-banking-towers','ws-medellin-cathedral','ws-monserrate','ws-panama-skyline','ws-city-night-towers']);
+Skin.music('media/ws-music');
 </script>
 </body>
 </html>

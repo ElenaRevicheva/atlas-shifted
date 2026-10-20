@@ -3,7 +3,8 @@
       spend; one film per page, Elena's pick). Phones get 640x360 encodes; reduced-motion / Data Saver / 2g get the still.
    2. examples(): the 7 creatives Atlas shipped in June–July, as a permanent gallery. A static list on
       purpose, so no lane filter or data change can hide them; the server refuses to re-render them.
-   3. leadForm(): the public's way in (weekly tracking, quota ran out, diagnostic) → POST api/atlas/lead. */
+   3. leadForm(): the public's way in (weekly tracking, quota ran out, diagnostic) → POST api/atlas/lead.
+   4. music(): the ambient track and its round sound button, the same behaviour as aideazz.xyz/api. */
 (function () {
   'use strict';
   var Skin = (window.Skin = {});
@@ -219,6 +220,75 @@
       Skin.leadForm(contactEl, { kind: 'contact', lang: opts.lang, intro: esc(T.contact), market: opts.market, country: opts.country });
       contactEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
+  };
+
+  /* ── 4. ambient music — the same behaviour as aideazz.xyz/api ─────────────────
+     Browsers refuse sound until the visitor has touched the page, so this TRIES once on load (that works for a
+     returning visitor the browser already trusts), then starts on the first real tap, click or key. A gesture the
+     browser does not count (a scroll) leaves it armed for the next one instead of giving up. Whoever mutes stays
+     muted on the next visit (localStorage); reduced-motion visitors are never started automatically. The button
+     follows the <audio> element itself, so it can never claim music that is not playing. preload="none": nothing
+     is downloaded for anyone it never plays for. Track: free Pixabay licence, already in the AIdeazz library. */
+  Skin.music = function (base, vol) {
+    var nav = document.querySelector('.nav');
+    if (!nav) return;
+    var KEY = 'aidz_ambient_muted', VOL = vol || 0.45, muted = false, wasOn = false, ramp = 0;
+    try { muted = localStorage.getItem(KEY) === '1'; } catch (e) {}
+    var calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var au = document.createElement('audio');
+    au.loop = true; au.preload = 'none'; au.setAttribute('playsinline', '');
+    [['.webm', 'audio/webm; codecs=opus'], ['.m4a', 'audio/mp4']].forEach(function (s) {
+      var so = document.createElement('source'); so.src = base + s[0]; so.type = s[1]; au.appendChild(so);
+    });
+    var SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/>';
+    var ON = SVG + '<path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+    var OFF = SVG + '<path d="m16 9 5 6M21 9l-5 6"/></svg>';
+    var btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'sndbtn';
+    function paint() {
+      var on = !au.paused, es = (document.documentElement.lang || '').slice(0, 2) === 'es';
+      var l = on ? (es ? 'Silenciar música' : 'Mute music') : (es ? 'Activar música' : 'Play music');
+      btn.innerHTML = on ? ON : OFF;
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      btn.setAttribute('aria-label', l); btn.title = l;
+    }
+    function store(v) { try { localStorage.setItem(KEY, v); } catch (e) {} }
+    function play() {
+      // a short volume ramp so the music arrives instead of jumping in (iOS ignores volume; harmless there)
+      au.volume = 0; clearInterval(ramp);
+      var t0 = Date.now();
+      ramp = setInterval(function () {
+        var k = Math.min(1, (Date.now() - t0) / 1400);
+        au.volume = VOL * k;
+        if (k >= 1) clearInterval(ramp);
+      }, 70);
+      var p = au.play();
+      return p && p.then ? p : Promise.resolve();
+    }
+    var EV = ['pointerdown', 'pointerup', 'mousedown', 'touchend', 'keydown', 'click'];
+    function disarm() { EV.forEach(function (e) { window.removeEventListener(e, onGesture, true); }); }
+    function onGesture(ev) {
+      if (ev.target && ev.target.closest && ev.target.closest('.sndbtn')) return; // the button decides for itself
+      if (muted) { disarm(); return; }
+      play().then(disarm).catch(function () {});
+    }
+    btn.onclick = function () {
+      disarm();
+      if (au.paused) { muted = false; store('0'); play().catch(function () {}); }
+      else { muted = true; store('1'); au.pause(); }
+    };
+    // a hidden tab (phone locked, another tab) goes quiet and picks up again when the visitor comes back
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) { wasOn = !au.paused; if (wasOn) au.pause(); }
+      else if (wasOn && !muted) play().catch(function () {});
+    });
+    au.addEventListener('play', paint); au.addEventListener('pause', paint);
+    try { new MutationObserver(paint).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] }); } catch (e) {}
+    nav.appendChild(btn); // right after EN/ES, so the two page controls stay together when the nav wraps on a phone
+    document.body.appendChild(au); // no controls attribute: in the page (like /api), never visible
+    paint();
+    if (muted || calm) return;
+    play().catch(function () { EV.forEach(function (e) { window.addEventListener(e, onGesture, true); }); });
   };
 
   Skin.ticker = function (el, items) {

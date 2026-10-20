@@ -64,6 +64,11 @@ h1,h2,h3,h4{font-family:var(--display);letter-spacing:-.022em;text-wrap:balance}
 .langsw{display:inline-flex;border:1px solid var(--line-2);border-radius:999px;overflow:hidden;background:rgba(255,255,255,.04)}
 .langsw button{background:transparent;color:var(--ink-60);border:0;padding:7px 11px;font:700 11px var(--mono);cursor:pointer}
 .langsw button.on{background:#fff;color:#020617}
+/* the sound button: a 36px ghost circle beside the language switch, as on aideazz.xyz/api */
+.sndbtn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;border-radius:999px;border:1px solid var(--line-2);background:rgba(255,255,255,.05);color:var(--ink-80);cursor:pointer;transition:all .15s}
+.sndbtn:hover{border-color:rgba(255,255,255,.4);color:#fff}
+.sndbtn[aria-pressed="true"]{color:#fff;border-color:rgba(255,255,255,.3)}
+.sndbtn svg{width:18px;height:18px}
 
 /* ── ticker ── */
 .ticker{position:relative;left:50%;width:100vw;transform:translateX(-50%);overflow:hidden;border-block:1px solid var(--line);padding:11px 0;background:rgba(var(--veil),.25)}
