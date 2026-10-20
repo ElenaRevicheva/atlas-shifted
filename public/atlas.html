@@ -760,7 +760,7 @@ $('langEN').onclick=()=>setLang('en');
 $('langES').onclick=()=>setLang('es');
 applyStaticLang();
 fetch(atlasUrl()).then(r=>r.json()).then(render).catch(e=>{ $('board').innerHTML='<div class="loading">'+t('failed')+': '+esc(e.message)+'</div>'; });
-Skin.backdrop(['ws-night','ws-city-night-grid','ws-city-night-towers']);
+Skin.backdrop(['ws-night','ws-city-night-grid','ws-banking-towers','ws-monserrate','ws-city-night-towers']);
 </script>
 </body>
 </html>
