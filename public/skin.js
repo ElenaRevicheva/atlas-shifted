@@ -43,7 +43,9 @@
     // Phones held upright get a sharp 9:16 crop (-p); small landscape screens the 640x360 cut (-m).
     var ext = window.innerWidth < 860 ? (window.innerHeight > window.innerWidth ? '-p.mp4' : '-m.mp4') : '.mp4';
     var R = names.map(function (n) { return 'media/' + n + ext; });
-    var cur = A, nxt = B, i = 0, hand = false, X = 1.2;
+    // X = dissolve length; LEAD = how close to the end the next film starts (the outgoing film is shown in full,
+    // then holds its last frame while the next one fades in over it).
+    var cur = A, nxt = B, i = 0, hand = false, X = 1.2, LEAD = 0.25;
     var bad = {}; // clip index -> failed once (a missing clip is skipped, never retried)
     function nextGood(from) {
       for (var k = 1; k <= R.length; k++) { var j = (from + k) % R.length; if (!bad[j]) return j; }
@@ -54,11 +56,11 @@
       if (j < 0 || j === i) return; // nothing else to cue: the current clip loops
       if (nxt.dataset.src !== R[j]) { nxt.dataset.src = R[j]; nxt.dataset.idx = j; nxt.src = R[j]; nxt.load(); }
     }
-    function tick() {
-      if (hand || !cur.duration || cur.duration - cur.currentTime > X) return;
+    function handoff() {
+      if (hand || dead) return;
       var nj = nextGood(i);
-      if (nj < 0 || nj === i) { cur.loop = true; return; } // one good clip left: it simply loops
-      if (nxt.dataset.src !== R[nj]) { pre(); return; }
+      if (nj < 0 || nj === i) { cur.loop = true; cur.currentTime = 0; cur.play().catch(function () {}); return; } // one good clip left: it loops
+      if (nxt.dataset.src !== R[nj]) { pre(); cur.currentTime = 0; cur.play().catch(function () {}); return; } // next not cued yet: replay
       hand = true;
       nxt.currentTime = 0;
       nxt.play().then(function () {
@@ -67,6 +69,10 @@
           var f = cur; cur = nxt; nxt = f; i = +cur.dataset.idx; f.pause(); hand = false; pre();
         }, X * 1000);
       }).catch(function () { hand = false; });
+    }
+    function tick() {
+      if (hand || !cur.duration) return;
+      if (cur.duration - cur.currentTime <= LEAD) handoff();
     }
     var dead = false;
     function stop() {
@@ -86,8 +92,8 @@
       cur.play().then(function () { cur.style.opacity = 1; }).catch(function () {});
       pre();
     }
-    // Never freeze on a last frame. `hand` stays as it is: only the handoff's own promise clears it.
-    function ended() { if (this === cur && !dead) { cur.currentTime = 0; cur.play().catch(function () {}); } }
+    // A film that reached its end before a timeupdate caught it hands off now (never restarts under a fade).
+    function ended() { if (this === cur && !dead && !hand) handoff(); }
     [A, B].forEach(function (v) { v.muted = true; v.addEventListener('timeupdate', tick); v.addEventListener('error', err); v.addEventListener('ended', ended); });
     A.preload = 'auto'; B.preload = 'auto'; A.src = R[0]; A.dataset.src = R[0]; A.dataset.idx = 0;
     A.play().then(function () { A.style.opacity = 1; pre(); }).catch(function () { /* the poster stays */ });
