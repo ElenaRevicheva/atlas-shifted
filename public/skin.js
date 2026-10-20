@@ -7,7 +7,8 @@
    4. music(): the ambient track and its round sound button, the same behaviour as aideazz.xyz/api.
    5. hubspot() + whatsapp(): the two chat bubbles of aideazz.xyz/api.
    6. footer(): the footer links of aideazz.xyz/api.
-   7. countUp(): numbers that run up from 0, like the /api counters. */
+   7. countUp(): numbers that run up from 0, like the /api counters.
+   8. lightField(): the cursor-lit dot field + drifting light of aideazz.xyz/api. */
 (function () {
   'use strict';
   var Skin = (window.Skin = {});
@@ -466,6 +467,69 @@
       }
     }, { threshold: 0 });
     root._cuObs.observe(root);
+  };
+
+  /* ── 8. light field — the aideazz.xyz/api torch (HeroBackdrop.tsx, read off hud.ai), ported ───────────
+     A field of tiny square dots, each twinkling on its own phase (a shared phase reads as a screensaver), coloured
+     gold -> white -> violet across the width. The pointer is a torch, not a cursor: the field sits low everywhere and
+     lifts only where the visitor looks, easing after the mouse so it never snaps. The three CSS light rays drift with
+     the pointer, each at its own depth. Touch screens have no hover, so there the field glows a little on its own,
+     at ~30 fps. Reduced motion or no canvas: the static dot texture stays and nothing runs. */
+  Skin.lightField = function () {
+    if (window.__wsFwd) return;
+    var bd = document.querySelector('.bd');
+    if (!bd || !window.requestAnimationFrame) return;
+    if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var c = document.createElement('canvas'), x = c.getContext && c.getContext('2d');
+    if (!x) return;
+    c.className = 'lf';
+    var veil = bd.querySelector('.veil');
+    bd.insertBefore(c, veil ? veil.nextSibling : null);
+    bd.classList.add('bd--lit');
+    var W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2);
+    function size() { W = c.clientWidth; H = c.clientHeight; c.width = W * DPR; c.height = H * DPR; x.setTransform(DPR, 0, 0, DPR, 0, 0); }
+    size();
+    addEventListener('resize', size, { passive: true });
+    var ptr = { x: -9999, y: -9999, tx: -9999, ty: -9999, lit: false };
+    addEventListener('pointermove', function (e) {
+      if (e.pointerType === 'touch') return;
+      ptr.tx = e.clientX; ptr.ty = e.clientY;
+      if (!ptr.lit) { ptr.x = e.clientX; ptr.y = e.clientY; ptr.lit = true; }
+    }, { passive: true });
+    document.addEventListener('mouseout', function (e) { if (!e.relatedTarget) ptr.lit = false; });
+    var coarse = !!(window.matchMedia && matchMedia('(hover: none)').matches);
+    var AMB = coarse ? 0.24 : 0.13, SPOT = coarse ? 0 : 0.75, R2 = 320 * 320, GAP = 12, DOT = 2, last = 0;
+    function frame(t) {
+      requestAnimationFrame(frame);
+      if (coarse && t - last < 33) return;   // ~30 fps on phones
+      last = t;
+      x.clearRect(0, 0, W, H);
+      var cx = W * 0.5, cy = H * 0.52, rad = Math.hypot(W, H) * 0.58;
+      var breathe = Math.sin(t * 0.00035) * 0.14 + 0.86;
+      ptr.x += (ptr.tx - ptr.x) * 0.12;
+      ptr.y += (ptr.ty - ptr.y) * 0.12;
+      for (var gy = 0; gy < H; gy += GAP) {
+        for (var gx = 0; gx < W; gx += GAP) {
+          var d = Math.hypot(gx - cx, gy - cy) / rad, blob = Math.max(0, 1 - d * d);
+          var edge = Math.min(1, Math.min(gx, W - gx) / 90, Math.min(gy, H - gy) / 90), f = blob * edge;
+          if (f <= 0.015) continue;
+          var hash = (gx * 12.9898 + gy * 78.233) % 6.283;          // neighbours are never in step
+          var flick = 0.42 + 0.58 * Math.abs(Math.sin(t * 0.0026 + hash));
+          var hx = gx / W + Math.sin(t * 0.00016) * 0.09;
+          var R = Math.round(255 - Math.max(0, hx - 0.42) * 168), G = Math.round(240 - Math.abs(hx - 0.5) * 150), B = Math.round(188 + hx * 67);
+          var px = gx - ptr.x, py = gy - ptr.y, sd = (px * px + py * py) / R2;
+          var spot = ptr.lit && sd < 1 ? (1 - sd) * (1 - sd) : 0;
+          var a = f * flick * breathe * (AMB + SPOT * spot);
+          if (a < 0.012) continue;
+          x.fillStyle = 'rgba(' + R + ',' + G + ',' + B + ',' + a.toFixed(3) + ')';
+          x.fillRect(gx, gy, DOT, DOT);
+        }
+      }
+      // the rays slide with the pointer, each at its own depth (CSS reads --px/--py)
+      bd.style.setProperty('--px', ptr.lit ? (ptr.x - W / 2).toFixed(1) : '0');
+      bd.style.setProperty('--py', ptr.lit ? (ptr.y - H / 2).toFixed(1) : '0');
+    }
+    requestAnimationFrame(frame);
   };
 
   Skin.ticker = function (el, items) {

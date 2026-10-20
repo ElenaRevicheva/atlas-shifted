@@ -44,6 +44,13 @@ h1,h2,h3,h4{font-family:var(--display);letter-spacing:-.022em;text-wrap:balance}
   -webkit-mask-image:radial-gradient(circle,#000 0 34%,transparent 62%);mask-image:radial-gradient(circle,#000 0 34%,transparent 62%);
   animation:sweep 9s linear infinite}
 @keyframes sweep{to{rotate:360deg}}
+/* the light field (Skin.lightField): the canvas replaces the static dot texture once it runs, and the rays drift
+   with the pointer, each at its own depth (transform; raybob keeps the separate translate property) */
+.bd>canvas.lf{position:absolute;inset:0;width:100%;height:100%}
+.bd--lit>.dots{display:none}
+.bd--lit .ray.r1{transform:translate(calc(var(--px,0) * .07px),calc(var(--py,0) * .07px)) rotate(-7deg)}
+.bd--lit .ray.r2{transform:translate(calc(var(--px,0) * .045px),calc(var(--py,0) * .045px)) rotate(5deg)}
+.bd--lit .ray.r3{transform:translate(calc(var(--px,0) * .105px),calc(var(--py,0) * .105px)) rotate(-2deg)}
 
 /* ── layout ── */
 .wrap{position:relative;z-index:10;max-width:62rem;margin:0 auto;padding:28px 20px 40px}

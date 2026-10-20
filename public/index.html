@@ -37,7 +37,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700&display=swap" />
 <link rel="preload" as="image" href="media/ws-catamaran.webp" />
-<link rel="stylesheet" href="skin.css?v=20261020" />
+<link rel="stylesheet" href="skin.css?v=20261020e" />
 <style>
   /* result-specific pieces (the shared look lives in skin.css) */
   .results{display:none}
@@ -188,7 +188,7 @@
   </footer>
 </main>
 
-<script src="skin.js?v=20261020d"></script>
+<script src="skin.js?v=20261020e"></script>
 <script>
 const $=(id)=>document.getElementById(id);
 const esc=Skin.esc;
@@ -428,6 +428,7 @@ $('q').addEventListener('keydown',e=>{ if(e.key==='Enter') run(); });
 $('q').addEventListener('input',()=>{ if(pickedMarket!==null){ pickedMarket=null; paintChips(); } });
 applyLang();
 Skin.backdrop(['ws-catamaran','ws-jungle-island','ws-cartagena','ws-surf-beach','ws-casco-viejo','ws-beach-boats','ws-bocagrande','ws-sunset-real']);
+Skin.lightField();
 Skin.music('media/ws-music');
 Skin.whatsapp({page:'whitespace',prefill:{en:'Hi Elena — I saw the AIdeazz WHITESPACE finder and I’d like to talk.',es:'Hola Elena — vi el buscador WHITESPACE de AIdeazz y me gustaría conversar.'}});
 Skin.hubspot();
