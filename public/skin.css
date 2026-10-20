@@ -57,11 +57,13 @@ h1,h2,h3,h4{font-family:var(--display);letter-spacing:-.022em;text-wrap:balance}
 @media(min-width:640px){.wrap{padding:36px 32px 48px}}
 .top{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:28px}
 .brandlink{display:inline-flex;gap:12px;align-items:center;text-decoration:none;color:#fff}
-.mark{display:inline-block;aspect-ratio:176/202;height:44px;background-image:var(--ramp-fb);background-image:var(--ramp);background-size:220%;animation:az-flow 5s linear infinite;
+.mark{display:inline-block;aspect-ratio:176/202;height:50px;background-image:var(--ramp-fb);background-image:var(--ramp);background-size:220%;animation:az-flow 5s linear infinite;
   -webkit-mask:url(https://aideazz.xyz/media/az-mark.png) center/contain no-repeat;mask:url(https://aideazz.xyz/media/az-mark.png) center/contain no-repeat}
 .wordmark{display:flex;flex-direction:column;line-height:1}
-.wordmark .w{font:600 25px/1 var(--display);letter-spacing:.06em}
-.wordmark .w b{font-weight:600;background-image:var(--ramp-fb);background-image:var(--ramp);background-size:220%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:az-flow 5s linear infinite}
+/* the brand lockup (Elena, 20 Oct: keep it, bigger + sharper, 2026): Syne ExtraBold, sharp-cut display face */
+.wordmark .w{font:800 min(28px,5.4vw)/1 'Syne',var(--display);letter-spacing:.015em;text-transform:uppercase;white-space:nowrap}
+@media(min-width:640px){.mark{height:60px}.wordmark .w{font-size:35px}.wordmark .lab{font-size:11.5px}}
+.wordmark .w b{font-weight:800;background-image:var(--ramp-fb);background-image:var(--ramp);background-size:220%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:az-flow 5s linear infinite}
 .wordmark .lab{margin-top:6px;display:flex;align-items:center;gap:8px;font:500 10.5px var(--mono);letter-spacing:.32em;color:var(--ink-80);text-transform:uppercase}
 .wordmark .lab i{display:inline-block;width:18px;height:1px;background:#8b5cf6}.wordmark .lab i:last-child{background:var(--yellow)}
 @keyframes az-flow{100%{background-position:220% center}}
