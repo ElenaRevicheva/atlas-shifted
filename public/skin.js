@@ -35,8 +35,15 @@
     return tk;
   })();
 
+  /* aideazz.xyz/atlas frames these pages: tell it which page is showing, so its address bar follows (radar <-> finder).
+     Posted only to https://aideazz.xyz, and only after the owner token above has left location.search. */
+  try {
+    if (window.top !== window.self) window.parent.postMessage({ ws: 'nav', page: /atlas\.html$/.test(location.pathname) ? 'atlas' : 'finder', search: location.search }, 'https://aideazz.xyz');
+  } catch (e) {}
+
   /* ── 1. film backdrop ─────────────────────────────────────────────────────── */
   Skin.backdrop = function (names) {
+    if (window.__wsFwd) return; // the page is moving to aideazz.xyz/atlas: start nothing here
     var A = document.getElementById('va'), B = document.getElementById('vb');
     if (!A || !B || !names || !names.length) return;
     // One film: it plays through both elements in turn, so each loop dissolves into itself instead of jumping.
@@ -233,6 +240,7 @@
      follows the <audio> element itself, so it can never claim music that is not playing. preload="none": nothing
      is downloaded for anyone it never plays for. Track: free Pixabay licence, already in the AIdeazz library. */
   Skin.music = function (base, vol) {
+    if (window.__wsFwd) return; // the page is moving to aideazz.xyz/atlas: start nothing here
     var nav = document.querySelector('.nav');
     if (!nav) return;
     var KEY = 'aidz_ambient_muted', VOL = vol || 0.45, muted = false, wasOn = false, ramp = 0;
@@ -300,6 +308,7 @@
      WhatsApp API and no backend: a wa.me link. Outside Panama business hours it stops promising a fast reply and offers
      a booking link instead, so a late visitor still has a concrete next step. Ported from WhatsAppFloat.tsx. */
   Skin.hubspot = function () {
+    if (window.__wsFwd) return; // the page is moving to aideazz.xyz/atlas: start nothing here
     if (document.getElementById('hs-script-loader')) return;
     var s = document.createElement('script');
     s.id = 'hs-script-loader'; s.async = true; s.defer = true;
@@ -309,6 +318,7 @@
   };
 
   Skin.whatsapp = function (opts) {
+    if (window.__wsFwd) return; // the page is moving to aideazz.xyz/atlas: start nothing here
     opts = opts || {};
     var PHONE = '50761666716', TZ = 'America/Panama', OPEN = 9, CLOSE = 17, DAYS = [1, 2, 3, 4, 5, 6];
     var BOOK = 'https://calendly.com/elena_revicheva/coffee-chat';

@@ -2,12 +2,37 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
+<script>/* Old address -> aideazz.xyz/atlas (20 Oct 2026). Human, top-level visits only: inside the aideazz.xyz/atlas frame
+   window.top !== window.self, so this cannot loop. Owner mode (a token in the URL or already in this tab) and ?direct
+   (the full-screen link, remembered for the tab) stay here; scripts and crawlers that do not run JS keep getting this page. */
+(function(){try{
+  if (window.top !== window.self || location.hostname !== 'webhook.aideazz.xyz') return;
+  var u = new URL(location.href), q = u.searchParams;
+  if (q.has('token') || q.has('ship_token')) return;
+  // owner mode and "Open full screen" (?direct) are remembered for this tab, so in-app links never bounce back
+  try {
+    if (q.has('direct')) sessionStorage.setItem('ws_direct', '1');
+    if (sessionStorage.getItem('ws_owner') || sessionStorage.getItem('ws_direct')) return;
+  } catch (e) { if (q.has('direct')) return; }
+  // a script redirect reports THIS page as the referrer; carry the real source so analytics keeps it
+  try {
+    var ref = document.referrer ? new URL(document.referrer).hostname : '';
+    if (ref && !/(^|\.)aideazz\.xyz$/.test(ref) && !q.has('utm_source')) { q.set('utm_source', ref); q.set('utm_medium', 'referral'); }
+  } catch (e) {}
+  // leaving: show nothing and start nothing (films, music, HubSpot, the radar fetch) - the frame does it all again
+  window.__wsFwd = 1;
+  var de = document.documentElement; de.style.visibility = 'hidden';
+  setTimeout(function () { de.style.visibility = ''; }, 4000);   // if the move fails, the page shows itself
+  var s = q.toString();
+  location.replace('https://aideazz.xyz/atlas' + (/atlas\.html$/.test(u.pathname) ? '' : '/finder') + (s ? '?' + s : '') + u.hash);
+}catch(e){}})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Atlas Shifted AIPA — Angle Window Radar</title>
 <meta name="description" content="Atlas by AIdeazz AI Lab reads the live ad market every Monday, scores every angle and ships test-ready creative when a window opens." />
 <link rel="canonical" href="https://aideazz.xyz/atlas" /><!-- the main-domain address (aideazz.xyz/atlas) frames this page; ranking collects there -->
-<link rel="icon" type="image/svg+xml" href="favicon.svg" />
-<link rel="apple-touch-icon" href="favicon.svg" />
+<link rel="icon" type="image/svg+xml" href="favicon.svg?v=2" />
+<link rel="apple-touch-icon" href="favicon.svg?v=2" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700&display=swap" />
@@ -232,7 +257,7 @@
   <div id="drawerBody"><div class="loading">…</div></div>
 </div>
 
-<script src="skin.js?v=20261020b"></script>
+<script src="skin.js?v=20261020d"></script>
 <script>
 const $=(id)=>document.getElementById(id);
 const esc=Skin.esc;
@@ -788,7 +813,7 @@ function setLang(l){ LANG=l; try{localStorage.setItem('atlas_lang',l)}catch{} ap
 $('langEN').onclick=()=>setLang('en');
 $('langES').onclick=()=>setLang('es');
 applyStaticLang();
-fetch(atlasUrl()).then(r=>r.json()).then(render).catch(e=>{ $('board').innerHTML='<div class="loading">'+t('failed')+': '+esc(e.message)+'</div>'; });
+if(!window.__wsFwd) fetch(atlasUrl()).then(r=>r.json()).then(render).catch(e=>{ $('board').innerHTML='<div class="loading">'+t('failed')+': '+esc(e.message)+'</div>'; });
 Skin.backdrop(['ws-night','ws-city-night-grid','ws-casco-skyline','ws-medellin-cathedral','ws-banking-towers','ws-monserrate','ws-panama-skyline','ws-city-night-towers']);
 Skin.music('media/atlas-music');
 Skin.whatsapp({page:'atlas',prefill:{en:'Hi Elena — I saw the AIdeazz Atlas radar and I’d like to talk.',es:'Hola Elena — vi el radar Atlas de AIdeazz y me gustaría conversar.'}});
