@@ -180,11 +180,12 @@
     wrap.setAttribute('aria-modal', 'true');
     wrap.innerHTML = '<div class="howcard"><button class="howx" type="button" aria-label="' + esc(T.close) + '">×</button>' +
       '<h3>' + esc(x[lang] || x.en) + (x.us ? ' <span class="tagdemo">' + esc(T.demo) + '</span>' : '') + '</h3><div class="howbody">…</div></div>';
-    var close = function () { wrap.remove(); document.removeEventListener('keydown', onKey); };
+    var close = function () { wrap.remove(); document.body.classList.remove('howopen'); document.removeEventListener('keydown', onKey); };
     var onKey = function (e) { if (e.key === 'Escape') close(); };
     wrap.addEventListener('click', function (e) { if (e.target === wrap || e.target.classList.contains('howx')) close(); });
     document.addEventListener('keydown', onKey);
     document.body.appendChild(wrap);
+    document.body.classList.add('howopen');
     wrap.querySelector('.howx').focus();
     loadProof().then(function (all) {
       var p = all[id];

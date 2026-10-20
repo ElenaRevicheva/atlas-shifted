@@ -449,3 +449,5 @@ body:has(.drawer.open) #hubspot-messages-iframe-container{visibility:hidden!impo
 .howmedia{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
 .howmedia figure{margin:0} .howmedia img,.howmedia video{display:block;width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:12px;background:#0b0b14}
 .howmedia figcaption{margin-top:6px;font:500 10.5px/1.4 var(--mono);color:var(--ink-45)}
+/* while "How it worked" is open, the two chat bubbles step aside (HubSpot's welcome card covered the ads) */
+body.howopen #hubspot-messages-iframe-container,body.howopen .wafloat{display:none!important}
