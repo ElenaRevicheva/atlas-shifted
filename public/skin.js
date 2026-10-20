@@ -5,7 +5,8 @@
       purpose, so no lane filter or data change can hide them; the server refuses to re-render them.
    3. leadForm(): the public's way in (weekly tracking, quota ran out, diagnostic) → POST api/atlas/lead.
    4. music(): the ambient track and its round sound button, the same behaviour as aideazz.xyz/api.
-   5. hubspot() + whatsapp(): the two chat bubbles of aideazz.xyz/api. */
+   5. hubspot() + whatsapp(): the two chat bubbles of aideazz.xyz/api.
+   6. footer(): the footer links of aideazz.xyz/api. */
 (function () {
   'use strict';
   var Skin = (window.Skin = {});
@@ -368,6 +369,49 @@
     btn.onclick = function () { set(!isOpen); };
     try { new MutationObserver(paint).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] }); } catch (e) {}
     paint();
+  };
+
+  /* ── 6. footer — the same exits as aideazz.xyz/api ──────────────────────────────
+     Resources + Company exactly as on /api (src/pages/LabApi.tsx footer); the /api link stays, named for what it is.
+     The two decks open in the reader's language, like on /api. "Start a project" lands on the portfolio inquiry form
+     with this page as the UTM source, so a lead from here is told apart in HubSpot. */
+  Skin.footer = function (page) {
+    var cols = document.getElementById('footCols');
+    if (!cols) return;
+    var SITE = 'https://aideazz.xyz';
+    var T = {
+      en: { res: 'Resources', co: 'Company', about: 'Human-Backed AI', api: 'GEO/AEO Visibility API', start: 'Start a project',
+        pol: 'Service Policies', rights: 'All rights reserved' },
+      es: { res: 'Recursos', co: 'Empresa', about: 'IA con respaldo humano', api: 'API de visibilidad GEO/AEO', start: 'Empezar un proyecto',
+        pol: 'Políticas de servicio', rights: 'Todos los derechos reservados' }
+    };
+    var start = SITE + '/portfolio?utm_source=' + encodeURIComponent(page || 'atlas') +
+      '&utm_medium=web&utm_campaign=atlas-shifted&utm_content=start-project#portfolio-inquiry-form';
+    function a(href, text, cls) {
+      var ext = href.indexOf('mailto:') !== 0;
+      return '<a href="' + esc(href) + '"' + (ext ? ' target="_blank" rel="noopener"' : '') + (cls ? ' class="' + cls + '"' : '') + '>' + esc(text) + '</a>';
+    }
+    function paint() {
+      var es = (document.documentElement.lang || '').slice(0, 2) === 'es', L = T[es ? 'es' : 'en'], deck = es ? '_ES' : '';
+      cols.innerHTML =
+        '<div><span class="eyebrow">' + esc(L.res) + '</span>' +
+          a(SITE + '/Elena_Revicheva_Professional_Outlook_2026' + deck + '.pdf?v=20261011c', L.about) +
+          a('https://www.youtube.com/@AIdeazz', 'YouTube') +
+          a(SITE + '/ai-ops-wiki.html', 'AI Ops Wiki') +
+          a(SITE + '/blog', 'Blog') + '</div>' +
+        '<div><span class="eyebrow">' + esc(L.co) + '</span>' +
+          a(SITE + '/AIdeazz_AI_Growth_Operator_2026' + deck + '.pdf', 'AI Growth Operator') +
+          a(SITE + '/api', L.api) +
+          a('mailto:aipa@aideazz.xyz', 'aipa@aideazz.xyz') +
+          a(start, L.start, 'hi') +
+          a(SITE + '/policies.html', L.pol) + '</div>';
+      var r = document.getElementById('fRights');
+      if (r) r.textContent = L.rights;
+    }
+    var y = document.getElementById('fYear');
+    if (y) y.textContent = String(new Date().getFullYear());
+    paint();
+    try { new MutationObserver(paint).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] }); } catch (e) {}
   };
 
   Skin.ticker = function (el, items) {

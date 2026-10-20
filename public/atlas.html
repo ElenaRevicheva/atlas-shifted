@@ -216,12 +216,10 @@
   </section>
 
   <footer class="foot">
-    <div class="cols">
-      <div><span class="eyebrow">AIdeazz AI Lab</span><a href="https://aideazz.xyz/api" target="_blank" rel="noopener">aideazz.xyz/api ↗</a><a href="https://aideazz.xyz/portfolio" target="_blank" rel="noopener" id="fPortfolio">Portfolio ↗</a></div>
-      <div><span class="eyebrow" id="fTools"></span><a href="./">WHITESPACE</a><a href="atlas.html">Atlas radar</a><a href="https://aideazz.xyz/sop-ai-ops.html" target="_blank" rel="noopener">AI Ops SOP ↗</a></div>
-    </div>
+    <div class="cols" id="footCols"></div>
     <div class="fine" id="fFilm" style="max-width:24rem"></div>
-    <div class="big">© AIdeazz AI Lab · Panamá</div>
+    <div class="big">© <span id="fYear">2026</span> AIdeazz AI Lab</div>
+    <div class="rights" id="fRights">All rights reserved</div>
   </footer>
 </main>
 
@@ -785,6 +783,7 @@ Skin.backdrop(['ws-night','ws-city-night-grid','ws-banking-towers','ws-medellin-
 Skin.music('media/atlas-music');
 Skin.whatsapp({page:'atlas',prefill:{en:'Hi Elena — I saw the AIdeazz Atlas radar and I’d like to talk.',es:'Hola Elena — vi el radar Atlas de AIdeazz y me gustaría conversar.'}});
 Skin.hubspot();
+Skin.footer('atlas');
 </script>
 </body>
 </html>

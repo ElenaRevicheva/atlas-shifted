@@ -183,8 +183,13 @@ select.field option{background:#0f172a;color:#fff}
 .cta-final p{color:var(--body);max-width:36rem;margin:0 auto 26px;line-height:1.6}
 .foot{margin-top:70px;padding-top:36px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-size:13px;color:var(--dim)}
 .foot a{color:var(--ink-80);text-decoration:none}.foot a:hover{color:#fff}
-.foot .cols{display:flex;gap:28px;flex-wrap:wrap}
-.foot .cols div{display:flex;flex-direction:column;gap:7px}
+/* two columns on a phone too (as on /api), spread apart from 640px */
+.foot .cols{display:grid;grid-template-columns:1fr 1fr;gap:28px;width:100%}
+@media(min-width:640px){.foot .cols{display:flex;justify-content:space-between;gap:48px}}
+.foot .cols div{display:flex;flex-direction:column;gap:11px}
+.foot .cols a{font-size:15px}
+.foot .cols a.hi{color:#fff}
+.foot .rights{width:100%;margin-top:-12px;font:11px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
 .foot .big{width:100%;margin-top:22px;font:400 clamp(1.1rem,3vw,2.2rem)/1.1 var(--serif);color:var(--ink-60)}
 
 /* chat bubbles, as on aideazz.xyz/api: WhatsApp bottom-LEFT (HubSpot's launcher owns bottom-right) */
