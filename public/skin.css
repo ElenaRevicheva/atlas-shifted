@@ -27,8 +27,8 @@ h1,h2,h3,h4{font-family:var(--display);letter-spacing:-.022em;text-wrap:balance}
 /* ── backdrop: poster → two cross-fading films → veil → dot field → light ── */
 .bd{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
 .bd>img,.bd>video,.bd>.veil,.bd>.dots,.bd>.sweep{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.bd>video{opacity:0;transition:opacity 1200ms ease;filter:saturate(.85) brightness(.8)}
-.bd>.veil{background:linear-gradient(180deg,rgba(var(--veil),.86) 0%,rgba(var(--veil),.5) 26%,rgba(var(--veil),.68) 55%,rgba(var(--veil),.88) 80%,rgba(var(--veil),.94) 100%)}
+.bd>video{opacity:0;transition:opacity 1200ms ease;filter:saturate(1.08)}
+.bd>.veil{background:linear-gradient(180deg,rgba(var(--veil),.55) 0%,rgba(var(--veil),.18) 24%,rgba(var(--veil),.3) 52%,rgba(var(--veil),.6) 80%,rgba(var(--veil),.78) 100%)}
 .bd>.dots{background-image:radial-gradient(rgba(255,236,200,.16) 1px,transparent 1.3px);background-size:12px 12px;
   -webkit-mask-image:radial-gradient(ellipse 70% 60% at 50% 42%,#000 10%,transparent 72%);mask-image:radial-gradient(ellipse 70% 60% at 50% 42%,#000 10%,transparent 72%);
   animation:dotbreath 9s ease-in-out infinite}
@@ -73,14 +73,14 @@ h1,h2,h3,h4{font-family:var(--display);letter-spacing:-.022em;text-wrap:balance}
 @keyframes az-ticker{to{transform:translateX(-50%)}}
 
 /* ── hero ── */
-.kicker{margin:30px auto 0;text-align:center;font:500 13px/1.7 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-80);text-wrap:balance}
-.display{margin:12px auto 0;max-width:50rem;text-align:center;font:400 46px/1.02 var(--serif);letter-spacing:-.025em;text-shadow:0 2px 60px rgba(var(--veil),.75)}
+.kicker{margin:30px auto 0;text-align:center;font:500 13px/1.7 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#fff;text-wrap:balance;text-shadow:0 1px 2px rgba(0,0,0,.9),0 1px 18px rgba(var(--veil),.9)}
+.display{margin:12px auto 0;max-width:50rem;text-align:center;font:400 46px/1.02 var(--serif);letter-spacing:-.025em;text-shadow:0 1px 3px rgba(0,0,0,.75),0 2px 24px rgba(var(--veil),.85),0 2px 60px rgba(var(--veil),.75)}
 .display em{font-style:italic;color:var(--amber)}
 @media(min-width:640px){.display{font-size:62px}.kicker{font-size:15px}}
 @media(min-width:1024px){.display{font-size:74px}}
-.sub{margin:20px auto 0;max-width:44rem;text-align:center;font-size:16.5px;line-height:1.6;color:var(--body);text-shadow:0 1px 24px rgba(var(--veil),.9)}
+.sub{margin:20px auto 0;max-width:44rem;text-align:center;font-size:16.5px;line-height:1.6;color:#f3f4f6;text-shadow:0 1px 2px rgba(0,0,0,.9),0 1px 14px rgba(var(--veil),.95),0 1px 30px rgba(var(--veil),.9)}
 .sub b{color:#fff;font-weight:700}
-.honest{margin:12px auto 0;max-width:42rem;text-align:center;font-size:12.5px;line-height:1.55;color:var(--dim)}
+.honest{margin:12px auto 0;max-width:42rem;text-align:center;font-size:12.5px;line-height:1.55;color:#d1d5db;text-shadow:0 1px 2px rgba(0,0,0,.9),0 1px 14px rgba(var(--veil),.95)}
 @media(min-width:640px){.sub{font-size:18px}}
 
 /* ── glass widget + controls ── */

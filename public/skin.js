@@ -40,7 +40,8 @@
     if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     var c = navigator.connection;
     if (c && (c.saveData === true || /^(slow-)?2g$/.test(c.effectiveType || ''))) return;
-    var ext = window.innerWidth < 860 ? '-m.mp4' : '.mp4';
+    // Phones held upright get a sharp 9:16 crop (-p); small landscape screens the 640x360 cut (-m).
+    var ext = window.innerWidth < 860 ? (window.innerHeight > window.innerWidth ? '-p.mp4' : '-m.mp4') : '.mp4';
     var R = names.map(function (n) { return 'media/' + n + ext; });
     var cur = A, nxt = B, i = 0, hand = false, X = 1.2;
     var bad = {}; // clip index -> failed once (a missing clip is skipped, never retried)
