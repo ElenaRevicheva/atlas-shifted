@@ -122,6 +122,14 @@ async function main() {
     model: rendered.model,
     bytes: bytes.length,
     generated_at: new Date().toISOString(),
+    // The weekly concept re-run rewrites entry.concept; keep the campaign this asset was made from
+    // (the June-July originals were lost that way — only their image and video survived).
+    made_from: {
+      concept: entry.concept,
+      move: entry.move,
+      grounding_evidence: entry.grounding_evidence,
+      snapshot_date: entry.snapshot_date,
+    },
   };
   all[vertical] = entry;
   writeFileSync(CONCEPTS, JSON.stringify(all, null, 2));

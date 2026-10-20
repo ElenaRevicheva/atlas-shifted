@@ -1,0 +1,399 @@
+{
+ "geo_aeo_tech_seo_makers": {
+  "snapshot_date": "2026-06-27",
+  "ads_captured": 2,
+  "lanes": [
+   {
+    "angle": "authority",
+    "state": "STABLE",
+    "score": 0,
+    "basis": "saturation_only",
+    "advertisers": 1
+   },
+   {
+    "angle": "social_proof",
+    "state": "STABLE",
+    "score": 0,
+    "basis": "saturation_only",
+    "advertisers": 1
+   }
+  ],
+  "ads": [
+   {
+    "advertiser": "victorious.com",
+    "text": "AEO Services That Get You Seen - Be The Brand AI Recommends — Our AEO strategies combine SEO and AEO best practices to get you found everywhere. Our AEO agency works with",
+    "url": "https://victorious.com/aeo-services-ga/",
+    "link": "landing",
+    "angle": "authority",
+    "platform": "google"
+   },
+   {
+    "advertiser": "reputation.com",
+    "text": "AI SEO Software — AI To Manage Your AI SEO — Change how AI perceives your business. Made for multi-location brick & mortar businesses. See how AI perceives you, track AI ",
+    "url": "https://reputation.com/lp/ai-search-visibility",
+    "link": "landing",
+    "angle": "social_proof",
+    "platform": "google"
+   }
+  ],
+  "image": {
+   "model": "black-forest-labs/flux-1.1-pro",
+   "at": "2026-06-27"
+  },
+  "video": {
+   "model": "runway:seedance2",
+   "at": "2026-06-27"
+  }
+ },
+ "ai_marketing_studios": {
+  "snapshot_date": "2026-06-28",
+  "ads_captured": 33,
+  "lanes": [
+   {
+    "angle": "pain_point",
+    "state": "WATCH",
+    "score": 77,
+    "basis": "launch_proxy",
+    "advertisers": 2
+   },
+   {
+    "angle": "urgency_scarcity",
+    "state": "WATCH",
+    "score": 73,
+    "basis": "launch_proxy",
+    "advertisers": 1
+   },
+   {
+    "angle": "transformation",
+    "state": "WATCH",
+    "score": 47,
+    "basis": "launch_proxy",
+    "advertisers": 2
+   }
+  ],
+  "ads": [
+   {
+    "advertiser": "Photography to Profits With Humberto Garcia",
+    "text": "Just visited our website and are considering our guaranteed done-for-you marketing offer for portrait studios?",
+    "url": "https://photographytoprofits.com",
+    "link": "landing",
+    "angle": "social_proof",
+    "platform": "meta"
+   },
+   {
+    "advertiser": "Billy Gene Is A.I. & XR Marketing",
+    "text": "Unfortunately, after a heck of a 10 year run at my office in downtown San Diego — we're shutting down Geneius Studios for good.",
+    "url": "https://www.billysgoodbye.com",
+    "link": "landing",
+    "angle": "urgency_scarcity",
+    "platform": "meta"
+   },
+   {
+    "advertiser": "Vagaro Pro",
+    "text": "Join 220,000+ professionals who trust Vagaro for seamless booking, secure payments, and powerful AI marketing tools.",
+    "url": "https://vagaro.com",
+    "link": "landing",
+    "angle": "social_proof",
+    "platform": "meta"
+   }
+  ],
+  "image": {
+   "model": "black-forest-labs/flux-1.1-pro",
+   "at": "2026-06-28"
+  },
+  "video": {
+   "model": "runway:seedance2",
+   "at": "2026-06-28"
+  }
+ },
+ "ai_augmented_product_building": {
+  "snapshot_date": "2026-07-01",
+  "ads_captured": 13,
+  "lanes": [
+   {
+    "angle": "pain_point",
+    "state": "WATCH",
+    "score": 67,
+    "basis": "launch_proxy",
+    "advertisers": 1
+   },
+   {
+    "angle": "novelty",
+    "state": "AVOID",
+    "score": 53,
+    "basis": "launch_proxy",
+    "advertisers": 2
+   },
+   {
+    "angle": "urgency_scarcity",
+    "state": "STABLE",
+    "score": 47,
+    "basis": "launch_proxy",
+    "advertisers": 1
+   }
+  ],
+  "ads": [
+   {
+    "advertiser": "abhirupdutta",
+    "text": "Did you think this was just another AI prompt book? 👀 It's Definitely NOT!!! It was written to change how people build with AI. Three days after launch, it's already: 🥇 N",
+    "url": "https://www.facebook.com/ads/library/?id=1721547989045847",
+    "link": "ad",
+    "angle": "novelty",
+    "platform": "meta"
+   },
+   {
+    "advertiser": "Daniel Fazio",
+    "text": "Building a One Person Online Business in 2026 | Part 1: What to Sell – The Complete Guide to Choosing a Profitable Offer",
+    "url": "https://go.clientascension.ai",
+    "link": "landing",
+    "angle": "novelty",
+    "platform": "meta"
+   }
+  ],
+  "image": {
+   "model": "black-forest-labs/flux-1.1-pro",
+   "at": "2026-07-01"
+  },
+  "video": {
+   "model": "gemini:gemini-omni-flash-preview",
+   "at": "2026-07-01"
+  }
+ },
+ "expat_language": {
+  "snapshot_date": "2026-06-25",
+  "ads_captured": 92,
+  "lanes": [
+   {
+    "angle": "curiosity_gap",
+    "state": "WATCH",
+    "score": 76,
+    "basis": "launch_proxy",
+    "advertisers": 3
+   },
+   {
+    "angle": "fear_loss",
+    "state": "WATCH",
+    "score": 60,
+    "basis": "launch_proxy",
+    "advertisers": 9
+   },
+   {
+    "angle": "authority",
+    "state": "STABLE",
+    "score": 49,
+    "basis": "launch_proxy",
+    "advertisers": 3
+   }
+  ],
+  "ads": [
+   {
+    "advertiser": "BaseLang",
+    "text": "What if you could live with a native Spanish speaker without leaving home? That's basically what BaseLang is. Unlimited 1-on-1 classes with native speakers over Zoom. Any",
+    "url": "https://www.facebook.com/ads/library/?id=26913993801575586",
+    "link": "ad",
+    "angle": "urgency_scarcity",
+    "platform": "meta"
+   },
+   {
+    "advertiser": "damichel61 with BaseLang",
+    "text": "I don't want to be the retired gringo in Mexico who doesn't speak Spanish. You know the type. Moved to Latin America with their wife, hangs out exclusively with other exp",
+    "url": "https://www.facebook.com/ads/library/?id=1551039909723858",
+    "link": "ad",
+    "angle": "urgency_scarcity",
+    "platform": "meta"
+   },
+   {
+    "advertiser": "Viva Expats Spain by Yana",
+    "text": "The wrong insurance policy will get your Spanish visa rejected. I've seen it happen — and I'll make sure it doesn't happen to you. Sanitas, full cover, no co-payments, wr",
+    "url": "https://www.facebook.com/ads/library/?id=727056110492356",
+    "link": "ad",
+    "angle": "fear_loss",
+    "platform": "meta"
+   }
+  ],
+  "image": {
+   "model": "black-forest-labs/flux-1.1-pro",
+   "at": "2026-06-25"
+  },
+  "video": {
+   "model": "runway:seedance2",
+   "at": "2026-06-25"
+  }
+ },
+ "debt_finance": {
+  "snapshot_date": "2026-06-28",
+  "ads_captured": 17,
+  "lanes": [
+   {
+    "angle": "authority",
+    "state": "STABLE",
+    "score": 34,
+    "basis": "launch_proxy",
+    "advertisers": 2
+   },
+   {
+    "angle": "pain_point",
+    "state": "STABLE",
+    "score": 3,
+    "basis": "launch_proxy",
+    "advertisers": 14
+   }
+  ],
+  "ads": [
+   {
+    "advertiser": "topconsumerreviews.com",
+    "text": "Debt Relief - Who's Best? | 2026's Best Programs Reviewed — Trusted Guidance To Help You Navigate Your Best Available Debt Relief Options. BBB A+ Rated...",
+    "url": "https://www.topconsumerreviews.com/debt-consolidation-programs/index.php",
+    "link": "landing",
+    "angle": "authority",
+    "platform": "google"
+   },
+   {
+    "advertiser": "Loanify",
+    "text": "🛑 If you have over $10,000 in debt you need to read this... Getting debt relief may be simpler than you think. Don't settle for - Bankruptcy - High Interest Loans - Or Ro",
+    "url": "https://www.facebook.com/ads/library/?id=1410014127269918",
+    "link": "ad",
+    "angle": "pain_point",
+    "platform": "meta"
+   },
+   {
+    "advertiser": "Wealth Compass",
+    "text": "Please don't get a loan or file for bankruptcy - if you have over $10,000 in credit card debt, you may qualify for this nationally available Debt Relief Program. No more ",
+    "url": "https://www.facebook.com/ads/library/?id=26935415449457941",
+    "link": "ad",
+    "angle": "pain_point",
+    "platform": "meta"
+   }
+  ],
+  "image": {
+   "model": "black-forest-labs/flux-1.1-pro",
+   "at": "2026-06-28"
+  },
+  "video": {
+   "model": "runway:seedance2",
+   "at": "2026-06-28"
+  }
+ },
+ "auto_insurance": {
+  "snapshot_date": "2026-06-25",
+  "ads_captured": 49,
+  "lanes": [
+   {
+    "angle": "social_proof",
+    "state": "ENTER",
+    "score": 47,
+    "basis": "launch_proxy",
+    "advertisers": 3
+   },
+   {
+    "angle": "fear_loss",
+    "state": "AVOID",
+    "score": 33,
+    "basis": "launch_proxy",
+    "advertisers": 4
+   },
+   {
+    "angle": "curiosity_gap",
+    "state": "STABLE",
+    "score": 33,
+    "basis": "launch_proxy",
+    "advertisers": 1
+   }
+  ],
+  "ads": [
+   {
+    "advertiser": "USAA",
+    "text": "Members saved an average of $840 on their annual premium when they switched to USAA Auto Insurance. Get Quote",
+    "url": "https://www.facebook.com/ads/library/?id=1599274971159817",
+    "link": "ad",
+    "angle": "social_proof",
+    "platform": "meta"
+   },
+   {
+    "advertiser": "State Farm",
+    "text": "Learn more about auto insurance. State Farm Automobile Insurance.",
+    "url": "https://www.facebook.com/ads/library/?id=2042064343054238",
+    "link": "ad",
+    "angle": "social_proof",
+    "platform": "meta"
+   },
+   {
+    "advertiser": "Intuit Credit Karma",
+    "text": "You deserve to manage your money without 12 tabs open. Your money's home base. Put your credit to work for all it's worth. Credit Loans Home Auto Insurance Money Track yo",
+    "url": "https://www.facebook.com/ads/library/?id=905438048824181",
+    "link": "ad",
+    "angle": "pain_point",
+    "platform": "meta"
+   }
+  ],
+  "image": {
+   "model": "black-forest-labs/flux-1.1-pro",
+   "at": "2026-06-25"
+  },
+  "video": {
+   "model": "runway:seedance2",
+   "at": "2026-06-25"
+  }
+ },
+ "medicare_advantage_enrollment": {
+  "snapshot_date": "2026-07-02",
+  "ads_captured": 24,
+  "lanes": [
+   {
+    "angle": "authority",
+    "state": "WATCH",
+    "score": 51,
+    "basis": "launch_proxy",
+    "advertisers": 2
+   },
+   {
+    "angle": "fear_loss",
+    "state": "STABLE",
+    "score": 36,
+    "basis": "launch_proxy",
+    "advertisers": 1
+   },
+   {
+    "angle": "urgency_scarcity",
+    "state": "STABLE",
+    "score": 32,
+    "basis": "launch_proxy",
+    "advertisers": 4
+   }
+  ],
+  "ads": [
+   {
+    "advertiser": "100Insure",
+    "text": "Here's how we help Medicare beneficiaries affected by qualifying life events get proper coverage without waiting. Recently moved? Lost coverage? New to Medicare? You may ",
+    "url": "https://usamedicaresimplified.com",
+    "link": "landing",
+    "angle": "urgency_scarcity",
+    "platform": "meta"
+   },
+   {
+    "advertiser": "Medicare Hero",
+    "text": "Are you New to Medicare? Register to watch this live event right from your smartphone, tablet, or computer! (It's free!) Topics will Include: • ABC's of Medicare: What is",
+    "url": "https://medicarehero.com",
+    "link": "landing",
+    "angle": "pain_point",
+    "platform": "meta"
+   },
+   {
+    "advertiser": "Health Team",
+    "text": "You may be eligible for a Medicare Special Enrollment Period (SEP) if you go through certain qualifying events, such as: New to Medicare, Turning 65 (aging into Medicare)",
+    "url": "https://betterhealthteam.vip",
+    "link": "landing",
+    "angle": "urgency_scarcity",
+    "platform": "meta"
+   }
+  ],
+  "image": {
+   "model": "black-forest-labs/flux-1.1-pro",
+   "at": "2026-07-02"
+  },
+  "video": {
+   "model": "runway:seedance2",
+   "at": "2026-07-02"
+  }
+ }
+}

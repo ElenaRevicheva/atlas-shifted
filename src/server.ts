@@ -600,8 +600,16 @@ app.get('/api/run', async (req, res) => {
     const out = await runWhitespace(vertical, emit, mode, country);
     const degraded = !!(out as { meta?: { degraded?: boolean } }).meta?.degraded;
     const usable = usableResult(out);
-    if (usable) send(doneEv || { stage: 'done', message: 'Deliverable ready.', data: out, pct: 100 });
-    else {
+    // Elena, 20 Oct: a free result without live, clickable proof makes no sense. The owner still sees knowledge mode.
+    const noProof = usable && degraded && !privileged;
+    if (usable && !noProof) send(doneEv || { stage: 'done', message: 'Deliverable ready.', data: out, pct: 100 });
+    else if (noProof) {
+      send({
+        stage: 'error',
+        code: 'no_proof',
+        message: 'The live ad libraries did not answer for this market right now, so there is no proof to show. It did not use one of your free scans.',
+      });
+    } else {
       send({
         stage: 'error',
         code: 'empty',
@@ -620,7 +628,7 @@ app.get('/api/run', async (req, res) => {
       refund();
     }
     logRun({
-      ip, vertical, mode, country, result: usable ? 'live' : 'empty', degraded, ms: Date.now() - t0,
+      ip, vertical, mode, country, result: noProof ? 'no_proof' : usable ? 'live' : 'empty', degraded, ms: Date.now() - t0,
       creatives: (out as { meta?: { creativesScanned?: number } }).meta?.creativesScanned ?? null,
     });
   } catch (e) {
@@ -840,7 +848,7 @@ app.get('/api/atlas/ship', async (req, res) => {
 // Saved on the box, relayed to the fleet CRM hub as a HubSpot CLIENT deal (no emails are sent
 // to the address typed), then pinged to Telegram WITH the CRM outcome so a failed relay is seen.
 const leadHits = new Map<string, number[]>();
-const LEAD_KINDS = new Set(['weekly_tracking', 'diagnostic', 'scan_quota', 'contact']);
+const LEAD_KINDS = new Set(['weekly_tracking', 'diagnostic', 'scan_quota', 'scan_no_proof', 'contact']);
 const leadRelay = {
   day: '',
   count: 0,

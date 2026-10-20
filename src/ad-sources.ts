@@ -68,7 +68,7 @@ From the page text below, extract up to 12 distinct ads. For each ad return:
 - advertiser: the brand/page name running it (null if not visible)
 - copy: the ad's primary text / headline / caption (the persuasive words)
 - landingUrl: destination URL if present (else null)
-- activitySignal: any runtime/impressions/"active" signal text (else null)
+- activitySignal: any runtime/impressions/"active" signal text, including the ad's "Library ID: <digits>" exactly as shown (else null)
 - imageUrl: null (images are handled separately)
 
 Return ONLY a JSON array. Skip navigation, cookie banners, and UI chrome. If you cannot find real ads, return [].
@@ -93,8 +93,14 @@ ${text}
       copy: a.copy.toString().slice(0, 600),
       landingUrl: a.landingUrl?.toString().slice(0, 300) || null,
       activitySignal: a.activitySignal?.toString().slice(0, 120) || null,
-      sourceUrl,
+      sourceUrl: adPermalink(a.activitySignal, text, source) || sourceUrl,
     }));
+}
+
+/** Link the proof to the ad itself, never the search page — only when its Library ID is verbatim on the page. */
+function adPermalink(signal: unknown, pageText: string, source: AdCreative['source']): string | null {
+  const id = /Library ID:?\s*(\d{8,20})/i.exec(String(signal || ''))?.[1];
+  return source === 'meta_ad_library' && id && pageText.includes(id) ? `https://www.facebook.com/ads/library/?id=${id}` : null;
 }
 
 /** Recon Meta Ad Library for a vertical. */

@@ -25,6 +25,17 @@ export interface BDSerpResult {
   rank?: number;
 }
 
+/**
+ * Bright Data answers a refused target with 200 + an EMPTY body and the reason in x-brd-error
+ * (20 Oct: "Access to this site is restricted … KYC" for facebook.com, "requires special permission"
+ * for TikTok). Say it in the log instead of failing silently.
+ */
+async function bodyOrWhy(res: Response, tag: string, what: string): Promise<string | null> {
+  const body = await res.text();
+  if (!body) console.warn(`${tag} ${what} → empty body: ${(res.headers.get('x-brd-error') || 'no reason given').slice(0, 140)}`);
+  return body || null;
+}
+
 /** Fetch a URL through Web Unlocker; returns raw body (HTML/markdown) or null. */
 export async function bdFetch(url: string, timeoutMs = 45_000): Promise<string | null> {
   if (!hasBrightData()) return null;
@@ -39,7 +50,7 @@ export async function bdFetch(url: string, timeoutMs = 45_000): Promise<string |
       console.warn(`[bd] ${url} → ${res.status}: ${(await res.text()).slice(0, 160)}`);
       return null;
     }
-    return res.text();
+    return bodyOrWhy(res, '[bd]', url);
   } catch (e) {
     console.warn(`[bd] fetch error ${url}:`, (e as Error).message);
     return null;
@@ -60,7 +71,7 @@ export async function bdScrapingBrowserFetch(url: string, timeoutMs = config.met
       console.warn(`[bd-browser] ${url} → ${res.status}: ${(await res.text()).slice(0, 160)}`);
       return null;
     }
-    return res.text();
+    return bodyOrWhy(res, '[bd-browser]', url);
   } catch (e) {
     console.warn(`[bd-browser] fetch error ${url}:`, (e as Error).message);
     return null;
@@ -158,7 +169,7 @@ export async function bdSerpSearch(
       console.warn(`[bd-serp] ${query.slice(0, 40)} → ${res.status}`);
       return [];
     }
-    const text = await res.text();
+    const text = (await bodyOrWhy(res, '[bd-serp]', query.slice(0, 40))) || '';
     let parsed: any;
     try {
       parsed = JSON.parse(text);

@@ -430,3 +430,22 @@ body:has(.drawer.open) #hubspot-messages-iframe-container{visibility:hidden!impo
   .ddpanel,.ddbtn svg,summary::after{transition:none}
   .bd>video{display:none}
 }
+
+/* "How it worked" for a shipped creative (20 Oct 2026): signal -> real ads -> still -> video */
+.reel{cursor:pointer}
+.reel .howbtn{margin-top:9px;font:600 12px var(--sans);color:var(--amber);background:none;border:1px solid rgba(237,184,103,.45);border-radius:999px;padding:5px 11px;cursor:pointer}
+.reel .howbtn:hover{background:rgba(237,184,103,.12)}
+.howbox{position:fixed;inset:0;z-index:9999;background:rgba(2,6,23,.78);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:24px 16px}
+.howcard{position:relative;width:100%;max-width:760px;background:rgba(10,10,22,.96);border:1px solid var(--line-2);border-radius:var(--r);box-shadow:var(--shadow);padding:22px 20px 24px;color:var(--body)}
+.howcard h3{margin:0 40px 6px 0;font:700 22px/1.25 var(--display);color:#fff}
+.howcard h3 .tagdemo{position:static;display:inline-block;vertical-align:middle;margin-left:6px;font:600 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--line-2);border-radius:999px;padding:3px 8px;color:var(--ink-80)}
+.howcard h4{margin:20px 0 6px;font:600 12px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--amber)}
+.howcard p{margin:0 0 8px;font-size:14.5px;line-height:1.55}
+.howcard ul{margin:0;padding:0;list-style:none}
+.howlanes li{font:13px/1.7 var(--mono);color:var(--mut)} .howlanes b{color:#fff}
+.howads li{padding:10px 0;border-bottom:1px solid var(--line);font-size:14px;line-height:1.5;overflow-wrap:anywhere} .howads b{color:#fff}
+.howads a{font:12px var(--mono);color:var(--lilac-2);text-decoration:none}
+.howx{position:absolute;top:10px;right:12px;width:36px;height:36px;border-radius:999px;border:1px solid var(--line-2);background:rgba(255,255,255,.06);color:#fff;font:22px/1 var(--sans);cursor:pointer}
+.howmedia{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+.howmedia figure{margin:0} .howmedia img,.howmedia video{display:block;width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:12px;background:#0b0b14}
+.howmedia figcaption{margin-top:6px;font:500 10.5px/1.4 var(--mono);color:var(--ink-45)}

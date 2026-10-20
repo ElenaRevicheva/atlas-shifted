@@ -52,7 +52,14 @@ interface CaptureRecord {
   ad_text: string;
   landing_url: string | null;
   started_running: string | null;
+  activity_signal?: string | null;
   source_url: string;
+}
+
+/** The ad itself, not the search page: Meta's permalink from the "Library ID" the capture kept. */
+function adPermalink(r: CaptureRecord): string {
+  const id = /Library ID:?\s*(\d{8,20})/i.exec(r.activity_signal || '')?.[1];
+  return id && r.platform === 'meta' ? `https://www.facebook.com/ads/library/?id=${id}` : r.source_url;
 }
 
 function cosine(a: number[], b: number[]): number {
@@ -197,7 +204,7 @@ async function main() {
         platform: r.platform,
         angle_id: a.id,
         advertiser_ref: r.advertiser_ref,
-        ad_ref_url: r.source_url,
+        ad_ref_url: adPermalink(r),
         first_seen_date: r.started_running,
         raw_text_hash: createHash('sha1').update(r.ad_text).digest('hex').slice(0, 16),
         confidence: a.confidence,
@@ -225,7 +232,7 @@ async function main() {
         platform: r.platform,
         angle_id: best,
         advertiser_ref: r.advertiser_ref,
-        ad_ref_url: r.source_url,
+        ad_ref_url: adPermalink(r),
         first_seen_date: r.started_running,
         raw_text_hash: createHash('sha1').update(r.ad_text).digest('hex').slice(0, 16),
         confidence: Math.round(bestSim * 1000) / 1000,

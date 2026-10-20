@@ -142,18 +142,84 @@
     { id: 'medicare_advantage_enrollment', en: 'Medicare Advantage', es: 'Medicare Advantage', at: '2026-07-02', model: 'Flux 1.1 Pro → Runway Seedance 2', us: true },
   ];
   var EX_T = {
-    en: { made: 'rendered', demo: 'US-market demo' },
-    es: { made: 'renderizado', demo: 'demo mercado EE.UU.' },
+    en: {
+      made: 'rendered', demo: 'US-market demo', how: 'How it worked →', close: 'Close',
+      s1: '1 · The market signal', s1b: 'On {d} the radar read {n} real ads in this lane. Its top readings:',
+      s2: '2 · The real ads behind it', s2b: 'Every link opens the ad itself or the page the advertiser paid to send people to.',
+      s3: '3 · The campaign', s3b: 'From these ads Atlas wrote the campaign brief (angle, hook, headline, scene), then rendered the still and the video from it.',
+      still: 'Still', video: 'Video', seeAd: 'See this ad in Meta’s Ad Library ↗', landing: 'the ad’s landing page ↗',
+      score: 'score', states: { ENTER: 'enter', WATCH: 'watch', AVOID: 'avoid', STABLE: 'stable' },
+      angles: { social_proof: 'Social proof', pain_point: 'Pain point', urgency_scarcity: 'Urgency', authority: 'Authority', curiosity_gap: 'Curiosity', transformation: 'Transformation', fear_loss: 'Fear of loss', novelty: 'Novelty' },
+      fail: 'The record could not load. Try again in a moment.',
+    },
+    es: {
+      made: 'renderizado', demo: 'demo mercado EE.UU.', how: 'Cómo funcionó →', close: 'Cerrar',
+      s1: '1 · La señal del mercado', s1b: 'El {d} el radar leyó {n} anuncios reales en este carril. Sus lecturas principales:',
+      s2: '2 · Los anuncios reales detrás', s2b: 'Cada enlace abre el anuncio mismo o la página a la que el anunciante pagó por enviar gente.',
+      s3: '3 · La campaña', s3b: 'Con estos anuncios Atlas escribió el brief de campaña (ángulo, gancho, titular, escena) y luego renderizó la imagen y el video.',
+      still: 'Imagen', video: 'Video', seeAd: 'Ver este anuncio en la Biblioteca de anuncios de Meta ↗', landing: 'la página de destino del anuncio ↗',
+      score: 'puntaje', states: { ENTER: 'entrar', WATCH: 'vigilar', AVOID: 'evitar', STABLE: 'estable' },
+      angles: { social_proof: 'Prueba social', pain_point: 'Dolor', urgency_scarcity: 'Urgencia', authority: 'Autoridad', curiosity_gap: 'Curiosidad', transformation: 'Transformación', fear_loss: 'Miedo a perder', novelty: 'Novedad' },
+      fail: 'No se pudo cargar el registro. Intenta de nuevo en un momento.',
+    },
+  };
+  var proof = null; // examples-proof.json: the render-day radar rows + real ad links, frozen 20 Oct 2026
+  function loadProof() {
+    if (!proof) proof = fetch('examples-proof.json?v=20261020').then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); });
+    return proof;
+  }
+  /* "How it worked" for one shipped creative: signal -> real ads -> still -> video. Only stored, verified records:
+     the brief text that made each June-July render was overwritten by later weekly runs, so it is described, not shown. */
+  Skin.howItWorked = function (id, lang) {
+    var T = EX_T[lang] || EX_T.en, x = null;
+    for (var i = 0; i < Skin.EXAMPLES.length; i++) if (Skin.EXAMPLES[i].id === id) x = Skin.EXAMPLES[i];
+    if (!x) return;
+    var wrap = document.createElement('div');
+    wrap.className = 'howbox';
+    wrap.setAttribute('role', 'dialog');
+    wrap.setAttribute('aria-modal', 'true');
+    wrap.innerHTML = '<div class="howcard"><button class="howx" type="button" aria-label="' + esc(T.close) + '">×</button>' +
+      '<h3>' + esc(x[lang] || x.en) + (x.us ? ' <span class="tagdemo">' + esc(T.demo) + '</span>' : '') + '</h3><div class="howbody">…</div></div>';
+    var close = function () { wrap.remove(); document.removeEventListener('keydown', onKey); };
+    var onKey = function (e) { if (e.key === 'Escape') close(); };
+    wrap.addEventListener('click', function (e) { if (e.target === wrap || e.target.classList.contains('howx')) close(); });
+    document.addEventListener('keydown', onKey);
+    document.body.appendChild(wrap);
+    wrap.querySelector('.howx').focus();
+    loadProof().then(function (all) {
+      var p = all[id];
+      if (!p) throw new Error('no record');
+      var lanes = (p.lanes || []).map(function (l) {
+        return '<li><b>' + esc(T.angles[l.angle] || l.angle) + '</b> · ' + esc(T.states[l.state] || l.state) + ' · ' + esc(T.score) + ' ' + esc(l.score) + '/100</li>';
+      }).join('');
+      var ads = (p.ads || []).map(function (a) {
+        return '<li><b>' + esc(a.advertiser) + '</b> — “' + esc(a.text) + '”<br><a href="' + esc(a.url) + '" target="_blank" rel="noopener">' +
+          esc(a.link === 'ad' ? T.seeAd : a.url.replace(/^https?:\/\/(www\.)?/, '').split('/')[0] + ' — ' + T.landing) + '</a></li>';
+      }).join('');
+      wrap.querySelector('.howbody').innerHTML =
+        '<h4>' + esc(T.s1) + '</h4><p>' + esc(T.s1b.replace('{d}', p.snapshot_date).replace('{n}', p.ads_captured)) + '</p><ul class="howlanes">' + lanes + '</ul>' +
+        '<h4>' + esc(T.s2) + '</h4><p>' + esc(T.s2b) + '</p><ul class="howads">' + ads + '</ul>' +
+        '<h4>' + esc(T.s3) + '</h4><p>' + esc(T.s3b) + '</p>' +
+        '<div class="howmedia"><figure><img src="assets/' + esc(id) + '.jpg" alt="" loading="lazy"><figcaption>' + esc(T.still) + ' · ' + esc(p.image.model || '') + ' · ' + esc(p.image.at || '') + '</figcaption></figure>' +
+        '<figure><video controls playsinline preload="metadata" poster="assets/' + esc(id) + '.jpg" src="assets/' + esc(id) + '.mp4"></video><figcaption>' + esc(T.video) + ' · ' + esc(p.video.model || '') + ' · ' + esc(p.video.at || '') + '</figcaption></figure></div>';
+    }).catch(function () {
+      proof = null;
+      wrap.querySelector('.howbody').innerHTML = '<p>' + esc(T.fail) + '</p>';
+    });
   };
   Skin.examples = function (el, lang) {
     if (!el) return;
     var T = EX_T[lang] || EX_T.en;
     el.innerHTML = Skin.EXAMPLES.map(function (x) {
-      return '<figure class="reel" style="margin:0">' +
+      return '<figure class="reel" style="margin:0" data-id="' + esc(x.id) + '">' +
         (x.us ? '<span class="tagdemo">' + esc(T.demo) + '</span>' : '') +
         '<video muted loop playsinline preload="none" poster="assets/' + x.id + '.jpg" data-src="assets/' + x.id + '.mp4"></video>' +
-        '<figcaption class="cap"><b>' + esc(x[lang] || x.en) + '</b><span>' + esc(T.made) + ' ' + esc(x.at) + ' · ' + esc(x.model) + '</span></figcaption></figure>';
+        '<figcaption class="cap"><b>' + esc(x[lang] || x.en) + '</b><span>' + esc(T.made) + ' ' + esc(x.at) + ' · ' + esc(x.model) + '</span>' +
+        '<button class="howbtn" type="button">' + esc(T.how) + '</button></figcaption></figure>';
     }).join('');
+    el.querySelectorAll('.reel').forEach(function (f) {
+      f.addEventListener('click', function () { Skin.howItWorked(f.getAttribute('data-id'), lang); });
+    });
     var vids = el.querySelectorAll('video');
     if (!('IntersectionObserver' in window)) return;
     var io = new IntersectionObserver(function (entries) {

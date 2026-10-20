@@ -37,7 +37,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700&family=Sora:wght@200;300&family=Syne:wght@700;800&display=swap" />
 <link rel="preload" as="image" href="media/ws-catamaran.webp" />
-<link rel="stylesheet" href="skin.css?v=20261021g" />
+<link rel="stylesheet" href="skin.css?v=20261020h" />
 <style>
   /* result-specific pieces (the shared look lives in skin.css) */
   .results{display:none}
@@ -150,6 +150,7 @@
         <div class="adj" id="recAdj"></div>
       </div>
     </div>
+    <details class="fold" id="evSec"><summary><span class="eyebrow" id="hEv"></span></summary><div id="evidence"></div></details>
 
     <div class="sec only-mb"><span class="eyebrow" id="hAdcopy"></span><div class="grid2" id="adcopy"></div></div>
     <div class="sec only-mb"><span class="eyebrow" id="hLp"></span><div class="card tile" id="lp"></div></div>
@@ -160,7 +161,6 @@
 
     <div class="sec"><span class="eyebrow" id="hLanes"></span><div id="lanes"></div></div>
     <details class="fold" id="altSec"><summary><span class="eyebrow" id="hAlts"></span></summary><div id="alts"></div></details>
-    <details class="fold" id="evSec"><summary><span class="eyebrow" id="hEv"></span></summary><div id="evidence"></div></details>
 
     <section class="sec glass" id="trackBox">
       <span class="eyebrow" id="trackEyebrow"></span>
@@ -276,7 +276,7 @@
 {"q":"¿Pueden vigilar mi mercado cada semana?","a":"Un escaneo es una foto. Los escaneos semanales son la película: el mismo mercado y país cada semana, para ver cuándo se abre una ventana. Déjanos tu email y te contactamos para configurarlo."}
 ]}
 </script>
-<script src="skin.js?v=20261021b"></script>
+<script src="skin.js?v=20261020c"></script>
 <script>
 const $=(id)=>document.getElementById(id);
 const esc=Skin.esc;
@@ -329,10 +329,11 @@ en:{
   recLab:'Recommended whitespace angle',
   hAdcopy:'Launch-ready ad copy', hLp:'Landing-page concept',
   hBlog:'Blog brief — built to be found and cited (GEO / AEO), drops into a Dev.to / blog pipeline', hSocial:'Social atoms — drop into Buffer', hHub:'HubSpot campaign angle',
-  hLanes:'Crowded lanes — what to avoid', hAlts:'Other whitespace bets', hEv:'Evidence trail — the live units behind the call',
+  hLanes:'Crowded lanes — what to avoid', hAlts:'Other whitespace bets', hEv:'Proof — the real ads and pages behind this call (click to check each one)', seeAd:'See this ad in Meta’s Ad Library ↗',
   trackEyebrow:'Keep watching this market',
   trackH:'Watch <em id="trackMarket"></em> every week',
   trackIntro:'A one-shot scan is a photo. Weekly scans are the film: the same market and country, every week, so you see a window open. Leave your email and we get back to you about setting it up.',
+  noProofIntro:'<b>The live ad libraries did not answer for this market right now</b>, so we show nothing rather than a guess. This did not use one of your free scans. Leave your email and we send you this market’s real ads with links — or go straight to the $100 diagnostic.',
   quotaIntro:'<b>Your free scans for today are used.</b> Leave your email and we get back to you about this market — or go straight to the $100 diagnostic.',
   quotaGlobalIntro:'<b>Today\'s free scans are all taken.</b> Leave your email and we get back to you about this market — or go straight to the $100 diagnostic.',
   exEyebrow:'Already shipped by the engine',
@@ -388,10 +389,11 @@ es:{
   recLab:'Ángulo whitespace recomendado',
   hAdcopy:'Copy de anuncio listo para lanzar', hLp:'Concepto de landing page',
   hBlog:'Brief de blog — hecho para ser encontrado y citado (GEO / AEO), listo para un pipeline Dev.to / blog', hSocial:'Átomos sociales — listos para Buffer', hHub:'Ángulo de campaña HubSpot',
-  hLanes:'Carriles saturados — qué evitar', hAlts:'Otras apuestas whitespace', hEv:'Evidencia — las piezas reales detrás del análisis',
+  hLanes:'Carriles saturados — qué evitar', hAlts:'Otras apuestas whitespace', hEv:'Prueba — los anuncios y páginas reales detrás de esta recomendación (haz clic para verificar cada uno)', seeAd:'Ver este anuncio en la Biblioteca de anuncios de Meta ↗',
   trackEyebrow:'Sigue vigilando este mercado',
   trackH:'Vigila <em id="trackMarket"></em> cada semana',
   trackIntro:'Un escaneo es una foto. Los escaneos semanales son la película: el mismo mercado y país cada semana, para ver cuándo se abre una ventana. Déjanos tu email y te contactamos para configurarlo.',
+  noProofIntro:'<b>Las bibliotecas de anuncios en vivo no respondieron para este mercado ahora</b>, así que no mostramos nada en lugar de una suposición. No usó uno de tus escaneos gratis. Déjanos tu email y te enviamos los anuncios reales de este mercado con enlaces — o ve directo al diagnóstico de $100.',
   quotaIntro:'<b>Ya usaste tus escaneos gratis de hoy.</b> Déjanos tu email y te contactamos sobre este mercado — o ve directo al diagnóstico de $100.',
   quotaGlobalIntro:'<b>Los escaneos gratis de hoy ya se agotaron.</b> Déjanos tu email y te contactamos sobre este mercado — o ve directo al diagnóstico de $100.',
   exEyebrow:'Ya producido por el motor',
@@ -496,7 +498,7 @@ function run(){
     if(e.stage==='done'&&e.data){ feed(e.stage,e.message); render(e.data); es.close(); finish(); return; }
     if(e.stage==='error'){
       es.close(); finish();
-      if(e.code==='quota'||e.code==='quota_global'){ showQuota(e.code); return; }
+      if(e.code==='quota'||e.code==='quota_global'||e.code==='no_proof'){ showQuota(e.code); return; }
       feed('error',e.message); return;
     }
     feed(e.stage,e.message);
@@ -513,7 +515,7 @@ function feed(stage,msg){
 function showQuota(code){
   $('status').style.display='none';
   const box=$('quotaLead'); box.style.display='block';
-  Skin.leadForm(box,{kind:'scan_quota',lang:LANG,intro:t(code==='quota_global'?'quotaGlobalIntro':'quotaIntro')+' <a href="'+PAY+LANG+'" target="_blank" rel="noopener">$100 →</a>',market:()=>lastQuery,country:()=>lastCountry});
+  Skin.leadForm(box,{kind:code==='no_proof'?'scan_no_proof':'scan_quota',lang:LANG,intro:t(code==='quota_global'?'quotaGlobalIntro':code==='no_proof'?'noProofIntro':'quotaIntro')+' <a href="'+PAY+LANG+'" target="_blank" rel="noopener">$100 →</a>',market:()=>lastQuery,country:()=>lastCountry});
 }
 function paintTrack(){
   $('trackH').innerHTML=t('trackH');
@@ -521,6 +523,7 @@ function paintTrack(){
   Skin.leadForm($('trackLead'),{kind:'weekly_tracking',lang:LANG,intro:esc(t('trackIntro')),market:()=>lastQuery,country:()=>lastCountry});
 }
 
+function proofLabel(u){ if(/facebook\.com\/ads\/library\/\?id=\d/.test(u)) return t('seeAd'); try{ return new URL(u).hostname.replace(/^www\./,'')+' ↗'; }catch(_){ return String(u).slice(0,72); } }
 function render(p){
   $('results').style.display='block';
   const r=p.recommendation||{};
@@ -554,9 +557,9 @@ function render(p){
   $('altSec').style.display=alts.length?'block':'none';
   // Other bets + Evidence: open on wide screens, folded on phones (the recommended angle stays the first thing read)
   const wide=!window.matchMedia||matchMedia('(min-width:720px)').matches;
-  $('altSec').open=wide; $('evSec').open=wide;
+  $('altSec').open=wide; $('evSec').open=true; // the proof is never hidden behind a tap
   $('alts').innerHTML=alts.map(a=>'<div class="alt"><b>'+esc(a.angle)+'</b> <span class="c">'+(a.confidence||0)+'</span><br>'+esc(a.rationale)+'</div>').join('');
-  $('evidence').innerHTML=(p.evidence||[]).map(e=>'<div class="ev"><b>'+esc(e.advertiser||'unknown')+'</b> — '+esc(e.insight)+'<br>'+(e.sourceUrl?('<a href="'+esc(e.sourceUrl)+'" target="_blank" rel="noopener">'+esc(String(e.sourceUrl).slice(0,72))+'</a>'):'')+'</div>').join('')||'<div class="ct">'+t('noEvidence')+'</div>';
+  $('evidence').innerHTML=(p.evidence||[]).map(e=>'<div class="ev"><b>'+esc(e.advertiser||'unknown')+'</b> — '+esc(e.insight)+'<br>'+(e.sourceUrl?('<a href="'+esc(e.sourceUrl)+'" target="_blank" rel="noopener">'+esc(proofLabel(e.sourceUrl))+'</a>'):'')+'</div>').join('')||'<div class="ct">'+t('noEvidence')+'</div>';
   const m=p.meta||{};
   $('meta').textContent=t('scanned')+' '+(m.creativesScanned||0)+' '+t('creatives')+' · '+((m.sources&&m.sources.join(' + '))||'knowledge mode')+' · '+(m.llmProvider||'')+(p.cached?'':' · '+(m.durationMs||0)+' ms')+(m.degraded?' · DEGRADED':'');
   const deg=$('deg');
