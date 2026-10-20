@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700&display=swap" />
-<link rel="preload" as="image" href="media/ws-villa.webp" />
+<link rel="preload" as="image" href="media/ws-boarding.webp" />
 <link rel="stylesheet" href="skin.css?v=20261019" />
 <style>
   /* result-specific pieces (the shared look lives in skin.css) */
@@ -44,8 +44,8 @@
 </head>
 <body>
 <div class="bd" aria-hidden="true">
-  <img src="media/ws-villa.webp" alt="" />
-  <video id="va" muted playsinline preload="none" poster="media/ws-villa.webp"></video>
+  <img src="media/ws-boarding.webp" alt="" />
+  <video id="va" muted playsinline preload="none" poster="media/ws-boarding.webp"></video>
   <video id="vb" muted playsinline preload="none"></video>
   <div class="veil"></div>
   <div class="dots"></div>
@@ -218,7 +218,7 @@ en:{
   finalP:'The $100 diagnostic puts a person on your business and your channels, with written results and a 45-minute call.',
   finalBtn:'Book the $100 diagnostic →',
   fTools:'Tools', fPortfolio:'Portfolio ↗',
-  fFilm:'Background film: AIdeazz AI Lab promo footage, reused.',
+  fFilm:'Background film: never-used takes from AIdeazz AI Lab promo shoots.',
   confidence:'confidence', owns:'owns', borrows:'borrows proven psychology from →', hero:'HERO', keyword:'KEYWORD', xhook:'X thread hook',
   noEvidence:'No live evidence in this run.', scanned:'scanned', creatives:'units', connecting:'connecting…', streamClosed:'stream closed',
   cached:'Cached scan from', noteCopyLang:'',
@@ -260,7 +260,7 @@ es:{
   finalP:'El diagnóstico de $100 pone a una persona sobre tu negocio y tus canales, con resultados escritos y una llamada de 45 minutos.',
   finalBtn:'Reservar el diagnóstico de $100 →',
   fTools:'Herramientas', fPortfolio:'Portafolio ↗',
-  fFilm:'Película de fondo: material promocional de AIdeazz AI Lab, reutilizado.',
+  fFilm:'Película de fondo: tomas nunca usadas de las producciones promocionales de AIdeazz AI Lab.',
   confidence:'confianza', owns:'domina', borrows:'toma psicología probada de →', hero:'HERO', keyword:'PALABRA CLAVE', xhook:'Gancho de hilo X',
   noEvidence:'Sin evidencia en vivo en esta corrida.', scanned:'escaneadas', creatives:'piezas', connecting:'conectando…', streamClosed:'conexión cerrada',
   cached:'Escaneo guardado del', noteCopyLang:'',
@@ -400,7 +400,7 @@ $('go').onclick=run;
 $('q').addEventListener('keydown',e=>{ if(e.key==='Enter') run(); });
 $('q').addEventListener('input',()=>{ if(pickedMarket!==null){ pickedMarket=null; paintChips(); } });
 applyLang();
-Skin.backdrop(['ws-villa','ws-catamaran','ws-archipelago']);
+Skin.backdrop(['ws-boarding','ws-lagoon-leap','ws-sunset-sail','ws-volcano']);
 </script>
 </body>
 </html>
