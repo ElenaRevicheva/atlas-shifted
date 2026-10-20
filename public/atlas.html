@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700&display=swap" />
-<link rel="preload" as="image" href="media/ws-sunset-sail.webp" />
+<link rel="preload" as="image" href="media/ws-night.webp" />
 <link rel="stylesheet" href="skin.css?v=20261019" />
 <style>
   .shrug{margin:14px auto 0;text-align:center;font:12px var(--mono);color:var(--amber);max-width:46rem}
@@ -102,8 +102,8 @@
 </head>
 <body>
 <div class="bd" aria-hidden="true">
-  <img src="media/ws-sunset-sail.webp" alt="" />
-  <video id="va" muted playsinline preload="none" poster="media/ws-sunset-sail.webp"></video>
+  <img src="media/ws-night.webp" alt="" />
+  <video id="va" muted playsinline preload="none" poster="media/ws-night.webp"></video>
   <video id="vb" muted playsinline preload="none"></video>
   <div class="veil"></div>
   <div class="sweep"></div>
@@ -760,7 +760,7 @@ $('langEN').onclick=()=>setLang('en');
 $('langES').onclick=()=>setLang('es');
 applyStaticLang();
 fetch(atlasUrl()).then(r=>r.json()).then(render).catch(e=>{ $('board').innerHTML='<div class="loading">'+t('failed')+': '+esc(e.message)+'</div>'; });
-Skin.backdrop(['ws-sunset-sail','ws-boarding-b','ws-volcano','ws-boarding-c']);
+Skin.backdrop(['ws-night']);
 </script>
 </body>
 </html>

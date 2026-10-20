@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700&display=swap" />
-<link rel="preload" as="image" href="media/ws-boarding.webp" />
+<link rel="preload" as="image" href="media/ws-catamaran.webp" />
 <link rel="stylesheet" href="skin.css?v=20261019" />
 <style>
   /* result-specific pieces (the shared look lives in skin.css) */
@@ -44,8 +44,8 @@
 </head>
 <body>
 <div class="bd" aria-hidden="true">
-  <img src="media/ws-boarding.webp" alt="" />
-  <video id="va" muted playsinline preload="none" poster="media/ws-boarding.webp"></video>
+  <img src="media/ws-catamaran.webp" alt="" />
+  <video id="va" muted playsinline preload="none" poster="media/ws-catamaran.webp"></video>
   <video id="vb" muted playsinline preload="none"></video>
   <div class="veil"></div>
   <div class="dots"></div>
@@ -400,7 +400,7 @@ $('go').onclick=run;
 $('q').addEventListener('keydown',e=>{ if(e.key==='Enter') run(); });
 $('q').addEventListener('input',()=>{ if(pickedMarket!==null){ pickedMarket=null; paintChips(); } });
 applyLang();
-Skin.backdrop(['ws-boarding','ws-lagoon-leap','ws-sunset-sail','ws-volcano']);
+Skin.backdrop(['ws-catamaran']);
 </script>
 </body>
 </html>

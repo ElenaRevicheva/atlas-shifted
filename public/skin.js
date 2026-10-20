@@ -1,6 +1,6 @@
 /* skin.js — shared behaviour for WHITESPACE + Atlas (19 Oct 2026).
-   1. backdrop(): two <video> elements cross-fade through AIdeazz AI Lab promo shots (already rendered,
-      zero new spend). Phones get 640x360 encodes; reduced-motion / Data Saver / 2g get the still only.
+   1. backdrop(): two <video> elements cross-fade AIdeazz AI Lab promo-shoot footage (already rendered, zero new
+      spend; one film per page, Elena's pick). Phones get 640x360 encodes; reduced-motion / Data Saver / 2g get the still.
    2. examples(): the 7 creatives Atlas shipped in June–July, as a permanent gallery. A static list on
       purpose, so no lane filter or data change can hide them; the server refuses to re-render them.
    3. leadForm(): the public's way in (weekly tracking, quota ran out, diagnostic) → POST api/atlas/lead. */
@@ -35,6 +35,8 @@
   Skin.backdrop = function (names) {
     var A = document.getElementById('va'), B = document.getElementById('vb');
     if (!A || !B || !names || !names.length) return;
+    // One film: it plays through both elements in turn, so each loop dissolves into itself instead of jumping.
+    if (names.length === 1) names = [names[0], names[0]];
     if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     var c = navigator.connection;
     if (c && (c.saveData === true || /^(slow-)?2g$/.test(c.effectiveType || ''))) return;
