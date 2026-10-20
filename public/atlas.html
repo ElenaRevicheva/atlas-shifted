@@ -37,14 +37,15 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" />
 <link rel="preload" as="image" href="media/ws-night.webp" />
-<link rel="stylesheet" href="skin.css?v=20261021d" />
+<link rel="stylesheet" href="skin.css?v=20261021e" />
 <style>
   .shrug{margin-top:20px;font:12px/1.6 var(--mono);color:var(--amber);text-shadow:0 1px 2px rgba(0,0,0,.9),0 1px 14px rgba(8,5,14,.95)}
   /* hero stats: 3 compact count-up chips (the snapshot date lives in the bar above the header) */
-  .stats{display:flex;flex-wrap:wrap;gap:8px}
-  .stat{display:inline-flex;align-items:baseline;gap:8px;padding:8px 12px;border:1px solid var(--line-2);border-radius:12px;background:rgba(8,5,14,.45)}
-  .stat .n{font:400 24px/1 var(--serif);font-variant-numeric:tabular-nums;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8)}
-  .stat .l{font:500 10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.7)}
+  /* the stats as they were before the 21 Oct restructure (Elena: "make figures bigger, as they were") */
+  .stats{width:100%;max-width:920px;padding:26px 0;border-block:1px solid var(--line);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;text-align:center}
+  .stat .n{display:block;font:400 40px/1 var(--serif);font-variant-numeric:tabular-nums;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8),0 2px 24px rgba(8,5,14,.9)}
+  .stat .l{display:block;margin-top:8px;font:500 10.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.7);text-shadow:0 1px 2px rgba(0,0,0,.9)}
+  @media(min-width:1024px){.stat .n{font-size:44px}.stat .l{font-size:11px}}
   /* Today's move: the hero's real product proof — it holds its space before render(), so nothing jumps */
   .hero{min-height:420px}
   .hero .hload{color:var(--dim);font:13px var(--mono);padding:8px 0}
@@ -175,12 +176,11 @@
     <a href="#how" id="navHow"></a><a href="#pricing" id="navPricing"></a><a href="#faq" id="navFaq"></a>
     <div class="menu-only">
       <span class="langsw"><button type="button" data-lang="en">EN</button><button type="button" data-lang="es">ES</button></span>
-      <a class="btn ghost" id="menuFree" href="./"></a><a class="btn" id="menuCta" target="_blank" rel="noopener"></a>
+      <a class="btn ghost" id="menuFree" href="./"></a>
     </div>
   </nav>
   <div class="nav"><span class="langsw"><button type="button" id="langEN" data-lang="en">EN</button><button type="button" id="langES" data-lang="es">ES</button></span></div>
   <a class="navfree" id="navFree" href="./"></a>
-  <a class="btn navcta" id="navCta" target="_blank" rel="noopener"></a>
   <button type="button" class="burger" id="burger" aria-expanded="false" aria-controls="menu"></button>
  </div>
 </header>
@@ -189,7 +189,7 @@
   <!-- A1b the running line, right under the header (as on aideazz.xyz/api) -->
   <div class="ticker" id="ticker"></div>
 
-  <!-- A2 hero, stacked at every width: the promise, then this week's answer (Today's move) under it, then the stats -->
+  <!-- A2 hero, centred and stacked at every width: the promise, then this week's answer (Today's move) under it, then the stats -->
   <section class="intro stack">
     <div class="intro-txt">
       <p class="hchip"><i aria-hidden="true"></i><span id="kicker"></span></p>

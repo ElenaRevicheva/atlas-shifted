@@ -182,7 +182,16 @@ h1,h2,h3,h4{font-family:var(--display);letter-spacing:-.022em;text-wrap:balance}
 .intro-meta{grid-area:meta;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:16px}
 .intro-prod{grid-area:prod;min-width:0}
 /* Atlas: one column at every width (Elena, 20 Oct: Today's move lies under the headline) */
-@media(min-width:1024px){.intro.stack{grid-template-columns:minmax(0,1fr);grid-template-areas:"txt" "prod" "meta";grid-template-rows:auto;row-gap:28px;padding:40px 0 56px}.intro.stack .intro-txt{max-width:760px}.intro.stack .intro-prod{max-width:920px}}
+@media(min-width:1024px){.intro.stack{grid-template-columns:minmax(0,1fr);grid-template-areas:"txt" "prod" "meta";grid-template-rows:auto;row-gap:28px;padding:40px 0 56px}}
+/* ...and centred, as it was before the 21 Oct restructure (Elena: "See the angle opening should be centered as it was") */
+.intro.stack{justify-items:center}
+.intro.stack .intro-txt{width:100%;max-width:52rem;text-align:center}
+.intro.stack .display{text-align:center}
+.intro.stack .sub{margin-left:auto;margin-right:auto;max-width:44rem;text-align:center}
+.intro.stack .ctas{justify-content:center}
+.intro.stack .intro-prod{width:100%;max-width:920px}
+.intro.stack .intro-meta{width:100%;max-width:920px;align-items:center}
+.intro.stack .ticks{justify-content:center}
 .intro .glass{margin-top:0}
 .hchip{display:inline-flex;align-items:center;gap:10px;max-width:100%;margin:0;padding:7px 16px 7px 12px;border:1px solid var(--line-2);background:rgba(var(--veil),.5);font:500 11px/1.45 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:#fff;
   clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%)}
