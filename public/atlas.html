@@ -779,7 +779,7 @@ $('langEN').onclick=()=>setLang('en');
 $('langES').onclick=()=>setLang('es');
 applyStaticLang();
 fetch(atlasUrl()).then(r=>r.json()).then(render).catch(e=>{ $('board').innerHTML='<div class="loading">'+t('failed')+': '+esc(e.message)+'</div>'; });
-Skin.backdrop(['ws-night','ws-city-night-grid','ws-banking-towers','ws-medellin-cathedral','ws-monserrate','ws-panama-skyline','ws-city-night-towers']);
+Skin.backdrop(['ws-night','ws-city-night-grid','ws-casco-skyline','ws-medellin-cathedral','ws-banking-towers','ws-monserrate','ws-panama-skyline','ws-city-night-towers']);
 Skin.music('media/atlas-music');
 Skin.whatsapp({page:'atlas',prefill:{en:'Hi Elena — I saw the AIdeazz Atlas radar and I’d like to talk.',es:'Hola Elena — vi el radar Atlas de AIdeazz y me gustaría conversar.'}});
 Skin.hubspot();
