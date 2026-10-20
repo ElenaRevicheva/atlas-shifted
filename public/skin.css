@@ -187,7 +187,39 @@ select.field option{background:#0f172a;color:#fff}
 .foot .cols div{display:flex;flex-direction:column;gap:7px}
 .foot .big{width:100%;margin-top:22px;font:400 clamp(1.1rem,3vw,2.2rem)/1.1 var(--serif);color:var(--ink-60)}
 
+/* chat bubbles, as on aideazz.xyz/api: WhatsApp bottom-LEFT (HubSpot's launcher owns bottom-right) */
+.wrap{padding-bottom:104px}
+.wafloat{position:fixed;left:20px;bottom:20px;z-index:50;display:flex;flex-direction:column;align-items:flex-start;gap:12px;font-family:var(--sans)}
+.wacard{width:288px;max-width:calc(100vw - 40px);border-radius:16px;overflow:hidden;border:1px solid rgba(74,222,128,.3);background:rgba(15,23,42,.95);box-shadow:0 25px 50px -12px rgba(34,197,94,.2);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);animation:wain .3s cubic-bezier(.2,.9,.3,1.2)}
+.wacard[hidden]{display:none}
+@keyframes wain{from{opacity:0;transform:translateY(20px) scale(.9)}to{opacity:1;transform:none}}
+.wahead{display:flex;align-items:center;gap:12px;background:#16a34a;padding:12px 16px;color:#fff}
+.wahead b{font-weight:600;font-size:15px}
+.wastat{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:rgba(220,252,231,.8)}
+.wastat.on{color:#fff}
+.wadot{width:8px;height:8px;border-radius:999px;background:#fcd34d}
+.wastat.on .wadot{background:#86efac}
+.wax{background:none;border:0;padding:0;color:rgba(255,255,255,.8);cursor:pointer;display:flex}
+.wax:hover{color:#fff}
+.wabody{padding:16px;display:flex;flex-direction:column;gap:12px}
+.wamsg{border-radius:0 12px 12px 12px;background:rgba(255,255,255,.1);padding:8px 12px;font-size:14px;line-height:1.45;color:#f3f4f6}
+.wacta,.wabook{display:flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;padding:12px 16px;font-weight:600;font-size:15px;text-decoration:none;transition:background .15s}
+.wacta{background:#16a34a;color:#fff;box-shadow:0 10px 15px -3px rgba(34,197,94,.4)}
+.wacta:hover{background:#22c55e}
+.wabook{border:1px solid rgba(192,132,252,.4);background:rgba(147,51,234,.2);color:#f3e8ff}
+.wabook:hover{background:rgba(147,51,234,.3)}
+.walaunch{position:relative;width:56px;height:56px;display:flex;align-items:center;justify-content:center}
+.waping{position:absolute;inset:0;border-radius:999px;background:#22c55e;opacity:.6;animation:waping 1s cubic-bezier(0,0,.2,1) infinite}
+.waping.two{background:#4ade80;opacity:.4;animation-delay:.6s}
+@keyframes waping{75%,100%{transform:scale(2);opacity:0}}
+.wabtn{position:relative;z-index:1;width:56px;height:56px;padding:0;border-radius:999px;border:0;background:#16a34a;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 10px 15px -3px rgba(34,197,94,.5);animation:wawig 3.3s ease-in-out infinite;transition:background .15s}
+.wabtn:hover{background:#22c55e}
+@keyframes wawig{0%{transform:rotate(0) scale(1)}5%{transform:rotate(-12deg) scale(1.03)}10%{transform:rotate(12deg) scale(1.06)}16%{transform:rotate(-8deg) scale(1.04)}22%{transform:rotate(8deg) scale(1.02)}27%,100%{transform:rotate(0) scale(1)}}
+.wafloat.open .waping{display:none}
+.wafloat.open .wabtn{animation:none}
+/* the Atlas evidence drawer slides in from the right; HubSpot's launcher would sit on its corner */
+body:has(.drawer.open) #hubspot-messages-iframe-container{visibility:hidden!important}
 @media(prefers-reduced-motion:reduce){
-  .mark,.wordmark .w b,.ticker .track,.fill,.bd>.dots,.bd .ray,.bd>.sweep{animation:none}
+  .mark,.wordmark .w b,.ticker .track,.fill,.bd>.dots,.bd .ray,.bd>.sweep,.waping,.wabtn,.wacard{animation:none}
   .bd>video{display:none}
 }

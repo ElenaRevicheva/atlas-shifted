@@ -4,7 +4,8 @@
    2. examples(): the 7 creatives Atlas shipped in June–July, as a permanent gallery. A static list on
       purpose, so no lane filter or data change can hide them; the server refuses to re-render them.
    3. leadForm(): the public's way in (weekly tracking, quota ran out, diagnostic) → POST api/atlas/lead.
-   4. music(): the ambient track and its round sound button, the same behaviour as aideazz.xyz/api. */
+   4. music(): the ambient track and its round sound button, the same behaviour as aideazz.xyz/api.
+   5. hubspot() + whatsapp(): the two chat bubbles of aideazz.xyz/api. */
 (function () {
   'use strict';
   var Skin = (window.Skin = {});
@@ -156,7 +157,7 @@
     var T = LEAD_T[opts.lang] || LEAD_T.en;
     el.innerHTML =
       (opts.intro ? '<p>' + opts.intro + '</p>' : '') +
-      '<form class="inrow" novalidate>' +
+      '<form class="inrow" novalidate data-hs-do-not-collect="true">' +
       '<input class="field" type="email" name="email" required placeholder="' + esc(T.email) + '" autocomplete="email">' +
       '<input class="field" type="tel" name="whatsapp" placeholder="' + esc(T.wa) + '" autocomplete="tel" style="max-width:220px">' +
       '<input class="hp" type="text" name="website_hp" tabindex="-1" autocomplete="off" aria-hidden="true">' +
@@ -289,6 +290,84 @@
     paint();
     if (muted || calm) return;
     play().catch(function () { EV.forEach(function (e) { window.addEventListener(e, onGesture, true); }); });
+  };
+
+  /* ── 5. chat bubbles — the same two channels as aideazz.xyz/api ─────────────────
+     HubSpot chat sits bottom-RIGHT (the portal's chatflow targets every URL, so the loader alone shows it). WhatsApp
+     sits bottom-LEFT, because HubSpot's launcher is anchored bottom-right above everything and would cover it. No
+     WhatsApp API and no backend: a wa.me link. Outside Panama business hours it stops promising a fast reply and offers
+     a booking link instead, so a late visitor still has a concrete next step. Ported from WhatsAppFloat.tsx. */
+  Skin.hubspot = function () {
+    if (document.getElementById('hs-script-loader')) return;
+    var s = document.createElement('script');
+    s.id = 'hs-script-loader'; s.async = true; s.defer = true;
+    // ?v= is a fresh cache key: on 26 Jul HubSpot's edge served a copy without the chat (see aideazz index.html)
+    s.src = 'https://js-na1.hs-scripts.com/51409153.js?v=20260726';
+    document.body.appendChild(s);
+  };
+
+  Skin.whatsapp = function (opts) {
+    opts = opts || {};
+    var PHONE = '50761666716', TZ = 'America/Panama', OPEN = 9, CLOSE = 17, DAYS = [1, 2, 3, 4, 5, 6];
+    var BOOK = 'https://calendly.com/elena_revicheva/coffee-chat';
+    var T = {
+      en: { header: 'Chat on WhatsApp', online: 'Online', away: 'Away',
+        hiOn: 'Hello 👋 Thanks for looking at my work. Message me directly — I usually reply fast.',
+        hiAway: 'I’m offline right now 🌙 Leave a message and I’ll reply as soon as I’m back — or grab a time that works for you below.',
+        open: 'Open Chat', send: 'Send a Message', book: 'Book a Call', close: 'Close chat', launch: 'Open WhatsApp chat',
+        prefill: 'Hi Elena — I saw your AIdeazz portfolio and I’d like to talk.' },
+      es: { header: 'Chatea por WhatsApp', online: 'En línea', away: 'Ausente',
+        hiOn: '¡Hola! 👋 Gracias por ver mi trabajo. Escríbeme directamente — suelo responder rápido.',
+        hiAway: 'Ahora estoy desconectada 🌙 Déjame un mensaje y te respondo en cuanto vuelva — o agenda un horario que te convenga abajo.',
+        open: 'Abrir chat', send: 'Enviar mensaje', book: 'Agendar una llamada', close: 'Cerrar chat', launch: 'Abrir chat de WhatsApp',
+        prefill: 'Hola Elena — vi tu portafolio de AIdeazz y me gustaría conversar.' }
+    };
+    function svg(d, n) {
+      return '<svg viewBox="0 0 24 24" width="' + n + '" height="' + n + '" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>';
+    }
+    var MSG = '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>', X = '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>';
+    var SEND = '<path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/>';
+    var CAL = '<path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h5"/><path d="M17.5 17.5 16 16.3V14"/><circle cx="16" cy="16" r="6"/>';
+    // Hour and weekday in Panama, whatever the visitor's own clock says.
+    function nowInZone() {
+      try {
+        var parts = new Intl.DateTimeFormat('en-US', { timeZone: TZ, hour: 'numeric', hour12: false, weekday: 'short' }).formatToParts(new Date());
+        var h = '0', w = '';
+        parts.forEach(function (p) { if (p.type === 'hour') h = p.value; if (p.type === 'weekday') w = p.value; });
+        var map = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+        return { hour: parseInt(h, 10) % 24, day: w in map ? map[w] : new Date().getDay() };
+      } catch (e) { var d = new Date(); return { hour: d.getHours(), day: d.getDay() }; }
+    }
+    function lang() { return (document.documentElement.lang || '').slice(0, 2) === 'es' ? 'es' : 'en'; }
+    var root = document.createElement('div');
+    root.className = 'wafloat';
+    root.innerHTML = '<div class="wacard" hidden></div><div class="walaunch"><span class="waping"></span><span class="waping two"></span>' +
+      '<button type="button" class="wabtn" aria-expanded="false"></button></div>';
+    document.body.appendChild(root);
+    var card = root.querySelector('.wacard'), btn = root.querySelector('.wabtn'), isOpen = false;
+    function paint() {
+      var lg = lang(), L = T[lg], z = nowInZone();
+      var on = DAYS.indexOf(z.day) >= 0 && z.hour >= OPEN && z.hour <= CLOSE;
+      var msg = (opts.prefill && opts.prefill[lg]) || L.prefill;
+      var url = 'https://wa.me/' + PHONE + '?text=' + encodeURIComponent(msg);
+      card.innerHTML = '<div class="wahead">' + svg(MSG, 20) + '<b>' + esc(L.header) + '</b>' +
+        '<span class="wastat' + (on ? ' on' : '') + '"><i class="wadot"></i>' + esc(on ? L.online : L.away) + '</span>' +
+        '<button type="button" class="wax" aria-label="' + esc(L.close) + '">' + svg(X, 16) + '</button></div>' +
+        '<div class="wabody"><div class="wamsg">' + esc(on ? L.hiOn : L.hiAway) + '</div>' +
+        '<a class="wacta" href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(on ? L.open : L.send) + ' ' + svg(SEND, 16) + '</a>' +
+        (on ? '' : '<a class="wabook" href="' + BOOK + '" target="_blank" rel="noopener">' + svg(CAL, 16) + ' ' + esc(L.book) + '</a>') + '</div>';
+      card.querySelector('.wax').onclick = function () { set(false); };
+      card.querySelector('.wacta').onclick = function () {
+        try { if (window.gtag) window.gtag('event', 'contact_whatsapp', { placement: 'float', state: on ? 'online' : 'away', page: opts.page || '' }); } catch (e) {}
+      };
+      btn.setAttribute('aria-label', isOpen ? L.close : L.launch);
+      btn.innerHTML = isOpen ? svg(X, 24) : svg(MSG, 28);
+    }
+    // online / away is worked out again on every open, not only at page load
+    function set(v) { isOpen = v; root.classList.toggle('open', v); card.hidden = !v; btn.setAttribute('aria-expanded', v ? 'true' : 'false'); paint(); }
+    btn.onclick = function () { set(!isOpen); };
+    try { new MutationObserver(paint).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] }); } catch (e) {}
+    paint();
   };
 
   Skin.ticker = function (el, items) {
