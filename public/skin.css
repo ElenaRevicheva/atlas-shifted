@@ -163,10 +163,13 @@ h1,h2,h3,h4{font-family:var(--display);letter-spacing:-.022em;text-wrap:balance}
 [id]{scroll-margin-top:88px}
 
 /* ── ticker ── */
-.ticker{position:relative;left:50%;width:100vw;transform:translateX(-50%);overflow:hidden;border-block:1px solid var(--line);padding:11px 0;background:rgba(var(--veil),.25)}
-.ticker .track{display:flex;width:max-content;animation:az-ticker 38s linear infinite}
-.ticker span{font:500 12px var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-60);white-space:nowrap;padding-right:28px}
-.ticker span b{color:var(--amber);font-weight:500}
+/* = aideazz.xyz/api's running line: full-bleed under the header, the brand ramp flowing through the words */
+.ticker{position:relative;left:50%;width:100vw;transform:translateX(-50%);overflow:hidden;border-block:1px solid rgba(255,255,255,.1);padding:12px 0;background:rgba(var(--veil),.3)}
+.ticker .track{display:flex;align-items:center;width:max-content;animation:az-ticker 30s linear infinite}
+.ticker .tk{flex:none;font:500 13px var(--mono);letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;background-image:var(--ramp-fb);background-image:var(--ramp);background-size:220%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;animation:az-flow 5s linear infinite}
+.ticker .tk b{font-weight:700}
+.ticker .tdot{flex:none;width:4px;height:4px;margin:0 28px;border-radius:50%;background:rgba(252,211,77,.6)}
+@media(max-width:639.98px){.ticker{padding:10px 0}.ticker .tk{font-size:12px}.ticker .tdot{margin:0 20px}}
 @keyframes az-ticker{to{transform:translateX(-50%)}}
 
 /* ── hero (.intro — NOT .hero, which is the Atlas "Today's move" card): text left, the real product right ── */
@@ -175,6 +178,8 @@ h1,h2,h3,h4{font-family:var(--display);letter-spacing:-.022em;text-wrap:balance}
 .intro-txt{grid-area:txt;min-width:0}
 .intro-meta{grid-area:meta;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:16px}
 .intro-prod{grid-area:prod;min-width:0}
+/* Atlas: one column at every width (Elena, 20 Oct: Today's move lies under the headline) */
+@media(min-width:1024px){.intro.stack{grid-template-columns:minmax(0,1fr);grid-template-areas:"txt" "prod" "meta";grid-template-rows:auto;row-gap:28px;padding:40px 0 56px}.intro.stack .intro-txt{max-width:760px}.intro.stack .intro-prod{max-width:920px}}
 .intro .glass{margin-top:0}
 .hchip{display:inline-flex;align-items:center;gap:10px;max-width:100%;margin:0;padding:7px 16px 7px 12px;border:1px solid var(--line-2);background:rgba(var(--veil),.5);font:500 11px/1.45 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:#fff;
   clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%)}
@@ -406,7 +411,7 @@ select.field option{background:#0f172a;color:#fff}
 /* the Atlas evidence drawer slides in from the right; HubSpot's launcher would sit on its corner */
 body:has(.drawer.open) #hubspot-messages-iframe-container{visibility:hidden!important}
 @media(prefers-reduced-motion:reduce){
-  .mark,.wordmark .w b,.ticker .track,.fill,.bd>.dots,.bd .ray,.bd>.sweep,.waping,.wabtn,.wacard,.hchip i,.annc .dot{animation:none}
+  .mark,.wordmark .w b,.ticker .track,.ticker .tk,.fill,.bd>.dots,.bd .ray,.bd>.sweep,.waping,.wabtn,.wacard,.hchip i,.annc .dot{animation:none}
   .ddpanel,.ddbtn svg,summary::after{transition:none}
   .bd>video{display:none}
 }

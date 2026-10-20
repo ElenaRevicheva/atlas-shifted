@@ -568,11 +568,14 @@
     requestAnimationFrame(frame);
   };
 
+  // The running line, as on aideazz.xyz/api: each item in the flowing violet -> yellow ramp, an amber dot between items.
+  // The list is drawn twice and the track travels exactly -50%, so the loop has no seam.
   Skin.ticker = function (el, items) {
     if (!el) return;
-    var row = items.map(function (s) { return '<span>' + s + '</span>'; }).join('');
-    var twin = items.map(function (s) { return '<span aria-hidden="true">' + s + '</span>'; }).join('');
-    el.innerHTML = '<div class="track">' + row + twin + '</div>';
+    var one = function (hide) {
+      return items.map(function (s) { return '<span class="tk"' + (hide ? ' aria-hidden="true"' : '') + '>' + s + '</span><i class="tdot" aria-hidden="true"></i>'; }).join('');
+    };
+    el.innerHTML = '<div class="track">' + one(false) + one(true) + '</div>';
   };
 
   /* ── 9. shared header: Tools dropdown (desktop) + one panel behind ☰ (phone/tablet) ───────────────

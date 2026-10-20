@@ -37,7 +37,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" />
 <link rel="preload" as="image" href="media/ws-night.webp" />
-<link rel="stylesheet" href="skin.css?v=20261021a" />
+<link rel="stylesheet" href="skin.css?v=20261021b" />
 <style>
   .shrug{margin-top:20px;font:12px/1.6 var(--mono);color:var(--amber);text-shadow:0 1px 2px rgba(0,0,0,.9),0 1px 14px rgba(8,5,14,.95)}
   /* hero stats: 3 compact count-up chips (the snapshot date lives in the bar above the header) */
@@ -186,8 +186,11 @@
 </header>
 
 <main class="wrap">
-  <!-- A2 hero: the promise left, this week's answer (Today's move) right; on phones the card comes right after the CTAs -->
-  <section class="intro">
+  <!-- A1b the running line, right under the header (as on aideazz.xyz/api) -->
+  <div class="ticker" id="ticker"></div>
+
+  <!-- A2 hero, stacked at every width: the promise, then this week's answer (Today's move) under it, then the stats -->
+  <section class="intro stack">
     <div class="intro-txt">
       <p class="hchip"><i aria-hidden="true"></i><span id="kicker"></span></p>
       <div><span class="ownerbar" id="ownerBar" style="display:none">OWNER MODE</span></div>
@@ -222,9 +225,6 @@
       <ul class="ticks"><li id="tickPublic"></li><li id="tickMomentum"></li></ul>
     </div>
   </section>
-
-  <!-- A3 the strip -->
-  <div class="ticker" id="ticker"></div>
 
   <!-- A4 the board: every lane's reading, with its evidence; market memory folded at the end -->
   <section class="blk tint" id="boardSec">
@@ -359,7 +359,7 @@
 {"q":"¿Qué incluye el diagnóstico AI Growth de $100?","a":"3 preguntas: sitio web, cómo te contactan, venta típica · Resultados escritos: cómo te tratan la búsqueda con IA, Google y tu WhatsApp · Llamada de 45 minutos para revisarlo · Se acredita si continúas a la auditoría completa."}
 ]}
 </script>
-<script src="skin.js?v=20261021a"></script>
+<script src="skin.js?v=20261021b"></script>
 <script>
 const $=(id)=>document.getElementById(id);
 const esc=Skin.esc;
