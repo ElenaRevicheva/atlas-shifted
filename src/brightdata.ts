@@ -15,6 +15,9 @@
  * degrade to its synthetic-evidence path instead of crashing.
  */
 import puppeteer from 'puppeteer-core';
+import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { config, hasBrightData, hasBrightDataBrowser } from './config.js';
 
 const BD_API = 'https://api.brightdata.com/request';
@@ -143,6 +146,66 @@ export interface BDAdLibraryAd {
 
 const AD_LIBRARY_DATASET = 'gd_mtveskb62h7q65ftgz'; // Bright Data "Meta - Ad Library" (Web Scraper API)
 
+// 21 Oct 2026: the same "clinica dental" PA job took ~2 min, then >201 s, then >322 s. Cancelling at the visitor's deadline
+// threw away rows Bright Data was still collecting (and billing). Now a job that outlives the wait finishes in the background
+// and its rows are kept here for a day, so the next scan of that market is served the real ads at once.
+const ADLIB_CACHE_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'data', 'adlib-cache');
+const ADLIB_FRESH_MS = 24 * 3_600_000;
+const ADLIB_BACKGROUND_MS = 20 * 60_000;
+const adlibInflight = new Map<string, string>(); // cache key → snapshot still running
+
+const adlibKey = (keyword: string, country: string) =>
+  `${fold(keyword).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80)}_${country.toUpperCase()}`;
+
+function adlibCached(key: string): BDAdLibraryAd[] | null {
+  try {
+    const hit = JSON.parse(readFileSync(join(ADLIB_CACHE_DIR, `${key}.json`), 'utf8')) as { at: string; rows: BDAdLibraryAd[] };
+    return Date.now() - Date.parse(hit.at) < ADLIB_FRESH_MS && Array.isArray(hit.rows) ? hit.rows : null;
+  } catch { return null; }
+}
+
+function adlibStore(key: string, keyword: string, country: string, rows: BDAdLibraryAd[], snapshot: string): void {
+  try {
+    mkdirSync(ADLIB_CACHE_DIR, { recursive: true });
+    const path = join(ADLIB_CACHE_DIR, `${key}.json`);
+    writeFileSync(`${path}.tmp`, JSON.stringify({ at: new Date().toISOString(), keyword, country, snapshot, rows }));
+    renameSync(`${path}.tmp`, path);
+  } catch (e) { console.warn(`[bd-adlib] cache write ${key}:`, (e as Error).message); }
+}
+
+/** Only ads still running are proof of today's market, and only ads about the search (see aboutKeyword). */
+function liveOnTopic(keyword: string, rows: BDAdLibraryAd[]): BDAdLibraryAd[] {
+  const now = Date.now();
+  return rows.filter((r) => r && !r.error && /^\d{8,20}$/.test(String(r.library_id || ''))
+    && r.is_active !== false && !(r.end_date && Date.parse(r.end_date) < now)
+    && aboutKeyword(keyword, [r.advertiser_name, r.title, r.description, r.caption, r.link_url].join(' ')));
+}
+
+/** Keep polling a job the visitor stopped waiting for; store its rows when ready, cancel only if it never finishes. */
+function adlibFinishInBackground(key: string, keyword: string, country: string, snapshot: string, startedAt: number): void {
+  const headers = { Authorization: `Bearer ${config.brightDataToken}` };
+  void (async () => {
+    try {
+      while (Date.now() - startedAt < ADLIB_BACKGROUND_MS) {
+        await sleep(15_000);
+        const p: any = await fetch(`https://api.brightdata.com/datasets/v3/progress/${snapshot}`, { headers, signal: AbortSignal.timeout(30_000) })
+          .then((r) => r.json()).catch(() => null);
+        if (p?.status === 'failed') { console.warn(`[bd-adlib] background "${keyword}" ${country}: job failed (${snapshot})`); return; }
+        if (p?.status !== 'ready') continue;
+        const body: any = await fetch(`https://api.brightdata.com/datasets/v3/snapshot/${snapshot}?format=json`, { headers, signal: AbortSignal.timeout(60_000) })
+          .then((r) => r.json()).catch(() => null);
+        if (Array.isArray(body)) adlibStore(key, keyword, country, body, snapshot);
+        console.log(`[bd-adlib] background "${keyword}" ${country}: ${Array.isArray(body) ? body.length : 0} rows after ${Math.round((Date.now() - startedAt) / 1000)} s (${snapshot})`);
+        return;
+      }
+      await fetch(`https://api.brightdata.com/datasets/v3/snapshot/${snapshot}/cancel`, { method: 'POST', headers, signal: AbortSignal.timeout(15_000) }).catch(() => null);
+      console.warn(`[bd-adlib] background "${keyword}" ${country}: still not ready after ${ADLIB_BACKGROUND_MS / 60_000} min — cancelled (${snapshot})`);
+    } finally {
+      adlibInflight.delete(key);
+    }
+  })();
+}
+
 const STOPWORDS = new Set(('de del la las el los y o en para por con sin un una unos unas al a e da do das dos na no em com '
   + 'the and or of for to in on with a an my your our ai').split(' '));
 const fold = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -170,6 +233,13 @@ export async function bdAdLibraryDiscover(
   keyword: string, country: string, limit = 12, maxWaitMs = 210_000, onWait?: (seconds: number) => void,
 ): Promise<BDAdLibraryAd[]> {
   if (!hasBrightData()) return [];
+  const key = adlibKey(keyword, country);
+  const cached = adlibCached(key);
+  if (cached) {
+    const ads = liveOnTopic(keyword, cached);
+    console.log(`[bd-adlib] "${keyword}" ${country}: ${ads.length} live, on-topic ads of ${cached.length} rows (collected < 24 h ago)`);
+    return ads;
+  }
   const headers = { Authorization: `Bearer ${config.brightDataToken}`, 'Content-Type': 'application/json' };
   const qs = new URLSearchParams({
     dataset_id: AD_LIBRARY_DATASET, format: 'json', include_errors: 'true',
@@ -178,15 +248,19 @@ export async function bdAdLibraryDiscover(
   // The whole call fits in maxWaitMs, the POST included; each request gets only what is left of it.
   const t0 = Date.now();
   const left = () => Math.max(1_000, maxWaitMs - (Date.now() - t0));
-  let snapshot: string | undefined;
+  // A job for this market already running in the background is waited on, not bought twice.
+  let snapshot: string | undefined = adlibInflight.get(key);
   try {
-    const res = await fetch(`https://api.brightdata.com/datasets/v3/scrape?${qs}`, {
-      method: 'POST', headers,
-      body: JSON.stringify({ input: [{ keyword, country: country.toUpperCase(), ad_type: 'All ads' }] }),
-      signal: AbortSignal.timeout(Math.min(90_000, left())),
-    });
-    let body: any = await res.json().catch(() => null);
-    snapshot = body && !Array.isArray(body) ? body.snapshot_id : undefined;
+    let body: any = snapshot ? { snapshot_id: snapshot } : null;
+    if (!snapshot) {
+      const res = await fetch(`https://api.brightdata.com/datasets/v3/scrape?${qs}`, {
+        method: 'POST', headers,
+        body: JSON.stringify({ input: [{ keyword, country: country.toUpperCase(), ad_type: 'All ads' }] }),
+        signal: AbortSignal.timeout(Math.min(90_000, left())),
+      });
+      body = await res.json().catch(() => null);
+      snapshot = body && !Array.isArray(body) ? body.snapshot_id : undefined;
+    }
     while (snapshot && !Array.isArray(body) && Date.now() - t0 < maxWaitMs - 10_000) {
       await sleep(10_000);
       onWait?.(Math.round((Date.now() - t0) / 1000));
@@ -201,20 +275,19 @@ export async function bdAdLibraryDiscover(
       }
     }
     if (!Array.isArray(body)) {
-      if (snapshot) {
-        // A job we stop waiting for is cancelled, so it is not billed for rows nobody reads.
-        await fetch(`https://api.brightdata.com/datasets/v3/snapshot/${snapshot}/cancel`, { method: 'POST', headers, signal: AbortSignal.timeout(15_000) }).catch(() => null);
+      // A job still running is NOT cancelled: it finishes in the background and the next scan of this market gets its rows.
+      if (snapshot && !adlibInflight.has(key)) {
+        adlibInflight.set(key, snapshot);
+        adlibFinishInBackground(key, keyword, country, snapshot, t0);
       }
-      console.warn(`[bd-adlib] "${keyword}" ${country}: no rows after ${Math.round((Date.now() - t0) / 1000)} s (${snapshot || JSON.stringify(body).slice(0, 160)})`);
+      console.warn(`[bd-adlib] "${keyword}" ${country}: no rows after ${Math.round((Date.now() - t0) / 1000)} s (${snapshot ? `${snapshot} — finishing in the background` : JSON.stringify(body).slice(0, 160)})`);
       return [];
     }
+    if (snapshot) adlibStore(key, keyword, country, body, snapshot);
     // Only ads still running are proof of today's market (the keyword search also returns stopped ones), and only ads
     // that are about the search: Meta matches loose words, so "seguro de auto" CO also returned novels and car parts.
-    const now = Date.now();
-    const ads = (body as BDAdLibraryAd[]).filter((r) => r && !r.error && /^\d{8,20}$/.test(String(r.library_id || ''))
-      && r.is_active !== false && !(r.end_date && Date.parse(r.end_date) < now)
-      && aboutKeyword(keyword, [r.advertiser_name, r.title, r.description, r.caption, r.link_url].join(' ')));
-    console.log(`[bd-adlib] "${keyword}" ${country}: ${ads.length} live, on-topic ads of ${body.length} rows in ${Math.round((now - t0) / 1000)} s`);
+    const ads = liveOnTopic(keyword, body as BDAdLibraryAd[]);
+    console.log(`[bd-adlib] "${keyword}" ${country}: ${ads.length} live, on-topic ads of ${body.length} rows in ${Math.round((Date.now() - t0) / 1000)} s`);
     return ads;
   } catch (e) {
     console.warn(`[bd-adlib] "${keyword}" ${country} error:`, (e as Error).message);
