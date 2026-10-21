@@ -212,14 +212,16 @@ const fold = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
 
 /**
  * The ad is about the search: its meaningful words appear in the ad (first 5 letters, so "seguros" counts for "seguro").
- * Up to 2 words: all of them; longer searches: 60 % ("kids language learning tutors" needs 3 of 4).
+ * Up to 4 words: all of them; longer searches: 80 %.
  * Measured on "clinica dental" PA: keeps 7/10 (all clinics), drops an orthodontist and a "odontólogo" ad.
+ * 21 Oct 2026: 3-of-4 let a pet-video generator through as proof for "AI tutors for kids learning languages" ES (it says
+ * kids, learning, language — never tutor). An unrelated ad shown as proof is worse than "no proof right now".
  */
 function aboutKeyword(keyword: string, adText: string): boolean {
   const words = fold(keyword).split(/[^a-z0-9]+/).filter((w) => w.length >= 3 && !STOPWORDS.has(w));
   if (!words.length) return true;
   const text = fold(adText);
-  const need = words.length <= 2 ? words.length : Math.ceil(words.length * 0.6);
+  const need = words.length <= 4 ? words.length : Math.ceil(words.length * 0.8);
   return words.filter((w) => text.includes(w.slice(0, 5))).length >= need;
 }
 
