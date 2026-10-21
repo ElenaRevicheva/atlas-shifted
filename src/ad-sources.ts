@@ -123,16 +123,21 @@ function adLibraryCreatives(ads: BDAdLibraryAd[]): AdCreative[] {
 // Ad Library after 20 min; "turismo médico" CR / "alquiler de yates" CO / "abogados de inmigración" PA answered in 83–115 s
 // with 12 ads each. So a market typed in English for a Spanish-speaking country is searched with the local ad phrase.
 const SPANISH_AD_MARKETS = new Set(['AR', 'BO', 'CL', 'CO', 'CR', 'CU', 'DO', 'EC', 'ES', 'GT', 'HN', 'MX', 'NI', 'PA', 'PE', 'PR', 'PY', 'SV', 'UY', 'VE']);
+const PORTUGUESE_AD_MARKETS = new Set(['BR']);
 const adPhraseCache = new Map<string, string>();
 
 async function localAdPhrase(vertical: string, country: string): Promise<string> {
   const cc = country.toUpperCase();
-  if (!SPANISH_AD_MARKETS.has(cc)) return vertical;
+  const lang = SPANISH_AD_MARKETS.has(cc) ? 'Spanish' : PORTUGUESE_AD_MARKETS.has(cc) ? 'Portuguese' : '';
+  if (!lang) return vertical;
   const key = `${cc}:${vertical.toLowerCase()}`;
   const hit = adPhraseCache.get(key);
   if (hit) return hit;
+  const examples = lang === 'Spanish'
+    ? '"dental implants" → "implantes dentales", "immigration lawyer" → "abogados de inmigración", "yacht charter" → "alquiler de yates"'
+    : '"dental implants" → "implante dentário", "immigration lawyer" → "advogado de imigração", "yacht charter" → "aluguel de lancha"';
   const { value } = await llmJson<{ q?: string }>(
-    `Market: "${vertical}". Country: ${cc}.\nGive the short Spanish phrase (2-4 words) that local businesses in this country write in their Facebook/Instagram ads for this market — e.g. "dental implants" → "implantes dentales", "immigration lawyer" → "abogados de inmigración", "yacht charter" → "alquiler de yates". If the market is already in Spanish, return it unchanged.\nJSON only: {"q":"..."}`,
+    `Market: "${vertical}". Country: ${cc}.\nGive the short ${lang} phrase (2-4 words) that local businesses in this country write in their Facebook/Instagram ads for this market — e.g. ${examples}. If the market is already in ${lang}, return it unchanged.\nJSON only: {"q":"..."}`,
     { maxTokens: 60, fallback: {} },
   ).catch(() => ({ value: {} as { q?: string } }));
   const q = String(value.q || '').trim().replace(/["“”]/g, '');

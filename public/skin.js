@@ -288,13 +288,13 @@
   /* ── 4. paid layers (only real offers; the $100 diagnostic checkout is aideazz.xyz/pay) ── */
   var TIER_T = {
     en: {
-      t1: ['Free', 'Whitespace scan', '$0', ['2 scans a day · 10 LatAm markets + Spain + US', 'Crowded lanes + the open angle', 'Ad copy or a GEO/AEO content brief', 'Evidence links to the live units'], 'Scan a market'],
+      t1: ['Free', 'Whitespace scan', '$0', ['Free scans every day · all of Latin America + Spain + US', 'Crowded lanes + the open angle', 'Ad copy or a GEO/AEO content brief', 'Evidence links to the live units'], 'Scan a market'],
       t2: ['Start here', 'AI Growth diagnostic', '$100', ['3-question intake: website, how customers reach you, typical sale', 'Written results on how AI search, Google and your WhatsApp treat your business', '45-minute call to walk through it', 'Credited if you continue to the full audit'], 'Book the diagnostic'],
       t3: ['Managed', 'Weekly scans + AI Growth Operator', 'Scoped on a call', ['Your market and country scanned every week, results sent to you', 'Campaign copy for the open angle; creative rendered on request', 'Set up with you inside the tools you already use: WhatsApp Business, Google Maps, Instagram', 'Website or not'], 'Ask for it'],
       contact: 'Tell us where to reach you and we get back to you.',
     },
     es: {
-      t1: ['Gratis', 'Escaneo whitespace', '$0', ['2 escaneos al día · 10 mercados de LatAm + España + EE.UU.', 'Carriles saturados + el ángulo abierto', 'Copy de anuncio o brief de contenido GEO/AEO', 'Enlaces a la evidencia en vivo'], 'Escanear un mercado'],
+      t1: ['Gratis', 'Escaneo whitespace', '$0', ['Escaneos gratis cada día · toda Latinoamérica + España + EE.UU.', 'Carriles saturados + el ángulo abierto', 'Copy de anuncio o brief de contenido GEO/AEO', 'Enlaces a la evidencia en vivo'], 'Escanear un mercado'],
       t2: ['Empieza aquí', 'Diagnóstico AI Growth', '$100', ['3 preguntas: sitio web, cómo te contactan, venta típica', 'Resultados escritos: cómo te tratan la búsqueda con IA, Google y tu WhatsApp', 'Llamada de 45 minutos para revisarlo', 'Se acredita si continúas a la auditoría completa'], 'Reservar el diagnóstico'],
       t3: ['Gestionado', 'Escaneos semanales + AI Growth Operator', 'Se define en una llamada', ['Tu mercado y país escaneados cada semana, resultados enviados a ti', 'Copy de campaña para el ángulo abierto; creativo renderizado a pedido', 'Configurado contigo dentro de las herramientas que ya usas: WhatsApp Business, Google Maps, Instagram', 'Con o sin sitio web'], 'Solicitarlo'],
       contact: 'Dinos dónde contactarte y te respondemos.',

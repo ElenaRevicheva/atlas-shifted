@@ -139,7 +139,8 @@ function clientIp(req: express.Request): string {
 const ipHash = (ip: string) => createHash('sha256').update(`${ip}|${config.ownerToken || 'ws'}`).digest('hex').slice(0, 12);
 
 /** Countries the one-shot scan can look at (Meta Ad Library country codes). */
-const COUNTRIES = new Set(['PA', 'CR', 'CO', 'MX', 'DO', 'GT', 'EC', 'PE', 'CL', 'AR', 'ES', 'US']);
+// 21 Oct 2026: all of Latin America (Brasil searched in Portuguese — see localAdPhrase in ad-sources.ts) + Spain + US.
+const COUNTRIES = new Set(['PA', 'CR', 'CO', 'MX', 'DO', 'PR', 'GT', 'SV', 'HN', 'NI', 'EC', 'PE', 'BO', 'CL', 'AR', 'UY', 'PY', 'VE', 'BR', 'ES', 'US']);
 const normCountry = (v: unknown): string => {
   const c = String(v || '').trim().toUpperCase();
   return COUNTRIES.has(c) ? c : 'US';
