@@ -119,9 +119,34 @@ function adLibraryCreatives(ads: BDAdLibraryAd[]): AdCreative[] {
     .filter((c) => c.copy.length > 8);
 }
 
+// 21 Oct 2026: LatAm advertisers write their ads in Spanish. "medical tourism" CR / "yacht charter" CO found nothing in Meta's
+// Ad Library after 20 min; "turismo médico" CR / "alquiler de yates" CO / "abogados de inmigración" PA answered in 83–115 s
+// with 12 ads each. So a market typed in English for a Spanish-speaking country is searched with the local ad phrase.
+const SPANISH_AD_MARKETS = new Set(['AR', 'BO', 'CL', 'CO', 'CR', 'CU', 'DO', 'EC', 'ES', 'GT', 'HN', 'MX', 'NI', 'PA', 'PE', 'PR', 'PY', 'SV', 'UY', 'VE']);
+const adPhraseCache = new Map<string, string>();
+
+async function localAdPhrase(vertical: string, country: string): Promise<string> {
+  const cc = country.toUpperCase();
+  if (!SPANISH_AD_MARKETS.has(cc)) return vertical;
+  const key = `${cc}:${vertical.toLowerCase()}`;
+  const hit = adPhraseCache.get(key);
+  if (hit) return hit;
+  const { value } = await llmJson<{ q?: string }>(
+    `Market: "${vertical}". Country: ${cc}.\nGive the short Spanish phrase (2-4 words) that local businesses in this country write in their Facebook/Instagram ads for this market — e.g. "dental implants" → "implantes dentales", "immigration lawyer" → "abogados de inmigración", "yacht charter" → "alquiler de yates". If the market is already in Spanish, return it unchanged.\nJSON only: {"q":"..."}`,
+    { maxTokens: 60, fallback: {} },
+  ).catch(() => ({ value: {} as { q?: string } }));
+  const q = String(value.q || '').trim().replace(/["“”]/g, '');
+  const phrase = q && q.length <= 60 && /[\p{L}]/u.test(q) ? q : vertical;
+  adPhraseCache.set(key, phrase);
+  return phrase;
+}
+
 /** Recon Meta Ad Library for a vertical. */
 export async function reconMeta(vertical: string, country = 'US', onProgress?: (msg: string) => void): Promise<AdCreative[]> {
   if (!hasBrightData()) return [];
+  const phrase = await localAdPhrase(vertical, country);
+  if (phrase.toLowerCase() !== vertical.toLowerCase()) onProgress?.(`Searching Meta Ad Library in the local ad language: "${phrase}" (${country})…`);
+  vertical = phrase;
   // Bright Data's own Ad Library scraper first: real ads, each linked to itself (21 Oct 2026). The page-reading path
   // below needs KYC for facebook.com and stays only as a fallback.
   // Bright Data's job took 101-200+ s on 21 Oct for the same kind of search; 330 s keeps real proof within reach (the SSE

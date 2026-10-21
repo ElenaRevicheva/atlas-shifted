@@ -286,12 +286,16 @@ const WA_PREFILL={en:'Hi Elena — I saw the AIdeazz WHITESPACE finder and I’d
 /* The owner's token (see Skin.ownerToken) is passed to the scan so the owner is never metered. */
 const OWNER_TOKEN=Skin.ownerToken;
 
-/* Strong-fit markets — a chip FILLS the form, it never starts a scan by itself. Country follows the market. */
+/* Strong-fit markets — a chip FILLS the form, it never starts a scan by itself. Country follows the market.
+   q = the words the market's own ads use, in either page language (21 Oct 2026, Meta Ad Library via Bright Data:
+   "turismo médico" CR, "abogados de inmigración" PA, "alquiler de yates" CO answered in 83–115 s with 12 ads each;
+   the English wording found nothing after 20 min — LatAm advertisers write in Spanish; "implantes dentales" PA = local clinics
+   (Odontodent, Clínicas Dentales Corró, Dental Life…), "dental implants" PA = mostly one foreign advertiser). */
 const MARKETS=[
-  {en:'dental implants', es:'implantes dentales', country:'PA', tagEn:'Panamá', tagEs:'Panamá'},
-  {en:'medical tourism', es:'turismo médico', country:'CR', tagEn:'Costa Rica', tagEs:'Costa Rica'},
-  {en:'immigration lawyer', es:'abogado de inmigración', country:'PA', tagEn:'Panamá', tagEs:'Panamá'},
-  {en:'yacht charter', es:'alquiler de yates', country:'CO', tagEn:'Cartagena', tagEs:'Cartagena'},
+  {en:'dental implants', es:'implantes dentales', q:'implantes dentales', country:'PA', tagEn:'Panamá', tagEs:'Panamá'},
+  {en:'medical tourism', es:'turismo médico', q:'turismo médico', country:'CR', tagEn:'Costa Rica', tagEs:'Costa Rica'},
+  {en:'immigration lawyer', es:'abogados de inmigración', q:'abogados de inmigración', country:'PA', tagEn:'Panamá', tagEs:'Panamá'},
+  {en:'yacht charter', es:'alquiler de yates', q:'alquiler de yates', country:'CO', tagEn:'Cartagena', tagEs:'Cartagena'},
 ];
 const COUNTRIES=[['PA','Panamá'],['CR','Costa Rica'],['CO','Colombia'],['MX','México'],['DO','Rep. Dominicana'],['GT','Guatemala'],['EC','Ecuador'],['PE','Perú'],['CL','Chile'],['AR','Argentina'],['ES','España'],['US','USA']];
 
@@ -430,7 +434,7 @@ function paintChips(){
     '<button type="button" class="chip'+(pickedMarket===i?' on':'')+'" data-i="'+i+'">'+esc(m[LANG])+' <small>'+esc(LANG==='es'?m.tagEs:m.tagEn)+'</small></button>').join('')+'</div>';
   $('chips').querySelectorAll('.chip').forEach(b=>b.onclick=()=>{
     const m=MARKETS[+b.dataset.i]; pickedMarket=+b.dataset.i;
-    $('q').value=m[LANG]; countrySel.value=m.country; paintChips(); $('q').focus();
+    $('q').value=m.q||m[LANG]; countrySel.value=m.country; paintChips(); $('q').focus();
   });
   $('q').placeholder=mode==='content'?t('phContent'):t('phMedia');
 }
