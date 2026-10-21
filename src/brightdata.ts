@@ -8,6 +8,7 @@
  *   - bdScrapingBrowserFetch  Web Unlocker + render:true (legacy Meta fallback)
  *   - bdBrowserApiFetch    Scraping Browser zone via CDP (best for Meta Ad Library)
  *   - bdMetaAdLibraryFetch orchestrator: Browser API → unlocker render → plain fetch
+ *   - bdAdLibraryDiscover  Bright Data's own Meta Ad Library scraper (Web Scraper API, no KYC)
  *   - bdSmartFetch         orchestrator: unlock first, escalate to browser if thin
  *
  * All return null/[] on failure or when not configured, so the pipeline can
@@ -124,6 +125,82 @@ export async function bdMetaAdLibraryFetch(url: string, timeoutMs = config.metaF
   const rendered = await bdScrapingBrowserFetch(url, timeoutMs);
   if (rendered && rendered.length > 800) return rendered;
   return bdFetch(url, Math.min(timeoutMs, 45_000));
+}
+
+export interface BDAdLibraryAd {
+  library_id?: string;
+  advertiser_name?: string;
+  title?: string;
+  description?: string;
+  caption?: string;
+  link_url?: string;
+  image_url?: string;
+  start_date?: string;
+  end_date?: string;
+  is_active?: boolean;
+  error?: string;
+}
+
+const AD_LIBRARY_DATASET = 'gd_mtveskb62h7q65ftgz'; // Bright Data "Meta - Ad Library" (Web Scraper API)
+
+/**
+ * Real Meta ads by keyword + country from Bright Data's OWN Ad Library scraper (Web Scraper API).
+ * 21 Oct 2026: facebook.com through Web Unlocker / Scraping Browser needs KYC; this product does not.
+ * Measured: "clinica dental" PA → 10 active ads with Library IDs in ~2 min. Free 5K records/month, then $1.5/1K.
+ * Bright Data answers a slow job with a snapshot id instead of rows, so this polls until ready or maxWaitMs.
+ */
+export async function bdAdLibraryDiscover(
+  keyword: string, country: string, limit = 12, maxWaitMs = 210_000, onWait?: (seconds: number) => void,
+): Promise<BDAdLibraryAd[]> {
+  if (!hasBrightData()) return [];
+  const headers = { Authorization: `Bearer ${config.brightDataToken}`, 'Content-Type': 'application/json' };
+  const qs = new URLSearchParams({
+    dataset_id: AD_LIBRARY_DATASET, format: 'json', include_errors: 'true',
+    type: 'discover_new', discover_by: 'keyword', limit_per_input: String(limit),
+  });
+  // The whole call fits in maxWaitMs, the POST included; each request gets only what is left of it.
+  const t0 = Date.now();
+  const left = () => Math.max(1_000, maxWaitMs - (Date.now() - t0));
+  let snapshot: string | undefined;
+  try {
+    const res = await fetch(`https://api.brightdata.com/datasets/v3/scrape?${qs}`, {
+      method: 'POST', headers,
+      body: JSON.stringify({ input: [{ keyword, country: country.toUpperCase(), ad_type: 'All ads' }] }),
+      signal: AbortSignal.timeout(Math.min(90_000, left())),
+    });
+    let body: any = await res.json().catch(() => null);
+    snapshot = body && !Array.isArray(body) ? body.snapshot_id : undefined;
+    while (snapshot && !Array.isArray(body) && Date.now() - t0 < maxWaitMs - 10_000) {
+      await sleep(10_000);
+      onWait?.(Math.round((Date.now() - t0) / 1000));
+      // One bad poll (5xx, gateway HTML, slow answer) never throws away a job that is still running and billed.
+      const p: any = await fetch(`https://api.brightdata.com/datasets/v3/progress/${snapshot}`, { headers, signal: AbortSignal.timeout(Math.min(30_000, left())) })
+        .then((r) => r.json()).catch(() => null);
+      if (p?.status === 'failed') break;
+      if (p?.status === 'ready') {
+        body = await fetch(`https://api.brightdata.com/datasets/v3/snapshot/${snapshot}?format=json`, { headers, signal: AbortSignal.timeout(Math.min(60_000, left())) })
+          .then((r) => r.json()).catch(() => null);
+        if (!Array.isArray(body)) break; // ready but no rows (empty job): stop, do not re-download until the deadline
+      }
+    }
+    if (!Array.isArray(body)) {
+      if (snapshot) {
+        // A job we stop waiting for is cancelled, so it is not billed for rows nobody reads.
+        await fetch(`https://api.brightdata.com/datasets/v3/snapshot/${snapshot}/cancel`, { method: 'POST', headers, signal: AbortSignal.timeout(15_000) }).catch(() => null);
+      }
+      console.warn(`[bd-adlib] "${keyword}" ${country}: no rows after ${Math.round((Date.now() - t0) / 1000)} s (${snapshot || JSON.stringify(body).slice(0, 160)})`);
+      return [];
+    }
+    // Only ads still running are proof of today's market (the keyword search also returns stopped ones).
+    const now = Date.now();
+    const ads = (body as BDAdLibraryAd[]).filter((r) => r && !r.error && /^\d{8,20}$/.test(String(r.library_id || ''))
+      && r.is_active !== false && !(r.end_date && Date.parse(r.end_date) < now));
+    console.log(`[bd-adlib] "${keyword}" ${country}: ${ads.length} live ads of ${body.length} rows in ${Math.round((now - t0) / 1000)} s`);
+    return ads;
+  } catch (e) {
+    console.warn(`[bd-adlib] "${keyword}" ${country} error:`, (e as Error).message);
+    return [];
+  }
 }
 
 /** Unlock first; escalate to Scraping Browser when the body is thin/JS-gated. */

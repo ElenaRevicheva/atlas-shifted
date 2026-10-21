@@ -17,7 +17,7 @@
  * never present synthesized ads as if they were scraped evidence.
  */
 import { config, hasBrightData } from './config.js';
-import { bdScrapingBrowserFetch, bdFetch, bdSmartFetch, bdSerpSearch, htmlToText } from './brightdata.js';
+import { bdAdLibraryDiscover, bdScrapingBrowserFetch, bdFetch, bdSmartFetch, bdSerpSearch, htmlToText, type BDAdLibraryAd } from './brightdata.js';
 import { llmJson } from './llm.js';
 import type { AdCreative } from './types.js';
 
@@ -103,9 +103,30 @@ function adPermalink(signal: unknown, pageText: string, source: AdCreative['sour
   return source === 'meta_ad_library' && id && pageText.includes(id) ? `https://www.facebook.com/ads/library/?id=${id}` : null;
 }
 
+/** Bright Data Ad Library rows → creatives whose evidence link is the ad itself. */
+function adLibraryCreatives(ads: BDAdLibraryAd[]): AdCreative[] {
+  return ads
+    .map((a, i): AdCreative => ({
+      id: `meta_ad_library-${i + 1}`,
+      source: 'meta_ad_library',
+      advertiser: a.advertiser_name?.slice(0, 80) || null,
+      imageUrl: a.image_url || null,
+      copy: [a.title, a.description || a.caption].filter(Boolean).join(' — ').slice(0, 600),
+      landingUrl: a.link_url?.slice(0, 300) || null,
+      activitySignal: `${a.start_date ? `Started running on ${a.start_date.slice(0, 10)} · ` : ''}Library ID: ${a.library_id}`,
+      sourceUrl: `https://www.facebook.com/ads/library/?id=${a.library_id}`,
+    }))
+    .filter((c) => c.copy.length > 8);
+}
+
 /** Recon Meta Ad Library for a vertical. */
-export async function reconMeta(vertical: string, country = 'US'): Promise<AdCreative[]> {
+export async function reconMeta(vertical: string, country = 'US', onProgress?: (msg: string) => void): Promise<AdCreative[]> {
   if (!hasBrightData()) return [];
+  // Bright Data's own Ad Library scraper first: real ads, each linked to itself (21 Oct 2026). The page-reading path
+  // below needs KYC for facebook.com and stays only as a fallback.
+  const found = adLibraryCreatives(await bdAdLibraryDiscover(vertical, country, config.maxCreatives, 210_000,
+    (s) => onProgress?.(`Meta Ad Library still collecting live ads (${s} s)…`)).catch(() => []));
+  if (found.length) return found;
   const url = META_LIBRARY(vertical, country);
   const html = (await bdScrapingBrowserFetch(url)) || (await bdFetch(url));
   if (!html) return [];
@@ -169,7 +190,9 @@ export async function reconContentSources(
     return { creatives: [], sources: [], degraded: true };
   }
 
-  onProgress?.(`Searching what ranks for "${topic}"…`);
+  // Who pays to advertise this topic here: real Meta ads, read in parallel with the search below (21 Oct 2026).
+  const metaP = bdAdLibraryDiscover(topic, country, 6).catch(() => []);
+  onProgress?.(`Searching what ranks for "${topic}" and who advertises it on Meta…`);
   const q = `${topic} marketing OR services OR agency`;
   let serp = await bdSerpSearch(q, { num: 10, gl: country.toLowerCase() }).catch(() => []);
   // Bright Data sometimes answers a niche local query with an empty body (20 Oct: PA empty twice, US 8 results);
@@ -185,7 +208,9 @@ export async function reconContentSources(
   // Parallelize with bounded concurrency — sequential heavy fetches were the
   // main time sink. Use the fast Web Unlocker fetch (no browser escalation):
   // competitor marketing pages are server-rendered enough to extract positioning.
-  const top = serp.slice(0, config.maxCreatives);
+  // Bright Data refuses these hosts without KYC (21 Oct: 2 of 3 picks were YouTube), so the slots go to pages it can read.
+  const refused = /(^|\.)(youtube\.com|youtu\.be|facebook\.com|instagram\.com|tiktok\.com)$/i;
+  const top = serp.filter((r) => { try { return !refused.test(new URL(r.link).hostname); } catch { return false; } }).slice(0, config.maxCreatives);
   const out: AdCreative[] = [];
   const concurrency = 4;
   for (let i = 0; i < top.length; i += concurrency) {
@@ -205,10 +230,14 @@ export async function reconContentSources(
   }
 
   onProgress?.(`Captured positioning from ${out.length} competitors.`);
+  // The Meta job gets at most 45 s more once the search part is done; late ads are dropped, the visitor is not held.
+  const ads = adLibraryCreatives(await Promise.race([metaP, new Promise<BDAdLibraryAd[]>((r) => setTimeout(() => r([]), 45_000))]));
+  onProgress?.(`Meta Ad Library (${country.toUpperCase()}): ${ads.length} live ads for this topic.`);
+  const sources = [...(out.length ? [`Google SERP (${serpGl})`, 'Competitor sites'] : []), ...(ads.length ? ['Meta Ad Library'] : [])];
   return {
-    creatives: out,
-    sources: out.length ? [`Google SERP (${serpGl})`, 'Competitor sites'] : [],
-    degraded: out.length === 0,
+    creatives: [...out.slice(0, Math.max(0, config.maxCreatives - ads.length)), ...ads],
+    sources,
+    degraded: out.length + ads.length === 0,
   };
 }
 
@@ -224,7 +253,7 @@ export async function reconAllSources(
   }
 
   onProgress?.(`Scanning Meta Ad Library (${country})…`);
-  const meta = await reconMeta(vertical, country).catch(() => []);
+  const meta = await reconMeta(vertical, country, onProgress).catch(() => []);
   onProgress?.(`Meta Ad Library: ${meta.length} creatives.`);
 
   onProgress?.('Scanning TikTok Creative Center…');

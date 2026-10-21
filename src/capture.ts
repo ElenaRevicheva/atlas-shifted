@@ -24,7 +24,7 @@ import { existsSync, mkdirSync, readFileSync, appendFileSync, statSync } from 'n
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { hasBrightData, config } from './config.js';
-import { bdMetaAdLibraryFetch, bdSerpAds, htmlToText } from './brightdata.js';
+import { bdAdLibraryDiscover, bdMetaAdLibraryFetch, bdSerpAds, htmlToText } from './brightdata.js';
 import { metaApiSearchAds } from './meta-api.js';
 import { llmJson } from './llm.js';
 import {
@@ -195,9 +195,23 @@ async function captureVertical(
     } else {
       // Official API first (structured; works for political/EU commercial — US affiliate often empty).
       const apiAds = await metaApiSearchAds(src.query);
+      // 21 Oct 2026: Bright Data's own Ad Library scraper — real ads with Library IDs, no KYC (the page fetch below needs it).
+      const discovered = apiAds.length > 0 ? [] : await bdAdLibraryDiscover(src.query, 'US', 30, 360_000).catch(() => []);
       if (apiAds.length > 0) {
         ads = apiAds;
         console.log(`  [${v.id}] meta-api: ${ads.length} ads for "${src.query}"`);
+      } else if (discovered.length > 0) {
+        ads = discovered.map((a) => ({
+          advertiser: a.advertiser_name || null,
+          copy: [a.title, a.description || a.caption].filter(Boolean).join(' — '),
+          landingUrl: a.link_url || null,
+          activitySignal: `${a.is_active === false ? 'Inactive' : 'Active'} Library ID: ${a.library_id}`,
+          // Meta's own wording ("Nov 10, 2025"): classify.ts parseStarted reads only that form for the launch signal.
+          startedRunning: a.start_date && !Number.isNaN(Date.parse(a.start_date))
+            ? `Started running on ${new Date(a.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}`
+            : null,
+        }));
+        console.log(`  [${v.id}] meta-adlib: ${ads.length} ads for "${src.query}"`);
       } else {
         const html = await fetchMetaHtml(v.id, src.query, src.url);
         if (!html) {
