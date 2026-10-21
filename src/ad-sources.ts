@@ -124,7 +124,9 @@ export async function reconMeta(vertical: string, country = 'US', onProgress?: (
   if (!hasBrightData()) return [];
   // Bright Data's own Ad Library scraper first: real ads, each linked to itself (21 Oct 2026). The page-reading path
   // below needs KYC for facebook.com and stays only as a fallback.
-  const found = adLibraryCreatives(await bdAdLibraryDiscover(vertical, country, config.maxCreatives, 210_000,
+  // Bright Data's job took 101-200+ s on 21 Oct for the same kind of search; 330 s keeps real proof within reach (the SSE
+  // stream stays open on its 15 s keep-alives, the page shows the running seconds).
+  const found = adLibraryCreatives(await bdAdLibraryDiscover(vertical, country, config.maxCreatives, 330_000,
     (s) => onProgress?.(`Meta Ad Library still collecting live ads (${s} s)…`)).catch(() => []));
   if (found.length) return found;
   const url = META_LIBRARY(vertical, country);
