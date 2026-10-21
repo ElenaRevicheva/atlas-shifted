@@ -909,6 +909,7 @@ async function relayLead(rec: Record<string, string>, ipKey: string, message: st
         context: noEnrichTriggers(
           `[WHITESPACE ${rec.kind}] market: ${rec.market || '—'} · country: ${rec.country || '—'} · lang: ${rec.lang}` +
             (rec.whatsapp ? ` · WhatsApp: ${rec.whatsapp}` : '') +
+            (rec.utm ? ` · utm: ${rec.utm}` : '') +
             (message ? `\n${message}` : ''),
         ),
       }),
@@ -964,6 +965,14 @@ app.post('/api/atlas/lead', express.json({ limit: '16kb' }), async (req, res) =>
     country: COUNTRIES.has(rawCountry) ? rawCountry : '', // '' = the visitor did not choose one
     whatsapp: clip(b.whatsapp, 30),
     lang,
+    // campaign attribution from the page's ?utm_… (21 Oct 2026: leads reached HubSpot with no source at all)
+    utm: b.utm && typeof b.utm === 'object'
+      ? ['source', 'medium', 'campaign', 'content', 'term']
+        .map((k) => [k, clip((b.utm as Record<string, unknown>)[k], 60).replace(/[^\p{L}\p{N}._\- ]/gu, '')])
+        .filter(([, v]) => v)
+        .map(([k, v]) => `${k}=${v}`)
+        .join(' · ')
+      : '',
     ip: ipHash(ip),
   };
   try {

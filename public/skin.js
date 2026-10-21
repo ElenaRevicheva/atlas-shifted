@@ -271,6 +271,8 @@
         body: JSON.stringify({
           kind: opts.kind, email: email, whatsapp: f.whatsapp.value.trim(), website_hp: f.website_hp.value,
           market: opts.market ? opts.market() : '', country: opts.country ? opts.country() : '', lang: opts.lang,
+          // the shell page hands its ?utm_… to the frame, so this is the campaign that brought the visitor (21 Oct 2026)
+          utm: (function () { var o = {}; try { new URLSearchParams(location.search).forEach(function (v, k) { if (/^utm_(source|medium|campaign|content|term)$/.test(k)) o[k.slice(4)] = v.slice(0, 60); }); } catch (e) {} return o; })(),
         }),
       }).then(function (r) { return r.json(); }).then(function (j) {
         if (!j || !j.ok) throw new Error('x');
