@@ -143,6 +143,23 @@ export interface BDAdLibraryAd {
 
 const AD_LIBRARY_DATASET = 'gd_mtveskb62h7q65ftgz'; // Bright Data "Meta - Ad Library" (Web Scraper API)
 
+const STOPWORDS = new Set(('de del la las el los y o en para por con sin un una unos unas al a e da do das dos na no em com '
+  + 'the and or of for to in on with a an my your our ai').split(' '));
+const fold = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+/**
+ * The ad is about the search: its meaningful words appear in the ad (first 5 letters, so "seguros" counts for "seguro").
+ * Up to 2 words: all of them; longer searches: 60 % ("kids language learning tutors" needs 3 of 4).
+ * Measured on "clinica dental" PA: keeps 7/10 (all clinics), drops an orthodontist and a "odontólogo" ad.
+ */
+function aboutKeyword(keyword: string, adText: string): boolean {
+  const words = fold(keyword).split(/[^a-z0-9]+/).filter((w) => w.length >= 3 && !STOPWORDS.has(w));
+  if (!words.length) return true;
+  const text = fold(adText);
+  const need = words.length <= 2 ? words.length : Math.ceil(words.length * 0.6);
+  return words.filter((w) => text.includes(w.slice(0, 5))).length >= need;
+}
+
 /**
  * Real Meta ads by keyword + country from Bright Data's OWN Ad Library scraper (Web Scraper API).
  * 21 Oct 2026: facebook.com through Web Unlocker / Scraping Browser needs KYC; this product does not.
@@ -191,11 +208,13 @@ export async function bdAdLibraryDiscover(
       console.warn(`[bd-adlib] "${keyword}" ${country}: no rows after ${Math.round((Date.now() - t0) / 1000)} s (${snapshot || JSON.stringify(body).slice(0, 160)})`);
       return [];
     }
-    // Only ads still running are proof of today's market (the keyword search also returns stopped ones).
+    // Only ads still running are proof of today's market (the keyword search also returns stopped ones), and only ads
+    // that are about the search: Meta matches loose words, so "seguro de auto" CO also returned novels and car parts.
     const now = Date.now();
     const ads = (body as BDAdLibraryAd[]).filter((r) => r && !r.error && /^\d{8,20}$/.test(String(r.library_id || ''))
-      && r.is_active !== false && !(r.end_date && Date.parse(r.end_date) < now));
-    console.log(`[bd-adlib] "${keyword}" ${country}: ${ads.length} live ads of ${body.length} rows in ${Math.round((now - t0) / 1000)} s`);
+      && r.is_active !== false && !(r.end_date && Date.parse(r.end_date) < now)
+      && aboutKeyword(keyword, [r.advertiser_name, r.title, r.description, r.caption, r.link_url].join(' ')));
+    console.log(`[bd-adlib] "${keyword}" ${country}: ${ads.length} live, on-topic ads of ${body.length} rows in ${Math.round((now - t0) / 1000)} s`);
     return ads;
   } catch (e) {
     console.warn(`[bd-adlib] "${keyword}" ${country} error:`, (e as Error).message);
