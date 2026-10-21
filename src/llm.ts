@@ -10,6 +10,7 @@
  * BattlePlan can honestly report which engine produced it (and whether it
  * degraded). Keys come from config (read from .env) — never hardcoded.
  */
+import { AsyncLocalStorage } from 'node:async_hooks';
 import Anthropic from '@anthropic-ai/sdk';
 import Groq from 'groq-sdk';
 import { config } from './config.js';
@@ -234,10 +235,21 @@ export async function grokText(prompt: string, system: string | undefined, maxTo
  * become real ad assets — so this is a quality surface, not a bulk one.
  * Confirmed by eval-llm-chain.mjs before shipping; re-run it before reordering.
  */
+// 21 Oct 2026: a visitor on the Spanish page got English angles, insights and ad copy — the scan never knew the page
+// language. The server runs each scan inside withOutputLanguage(lang, …); every model call of that scan (they all pass
+// through llmText) then writes its human-readable text in that language. Per request, so parallel scans never mix.
+const outputLang = new AsyncLocalStorage<'es' | 'en'>();
+export const withOutputLanguage = <T>(lang: 'es' | 'en', fn: () => Promise<T>): Promise<T> => outputLang.run(lang, fn);
+const ES_OUTPUT = 'Write every human-readable text value (insights, angles, headlines, ad copy, briefs, explanations) in natural, '
+  + 'modern Latin American Spanish, the way a sharp 2026 growth marketer writes. Keep JSON keys, enum/code values, numbers, '
+  + 'brand names and URLs exactly as they are.';
+const withLang = (system?: string) => (outputLang.getStore() === 'es' ? [system, ES_OUTPUT].filter(Boolean).join('\n\n') : system);
+
 export async function llmText(
   prompt: string,
   opts: { system?: string; maxTokens?: number } = {},
 ): Promise<LlmAnswer> {
+  opts = { ...opts, system: withLang(opts.system) };
   const maxTokens = opts.maxTokens ?? 4096;
   const c = await claudeText(prompt, opts.system, maxTokens);
   if (c) return { text: c, provider: 'claude' };
@@ -311,6 +323,7 @@ export async function llmVision(
   imageUrls: string[],
   opts: { system?: string; maxTokens?: number } = {},
 ): Promise<LlmAnswer> {
+  opts = { ...opts, system: withLang(opts.system) };
   const maxTokens = opts.maxTokens ?? 1500;
   const urls = imageUrls.filter((u) => /^https?:\/\//i.test(u)).slice(0, 8);
   if (urls.length === 0) {

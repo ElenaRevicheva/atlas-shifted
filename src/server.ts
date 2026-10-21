@@ -29,7 +29,7 @@ import {
 } from './config.js';
 import { sendTelegramMessage } from './telegram.js';
 import { runWhitespace } from './agent.js';
-import { breakerState } from './llm.js';
+import { breakerState, withOutputLanguage } from './llm.js';
 import { buildIntelligence, angleHistory, laneEvidence } from './intelligence.js';
 import { readTrackedVerticals, SEED_IDS } from './verticals.js';
 import { loadBoardByVertical } from './radar-board.js';
@@ -475,8 +475,9 @@ const PAID_CTA = 'https://aideazz.xyz/pay/analisis-tecnico?sku=diagnostic_call&l
 const normQuery = (v: string) => v.normalize('NFKC').toLowerCase().replace(/\s+/g, ' ').trim();
 /** What is actually searched: NFKC, no zero-width/BOM characters, single spaces (case kept). */
 const scanText = (v: string) => v.normalize('NFKC').replace(/[\u200B-\u200D\u2060\uFEFF]/g, '').replace(/\s+/g, ' ').trim();
-function runCacheKey(vertical: string, mode: RunMode, country: string): string {
-  return createHash('sha1').update(`${mode}|${country}|${normQuery(vertical)}`).digest('hex');
+function runCacheKey(vertical: string, mode: RunMode, country: string, lang: 'es' | 'en' = 'en'): string {
+  // English keeps its old key (existing cached scans stay valid); a Spanish result is its own entry.
+  return createHash('sha1').update(`${mode}|${country}|${normQuery(vertical)}${lang === 'es' ? '|es' : ''}`).digest('hex');
 }
 /** A result worth keeping: a real recommendation AND its copy — not the empty fallback an LLM
  *  outage leaves in either of the two LLM calls (angles, then copy). */
@@ -515,7 +516,8 @@ app.get('/api/run', async (req, res) => {
 
   const privileged = isOwner(req);
   const ip = ipHash(clientIp(req));
-  const key = runCacheKey(vertical, mode, country);
+  const lang: 'es' | 'en' = String(req.query.lang || '') === 'es' ? 'es' : 'en';
+  const key = runCacheKey(vertical, mode, country, lang);
   const cachePath = join(RUN_CACHE_DIR, `${key}.json`);
   const t0 = Date.now();
 
@@ -598,7 +600,7 @@ app.get('/api/run', async (req, res) => {
       if (e.stage === 'done') doneEv = e;
       else send(e);
     };
-    const out = await runWhitespace(vertical, emit, mode, country);
+    const out = await withOutputLanguage(lang, () => runWhitespace(vertical, emit, mode, country));
     const degraded = !!(out as { meta?: { degraded?: boolean } }).meta?.degraded;
     const usable = usableResult(out);
     // Elena, 20 Oct: a free result without live, clickable proof makes no sense. The owner still sees knowledge mode.

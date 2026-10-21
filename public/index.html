@@ -495,7 +495,7 @@ function run(){
   $('status').style.display='block'; $('results').style.display='none'; $('quotaLead').style.display='none';
   $('feed').innerHTML=''; $('fill').style.width='0%';
   feed('start',t('connecting'));
-  const es=new EventSource('api/run?vertical='+encodeURIComponent(v)+'&mode='+encodeURIComponent(mode)+'&country='+encodeURIComponent(lastCountry)+(OWNER_TOKEN?'&token='+encodeURIComponent(OWNER_TOKEN):''));
+  const es=new EventSource('api/run?vertical='+encodeURIComponent(v)+'&mode='+encodeURIComponent(mode)+'&country='+encodeURIComponent(lastCountry)+'&lang='+encodeURIComponent(LANG)+(OWNER_TOKEN?'&token='+encodeURIComponent(OWNER_TOKEN):''));
   es.onmessage=(m)=>{
     let e; try{e=JSON.parse(m.data);}catch{return;}
     if(typeof e.pct==='number') $('fill').style.width=e.pct+'%';
