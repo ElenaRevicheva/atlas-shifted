@@ -251,16 +251,18 @@ export async function llmText(
 ): Promise<LlmAnswer> {
   opts = { ...opts, system: withLang(opts.system) };
   const maxTokens = opts.maxTokens ?? 4096;
+  // 25 Oct 2026 ORDER RULE (Elena: no regular money to top up): Claude while it has credit, then the free providers
+  // (Gemini, Groq), then Grok, then OpenAI — wired, never removed; without credit it refuses in ~0.1 s.
   const c = await claudeText(prompt, opts.system, maxTokens);
   if (c) return { text: c, provider: 'claude' };
-  const o = await openaiText(prompt, opts.system, maxTokens);
-  if (o) return { text: o, provider: 'openai' };
   const gm = await geminiText(prompt, opts.system, maxTokens);
   if (gm) return { text: gm, provider: 'gemini' };
-  const x = await grokText(prompt, opts.system, maxTokens);
-  if (x) return { text: x, provider: 'grok' };
   const g = await groqText(prompt, opts.system, maxTokens);
   if (g) return { text: g, provider: 'groq' };
+  const x = await grokText(prompt, opts.system, maxTokens);
+  if (x) return { text: x, provider: 'grok' };
+  const o = await openaiText(prompt, opts.system, maxTokens);
+  if (o) return { text: o, provider: 'openai' };
   return { text: '', provider: 'none' };
 }
 
@@ -556,7 +558,8 @@ export async function embedBatch(
   prefer?: 'openai' | 'gemini',
 ): Promise<{ vectors: number[][]; backend: EmbedBackend }> {
   if (texts.length === 0) return { vectors: [], backend: 'none' };
-  const order: Array<'openai' | 'gemini'> = prefer ? [prefer] : ['openai', 'gemini'];
+  // 25 Oct 2026: free Gemini first, OpenAI (wired) second — no regular money for OpenAI.
+  const order: Array<'openai' | 'gemini'> = prefer ? [prefer] : ['gemini', 'openai'];
   for (const b of order) {
     if (b === 'openai') {
       const r = await openaiEmbedBatch(texts);
